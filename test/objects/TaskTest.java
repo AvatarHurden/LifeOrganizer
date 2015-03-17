@@ -26,6 +26,16 @@ public class TaskTest {
 	}
 	
 	@Test
+	public void testPriority() {
+		Task t = setUp();
+		
+		t.setPriority('a');
+		
+		Assert.assertEquals('A', t.getPriority());
+		Assert.assertTrue(wasEdited(t));
+	}
+	
+	@Test
 	public void testDoTask() {
 		Task t = setUp();
 		
@@ -101,6 +111,21 @@ public class TaskTest {
 		
 		Assert.assertEquals(d, t.getDueDate());
 		Assert.assertTrue(wasEdited(t));
+	}
+	
+	@Test
+	public void testEncoding() {
+		String s = "[ ] DUE=2015.05.01 MADE=2015.03.12@14:42 NAME=\"Fazer LET#NINJA\" PROJS=+Tema,+CPD CONTEXTS=@Home EDIT=2015.03.12@14:42";
+		String s2 = "[x] DONE=2015.02.23@18:22 (B) MADE=2015.02.17@22:50 NAME=\"Add comments to tasks\" PROJS=+LifeOrganizer NOTE=\"Very easy, some difficulty making CLI\" EDIT=2015.02.23@18:22\n";
+		String s3 = "[ ] MADE=2015.03.17@14:13 NAME=\"Ler \\\"A rua é bela\\\"\" EDIT=2015.03.17@14:13";
+		
+		Task t = Task.decode(s);
+		Task t2 = Task.decode(s2);
+		Task t3 = Task.decode(s3);
+		
+		Assert.assertEquals(s, t.encode());
+		Assert.assertEquals(s2, t2.encode() + "\n");
+		Assert.assertEquals(s3, t3.encode());
 	}
 	
 	private Task setUp() {
