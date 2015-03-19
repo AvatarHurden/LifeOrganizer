@@ -4,6 +4,8 @@
 	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry exported="true" kind="lib" path="joda-time-2.4.jar"/>
+	<classpathentry kind="lib" path="src/ini4j-0.5.4.jar"/>
+	<classpathentry kind="lib" path="src/joda-time-2.4.jar"/>
+	<classpathentry kind="lib" path="src/mockito-all-1.9.5.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
