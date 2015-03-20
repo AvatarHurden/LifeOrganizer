@@ -213,21 +213,22 @@ public class Task {
 		// Defining creationDate
 		Pattern madeP = Pattern.compile("MADE=(\\S*) ");
 		Matcher madeM = madeP.matcher(s);	
-		if (madeM.find())
-			t.creationDate = convertTime(madeM.group(1));
+		madeM.find();
+		t.creationDate = convertTime(madeM.group(1));
 		
 		// Defining name
+		// Accepts things between unescaped quotes (NAME="Read \"this book\" now")
 		Pattern nameP = Pattern.compile("NAME=\"((?:\\\\.|[^\"\\\\])*)\"");
 		Matcher nameM = nameP.matcher(s);
-		if (nameM.find())
-			t.name = nameM.group(1).replace("\\\"", "\"");
+		nameM.find();
+		t.name = nameM.group(1).replace("\\\"", "\"");
 		
 		// Defining edtDate
 		Pattern editP = Pattern.compile("EDIT=(\\S*)[\n]?$");
 		Matcher editM = editP.matcher(s);	
-		if (editM.find())
-			t.editDate = convertTime(editM.group(1));
-		
+		editM.find();
+		t.editDate = convertTime(editM.group(1));
+
 		return t;
 	}
 	

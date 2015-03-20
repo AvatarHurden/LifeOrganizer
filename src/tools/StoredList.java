@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 
 public abstract class StoredList<T extends Comparable<T>> extends ArrayList<T> {
 
@@ -54,6 +55,52 @@ public abstract class StoredList<T extends Comparable<T>> extends ArrayList<T> {
 			i++;
 		add(i, s);
 		return true;
+	}
+	
+	/**
+	 * Gets the first element that makes the function true
+	 * 
+	 * @param func A function that takes an instance of <class>T</class> and returns a boolean
+	 * @return the instance or null
+	 */
+	public T getFirst(Test<T> func) {
+		for (T item : this)
+			if (func.test(item))
+				return item;
+		
+		return null;
+	}
+	
+	/**
+	 * Gets the last element that makes the function true
+	 * 
+		 */
+	public T getLast(Test<T> func) {
+		for (int i = size() - 1; i >= 0; i--)
+			if (func.test(get(i)))
+				return get(i);
+		
+		return null;
+	}
+	
+	/**
+	 * Returns all elements that make the function true
+	 * 
+	 * @param func A function that takes an instance of <class>T</class> and returns a boolean
+	 * @return a List of instances of <class>T</class>
+	 */
+	public List<T> filter(Test<T> func) {
+		List<T> list = new ArrayList<T>();
+		
+		for (T item : this)
+			if (func.test(item))
+				list.add(item);
+		
+		return list;
+	}
+	
+	public interface Test<T> {
+		boolean test(T a);
 	}
 	
 	/**

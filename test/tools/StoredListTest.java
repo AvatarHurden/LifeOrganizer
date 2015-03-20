@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -84,6 +85,19 @@ public class StoredListTest {
 		StoredList<String> list2 = setUp();
 		
 		assertEquals(list, list2);
+	}
+	
+	@Test
+	public void testGetLastAndFirstAndFilter() {
+		StoredList<String> list = setUp();
+		
+		list.add("1first");
+		list.add("2second");
+		list.add("2tlast");
+		
+		assertEquals("2second", list.getFirst(p -> p.contains("2")));
+		assertEquals("2second", list.getLast(p -> p.contains("2s")));
+		assertEquals(new ArrayList<>(), list.filter(p -> p.startsWith("hi")));
 	}
 	
 	private StoredList<String> setUp() {

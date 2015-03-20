@@ -32,8 +32,7 @@ public class TaskManagerTest {
 	
 	@Test
 	public void testLoadTasks() {
-//		TaskManager manager = setUp();
-		
+		TaskManager manager = setUp();
 		
 	}
 
