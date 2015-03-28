@@ -101,18 +101,7 @@ public class StoredListTest {
 	}
 	
 	private StoredList<String> setUp() {
-		return new StoredList<String>(file, true) {
-			@Override
-			String decode(String line) {
-				return line;
-			}
-
-			@Override
-			String encode(String object) {
-				return object;
-			}
-
-		};
+		return new StoredList<String>(file, true, (p -> p), (p -> p));
 	}
 	
 }

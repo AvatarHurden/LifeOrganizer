@@ -9,14 +9,18 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class StoredList<T extends Comparable<T>> extends ArrayList<T> {
+public class StoredList<T extends Comparable<T>> extends ArrayList<T> {
 
 	private File file;
 	private boolean sorted;
+	private Encoder<T> encoder;
+	private Decoder<T> decoder;
 	
-	public StoredList(File file, boolean sorted) {
+	public StoredList(File file, boolean sorted, Encoder<T> encoder, Decoder<T> decoder) {
 		this.file = file;
 		this.sorted = sorted;
+		this.encoder = encoder;
+		this.decoder = decoder;
 		try {
 			load();
 		} catch (IOException e) {}
@@ -29,14 +33,14 @@ public abstract class StoredList<T extends Comparable<T>> extends ArrayList<T> {
 		BufferedReader reader = new BufferedReader(new FileReader(file));
 		String line;
 		while ((line = reader.readLine()) != null)
-			add(decode(line));
+			add(decoder.decode(line));
 		reader.close();
 	}
 	
 	public void save() throws IOException {
 		BufferedWriter writer = new BufferedWriter(new FileWriter(file));
 		for (T obj : this) {
-			String line = encode(obj);
+			String line = encoder.encode(obj);
 			writer.write(line);
 			if (!line.endsWith("\n"))
 				writer.newLine();
@@ -103,16 +107,11 @@ public abstract class StoredList<T extends Comparable<T>> extends ArrayList<T> {
 		boolean test(T a);
 	}
 	
-	/**
-	 * Takes a single line of the file (without the line termination) and converts it into a instance of <class>T</class>
-	 * @param line
-	 */
-	abstract T decode(String line);
-	/**
-	 * Convert an instance of <class>T</class> into a line representation (without the line termination)
-	 * @param object
-	 */
-	abstract String encode(T object);
+	public interface Decoder<T> {
+		T decode(String s);
+	}
 	
-	
+	public interface Encoder<T> {
+		String encode(T t);
+	}
 }
