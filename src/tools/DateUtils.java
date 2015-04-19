@@ -4,10 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javafx.util.Callback;
 
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
@@ -72,12 +71,12 @@ public class DateUtils {
 		formats.add("@H:m");
 		formats.add("@H");
 		
-		Callback<MutableDateTime, MutableDateTime> delta = d -> d;
+		Consumer<MutableDateTime> delta = d -> d.add(0);;
 		if (string.substring(0, 3).equals("tom")) { // If string starts with "tod" or "tom", sets the day accordingly
-			delta = date -> {date.setDayOfMonth(DateTime.now().getDayOfMonth() + 1); return date;};
+			delta = date -> date.setDayOfMonth(DateTime.now().getDayOfMonth() + 1);
 			string = string.replace("tom", "");
 		} else if (string.substring(0, 3).equals("tod")) {
-			delta = date -> {date.setDayOfMonth(DateTime.now().getDayOfMonth()); return date;};
+			delta = date -> date.setDayOfMonth(DateTime.now().getDayOfMonth());
 			string = string.replace("tod", "");
 		} else {
 			// If there is a "+num", gets the last char to know what unit to increment and increments the amount on the final date
@@ -90,10 +89,10 @@ public class DateUtils {
 				string = string.replace(p.group(), "");
 			}
 			final int increment = number;
-			if (pattern == 'd') delta = date -> {date.addDays(increment); return date;};
-			else if (pattern == 'w') delta = date -> {date.addWeeks(increment); return date;};
-			else if (pattern == 'm') delta = date -> {date.addMonths(increment); return date;};
-			else if (pattern == 'y') delta = date -> {date.addYears(increment); return date;};;
+			if (pattern == 'd') delta = date -> date.addDays(increment);
+			else if (pattern == 'w') delta = date -> date.addWeeks(increment);
+			else if (pattern == 'm') delta = date -> date.addMonths(increment);
+			else if (pattern == 'y') delta = date -> date.addYears(increment);
 		}
 		
 		for (String p : formats)
@@ -115,7 +114,7 @@ public class DateUtils {
 		if (!accepted)
 			return null;
 		
-		now = delta.call(now); // Applies the delta that was defined earlier
+		delta.accept(now); // Applies the delta that was defined earlier
 				
 		if (defaults != null) // Applies the default values
 			for (Entry<String, Integer> pair : defaults.entrySet())

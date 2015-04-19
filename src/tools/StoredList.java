@@ -103,16 +103,14 @@ public class StoredList<T extends Comparable<T> & Property<T>> extends SimpleLis
 		if (millis <= 0)
 			return;
 		
-		saveThread = new Thread(new Runnable() {
-			@Override
-			public void run() {
+		saveThread = new Thread(() -> {
+			while (true)
 				try {
 					while (true) {
 						Thread.sleep(millis);
 						save();
 					}
 				} catch (InterruptedException | IOException e) {}
-			}
 		});
 		saveThread.start();
 	}
