@@ -74,9 +74,11 @@ public class DateUtils {
 		Consumer<MutableDateTime> delta = d -> d.add(0);;
 		if (string.substring(0, 3).equals("tom")) { // If string starts with "tod" or "tom", sets the day accordingly
 			delta = date -> date.setDayOfMonth(DateTime.now().getDayOfMonth() + 1);
+			accepted = true;
 			string = string.replace("tom", "");
 		} else if (string.substring(0, 3).equals("tod")) {
 			delta = date -> date.setDayOfMonth(DateTime.now().getDayOfMonth());
+			accepted = true;
 			string = string.replace("tod", "");
 		} else {
 			// If there is a "+num", gets the last char to know what unit to increment and increments the amount on the final date
@@ -84,6 +86,7 @@ public class DateUtils {
 			int number = 0;
 			char pattern = 0; 
 			if (p.find()) {
+				accepted = true;
 				number = Integer.parseInt(p.group(1));
 				pattern = p.group(2).toLowerCase().charAt(0);
 				string = string.replace(p.group(), "");

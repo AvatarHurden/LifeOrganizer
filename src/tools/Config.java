@@ -26,20 +26,28 @@ public class Config {
 //		}
 		this.configFile = configFile;
 		prop = new Properties();
-		if (!configFile.exists())
-			setDefaults();
-		else
+		try {
 			prop.load(new FileInputStream(configFile));
+		} catch (IOException e) {
+			setDefaults();
+		}
+	}
+	
+	public Config(Config source) {
+		this.configFile = source.configFile;
+		this.prop = source.prop;
+	}
+	
+
+	public void restore(Config source) {
+		this.configFile = source.configFile;
+		this.prop = source.prop;
 	}
 
 	private void setDefaults() throws FileNotFoundException, IOException {
-		String def = "$default$";
-		
 		prop.setProperty("default_folder", new File("data").getAbsolutePath());
-		prop.setProperty("todo_file", new File(def, "todo.txt").getPath());
-		prop.setProperty("done_file", new File(def, "done.txt").getPath());
-		prop.setProperty("sleep_file", new File(def, "sleep.txt").getPath());
-		prop.setProperty("locations_file", new File(def, "locations.txt").getPath());
+		prop.setProperty("todo_file", "todo.txt");
+		prop.setProperty("done_file", "done.txt");
 		prop.store(new FileOutputStream(configFile), "");
 	}
 	
@@ -56,13 +64,17 @@ public class Config {
 	}
 	
 	public String getPropertyAndSave(String name, String defaultValue) {
-		if (prop.getProperty(name) != null)
+		if (prop.getProperty(name) == null)
 			prop.setProperty(name, defaultValue);
 		return prop.getProperty(name);
 	}
 	
 	public <S> S getProperty(String name, Callback<String, S> converter) {
-		return converter.call(prop.getProperty(name));
+		try {
+			return converter.call(prop.getProperty(name));
+		} catch (Exception e) {
+			return null;
+		}
 	}
 	
 	public <S> S getProperty(String name, Callback<String, S> converter, S defaultValue) {
@@ -87,8 +99,19 @@ public class Config {
 		prop.setProperty(name, String.join(",", values));
 	}
 	
+	public <S> void setListProperty(String name, List<S> values, Callback<S, String> encoder) {
+		List<String> strings = new ArrayList<String>();
+		for (S value : values)
+			strings.add(encoder.call(value));
+		setListProperty(name, strings);
+	}
+	
 	public List<String> getListProperty(String name) {
-		return Arrays.asList(prop.getProperty(name).split(","));
+		try {
+			return Arrays.asList(prop.getProperty(name).split(","));
+		} catch (Exception e) {
+			return null;
+		}
 	}
 	
 	public List<String> getListProperty(String name, List<String> defaultValue) {
@@ -106,10 +129,14 @@ public class Config {
 	}
 	
 	public <S> List<S> getListProperty(String name, Callback<String, S> converter) {
-		List<S> objects = new ArrayList<S>();
-		for (String value : prop.getProperty(name).split(","))
-			objects.add(converter.call(value));
-		return objects;
+		try {
+			List<S> objects = new ArrayList<S>();
+			for (String value : prop.getProperty(name).split(","))
+				objects.add(converter.call(value));
+			return objects;
+		} catch (Exception e) {
+			return null;
+		}
 	}
 	
 	public <S> List<S> getListProperty(String name, Callback<String, S> converter, List<S> defaultValue) {
@@ -134,6 +161,10 @@ public class Config {
 		for (String value : prop.getProperty(name).split(","))
 			objects.add(decoder.call(value));
 		return objects;
+	}
+	
+	public void save() throws FileNotFoundException, IOException {
+		prop.store(new FileOutputStream(configFile), "LifeOrganizer Properties");
 	}
 	
 	//	public void setDataFolder(String path) {

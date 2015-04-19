@@ -213,7 +213,6 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		if (noteM.find())
 			t.note = noteM.group(1).replace("\\\\n", "\n").replace("\\\"", "\"");
 				
-		
 		// Defining edtDate
 		Pattern editP = Pattern.compile("EDIT=(\\S*)[\n]?$");
 		Matcher editM = editP.matcher(s);	
@@ -275,7 +274,6 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 	}
 	
 	// Property methods
-
 	public Property<State> StateProperty() {
 		if (stateProperty == null) 
 			stateProperty = new TaskObjectProperty<State>("state").get();

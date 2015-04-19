@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<VBox fx:id="dueDateBox" prefHeight="112.0" prefWidth="120.0" style="-fx-border-color: lightgray; -fx-border-image-width: 2; -fx-border-radius: 6; -fx-padding: 4;" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="views.DueDateView.DueDateViewController">
+   <children>
+      <DatePicker fx:id="datePicker" promptText="dd/mm/yyyy" />
+      <Label fx:id="timeLabel" alignment="CENTER" contentDisplay="CENTER" prefHeight="17.0" prefWidth="112.0">
+         <VBox.margin>
+            <Insets bottom="10.0" top="10.0" />
+         </VBox.margin></Label>
+      <Slider fx:id="hourSlider" />
+      <Slider fx:id="minuteSlider" />
+   </children>
+   <opaqueInsets>
+      <Insets />
+   </opaqueInsets>
+</VBox>

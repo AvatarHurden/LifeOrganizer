@@ -45,7 +45,9 @@ public class StoredList<T extends Comparable<T> & Property<T>> extends SimpleLis
 		
 		try {
 			load();
-		} catch (IOException e) {}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	/**
