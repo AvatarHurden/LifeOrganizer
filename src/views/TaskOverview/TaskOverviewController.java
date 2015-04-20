@@ -22,6 +22,7 @@ import objects.Context;
 import objects.Project;
 import objects.Task;
 
+import org.controlsfx.control.StatusBar;
 import org.joda.time.DateTime;
 
 import tools.Config;
@@ -46,13 +47,22 @@ public class TaskOverviewController {
 	private ToggleButton todoButton, doneButton;
 	private ToggleGroup shownTaskGroup;
 	
-	SingleTaskViewController controller;
+	@FXML
+	private AnchorPane statusBox;
+	private StatusBar statusBar;
+	
+	private SingleTaskViewController controller;
 	
 	private TaskManager manager;
 	private Stage configStage;
 	
 	public void setTaskManager(TaskManager manager) {
 		this.manager = manager;
+		
+		manager.getTodoList().savedProperty().addListener((obs, oldValue, newValue) -> {
+			statusBar.setText(newValue ? "Saved" : "Not Saved");
+		});
+		statusBar.setText(manager.getTodoList().isSaved() ? "Saved" : "Not Saved");
 		showTodo();
 	}
 
@@ -62,6 +72,13 @@ public class TaskOverviewController {
 	
 	@FXML
 	private void initialize() {
+		statusBar = new StatusBar();
+		statusBox.getChildren().add(statusBar);
+		AnchorPane.setTopAnchor(statusBar, 0d);
+		AnchorPane.setBottomAnchor(statusBar, 0d);
+		AnchorPane.setLeftAnchor(statusBar, 0d);
+		AnchorPane.setRightAnchor(statusBar, 0d);
+		
 		shownTaskGroup = new ToggleGroup();
 		todoButton.setToggleGroup(shownTaskGroup);
 		doneButton.setToggleGroup(shownTaskGroup);
@@ -73,7 +90,7 @@ public class TaskOverviewController {
 		});
 		
 		table = new CustomizableTableView<Task>();
-        
+		
 		table.<Task.State>addColumn("State", t -> t.StateProperty());
 		table.<DateTime>addColumn("Completion Date", t -> t.CompletionDateProperty(), col -> new DueDateCell());
 		table.<Character>addColumn("Priority", t -> t.PriorityProperty());
