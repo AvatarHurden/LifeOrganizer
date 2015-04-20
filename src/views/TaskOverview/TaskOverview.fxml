@@ -18,9 +18,15 @@
             </AnchorPane>
         </items>
       </SplitPane>
-      <TextField fx:id="textField" layoutX="23.0" layoutY="374.0" prefHeight="25.0" prefWidth="510.0" AnchorPane.bottomAnchor="7.0" AnchorPane.leftAnchor="25.0" AnchorPane.rightAnchor="65.0" />
+      <TextField fx:id="textField" layoutX="23.0" layoutY="374.0" prefHeight="25.0" prefWidth="510.0" promptText="Ctrl + N" AnchorPane.bottomAnchor="7.0" AnchorPane.leftAnchor="25.0" AnchorPane.rightAnchor="65.0" />
       <Button fx:id="addButton" layoutX="527.0" layoutY="361.0" mnemonicParsing="false" onAction="#click" text="Add" AnchorPane.bottomAnchor="7.0" AnchorPane.rightAnchor="20.0" />
       <Button layoutX="935.0" layoutY="2.0" mnemonicParsing="false" onAction="#archive" text="Archive" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="5.0" />
       <Button layoutX="14.0" layoutY="5.0" mnemonicParsing="false" onAction="#openConfig" text="Configs" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="5.0" />
+      <HBox layoutX="455.0" layoutY="5.0" prefHeight="25.0" prefWidth="90.0" AnchorPane.topAnchor="5.0">
+         <children>
+            <ToggleButton fx:id="todoButton" mnemonicParsing="false" onAction="#showTodo" prefWidth="45.0" text="Todo" />
+            <ToggleButton fx:id="doneButton" mnemonicParsing="false" onAction="#showDone" text="Done" />
+         </children>
+      </HBox>
    </children>
 </AnchorPane>

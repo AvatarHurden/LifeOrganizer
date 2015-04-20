@@ -21,7 +21,7 @@ public class ObjectListView<T> extends HBox {
 	public ObjectListView(Constructor<T> instantiator, StringPropertyGetter<T> property) {
 		this.instantiator = instantiator;
 		this.property = property;
-		getStylesheets().add("adress/view/style.css");
+		getStylesheets().add("views/style.css");
 	
 		initialize();
 	}
@@ -63,6 +63,10 @@ public class ObjectListView<T> extends HBox {
 	private void addLabel(T object) {
 		Label label = new Label();
 		label.setFocusTraversable(true);
+		label.setOnMousePressed((event) -> {
+			event.consume();
+			label.requestFocus();
+		});
 		label.getStyleClass().add("objectlistLabel");
 		label.textProperty().bindBidirectional(property.getProperty(object));
 		

@@ -47,6 +47,10 @@ public class TaskManager {
 		return todo;
 	}
 	
+	public StoredList<Task> getDoneList() {
+		return done;
+	}
+	
 	public void addTask(Task t) {
 		todo.add(t);
 	}
@@ -75,6 +79,5 @@ public class TaskManager {
 			todo.setFile(getTodoFile(), false);
 			done.setFile(getDoneFile(), false);
 		} catch (IOException e) {}
-	}
-	
+	}	
 }

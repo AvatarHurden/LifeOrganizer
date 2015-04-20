@@ -1,0 +1,18 @@
+
+.objectlistLabel {
+	-fx-color: #b4dafa;
+	-fx-background-color: -fx-body-color;
+    -fx-background-radius: 4;
+    -fx-padding: 0.166667em 0.624999em 0.25em 0.624999em; /* 2 7,5 3 7,5 */ 
+}
+
+.objectlistLabel:focused {
+    -fx-color: #b4dafa;
+    -fx-background-color: -fx-focus-color, -fx-outer-border, -fx-inner-border, -fx-body-color;
+    -fx-background-insets: -1.4, 0, 0.5, 1;
+    -fx-background-radius:  6.4, 5, 4, 3;
+}
+
+.objectlistLabel:hover {
+	-fx-color: #D9EBF9;
+}

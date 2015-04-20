@@ -12,9 +12,10 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import managers.TaskManager;
 import objects.Context;
@@ -41,6 +42,9 @@ public class TaskOverviewController {
 	private Button addButton;
 	@FXML
 	private ScrollPane mainPane;
+	@FXML
+	private ToggleButton todoButton, doneButton;
+	private ToggleGroup shownTaskGroup;
 	
 	SingleTaskViewController controller;
 	
@@ -49,7 +53,7 @@ public class TaskOverviewController {
 	
 	public void setTaskManager(TaskManager manager) {
 		this.manager = manager;
-		table.setItems(manager.getTodoList());
+		showTodo();
 	}
 
 	public void setConfigStage(Stage config) {
@@ -58,10 +62,17 @@ public class TaskOverviewController {
 	
 	@FXML
 	private void initialize() {
-		textField.setPromptText("Ctrl + N");
+		shownTaskGroup = new ToggleGroup();
+		todoButton.setToggleGroup(shownTaskGroup);
+		doneButton.setToggleGroup(shownTaskGroup);
+		todoButton.setSelected(true);
+		
+		shownTaskGroup.selectedToggleProperty().addListener((obs, oldValue, newValue) -> {
+			if (newValue == null)
+				oldValue.setSelected(true);
+		});
 		
 		table = new CustomizableTableView<Task>();
-		table.getStylesheets().add("adress/view/style.css");
         
 		table.<Task.State>addColumn("State", t -> t.StateProperty());
 		table.<DateTime>addColumn("Completion Date", t -> t.CompletionDateProperty(), col -> new DueDateCell());
@@ -124,7 +135,9 @@ public class TaskOverviewController {
 					try {
 						mainPane.setContent(loader.load());
 						controller = loader.<SingleTaskViewController>getController();
-					} catch (Exception e) {}
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 				}
 				controller.setTask(newValue);
 			}
@@ -157,6 +170,48 @@ public class TaskOverviewController {
 	}
 	
 	@FXML
+	private void showTodo() {
+		table.setItems(manager.getTodoList());
+	}
+	
+	@FXML
+	private void showDone() {
+		table.setItems(manager.getDoneList());
+	}
+
+	@FXML
+	private void openConfig() {
+		configStage.showAndWait();
+	}
+	
+	public void saveState(Config config) {
+		config.setListProperty("colOrder", table.getColumnOrder());
+		config.setListProperty("colWidth", table.getColumnWidth(), d -> d.toString());
+		config.setListProperty("colShown", table.getColumnShown(), b -> b.toString());
+		config.setListProperty("colSort", table.getColumnSortOrder());
+		
+		config.setListProperty("split", ""+splitPane.getDividerPositions()[0]);
+	}
+	
+	public void loadState(Config config) {
+		List<String> colOrder = config.getListProperty("colOrder");
+		if (colOrder != null && !colOrder.isEmpty())
+			table.setColumnOrder(colOrder);
+		
+		List<Double> colWidth = config.getListProperty("colWidth", s -> Double.valueOf(s));
+		if (colWidth != null && !colWidth.isEmpty())
+			table.setColumnWidth(colWidth);
+		
+		List<Boolean> colShown = config.getListProperty("colShown", s -> Boolean.valueOf(s));
+		if (colShown != null && !colShown.isEmpty())
+			table.setColumnShown(colShown);
+		
+		List<String> colSort = config.getListProperty("colSort");
+		if (colSort != null && !colSort.isEmpty())
+			table.setColumnSortOrder(colSort);
+	}
+	
+	@FXML
 	private void keyboardShorcuts(KeyEvent event) {
 		if (event.isControlDown())
 			switch (event.getCode()) {
@@ -177,58 +232,15 @@ public class TaskOverviewController {
 			}
 	}
 	
-	@FXML
-	private void openConfig() {
-		configStage.showAndWait();
-	}
-	
-	public void saveState(Config config) {
-		config.setListProperty("colOrder", table.getColumnOrder());
-		config.setListProperty("colWidth", table.getColumnWidth(), d -> d.toString());
-		config.setListProperty("colShown", table.getColumnShown(), b -> b.toString());
-		config.setListProperty("colSort", table.getColumnSortOrder());
-		
-		config.setListProperty("split", ""+splitPane.getDividerPositions()[0]);
-	}
-	
-	public void loadState(Config config) {
-		List<String> colOrder = config.getListProperty("colOrder");
-		if (colOrder != null)
-			table.setColumnOrder(colOrder);
-		
-		List<Double> colWidth = config.getListProperty("colWidth", s -> Double.valueOf(s));
-		if (colWidth != null)
-			table.setColumnWidth(colWidth);
-		
-		List<Boolean> colShown = config.getListProperty("colShown", s -> Boolean.valueOf(s));
-		if (colShown != null)
-			table.setColumnShown(colShown);
-		
-		List<String> colSort = config.getListProperty("colSort");
-		if (colSort != null)
-			table.setColumnSortOrder(colSort);
-	}
-	
 	private class DueDateCell extends TableCell<Task, DateTime> {
 		protected void updateItem(DateTime date, boolean empty) {
-			  super.updateItem(date, empty);
+			super.updateItem(date, empty);
 
-			 if (date == null || empty) {
-	                setText(null);
-	                setStyle("");
-	            } else {
-	                // Format date.
-	                setText(date.toString("YYYY.MM.dd@HH:mm"));
-	                
-	                // Style all dates in March with a different color.
-	                if (date.isBeforeNow()) {
-//	                    setTextFill(Color.CHOCOLATE);
-//	                    setStyle("-fx-background-color: yellow");
-	                } else {
-	                    setTextFill(Color.BLACK);
-	                    setStyle("");
-	                }
-	            }
+			if (date == null || empty) {
+				setText(null);
+				setStyle("");
+			} else
+				setText(date.toString("YYYY.MM.dd@HH:mm"));
 		}
 	}
 }		

@@ -112,6 +112,8 @@ public class CustomizableTableView<T> extends TableView<T> {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public void setColumnSortOrder(List<String> list) {
 		for (String s : list) {
+			if (s.equals(""))
+				continue;
 			TableColumn col = columnList.get(s.split("/")[0]);
 			col.setSortType(SortType.valueOf(s.split("/")[1]));
 			getSortOrder().add(col);
