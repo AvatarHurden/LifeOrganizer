@@ -162,6 +162,7 @@ public class TaskOverviewController {
 	@FXML
 	private void click() {
 		manager.addTask(new Task(textField.getText()));
+		textField.setText("");
 	}
 	
 	@FXML
