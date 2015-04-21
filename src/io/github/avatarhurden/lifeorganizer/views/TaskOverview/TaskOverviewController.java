@@ -91,6 +91,7 @@ public class TaskOverviewController {
 		});
 		
 		table = new CustomizableTableView<Task>();
+		table.getStylesheets().add("/io/github/avatarhurden/lifeorganizer/views/style.css");
 		
 		table.<Task.State>addColumn("State", t -> t.StateProperty());
 		table.<DateTime>addColumn("Completion Date", t -> t.CompletionDateProperty(), null,  col -> new DueDateCell());
@@ -182,10 +183,10 @@ public class TaskOverviewController {
 					super.updateItem(t, empty);
 					if (t == null || empty) return;
 					
-					if (t.getDueDate() != null && t.getDueDate().isBeforeNow())
-						getStyleClass().add("highlightedRow");
+					if (t.getDueDate() != null && t.getDueDate().isAfterNow())
+						getStyleClass().add("table-row-highlight");
 					else
-						getStyleClass().remove("highlightedRow");
+						getStyleClass().remove("table-row-highlight");
 				}
 			};
 		});
@@ -279,8 +280,6 @@ public class TaskOverviewController {
 				setStyle("");
 			} else {
 				setText(date.toString("YYYY.MM.dd@HH:mm"));
-				if (date.isAfter(DateTime.now()))
-					setStyle("-fx-text-fill: red;");
 			}
 		}
 	}

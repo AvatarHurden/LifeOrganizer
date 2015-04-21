@@ -1,4 +1,8 @@
 
+.table-row-highlight {
+    -fx-background-color: #E0736D;
+}
+
 .objectlistLabel {
 	-fx-color: #b4dafa;
 	-fx-background-color: -fx-body-color;

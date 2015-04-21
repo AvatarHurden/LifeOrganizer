@@ -1,7 +1,8 @@
 {
 	"current": 
 	{
-	"version" : 1.210,
-	"changes": "added updater",
+	"url": "",
+	"version" : 0.1,
+	"changes": "First Version",
 	}
 }

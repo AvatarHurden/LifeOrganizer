@@ -22,7 +22,7 @@ import org.controlsfx.control.NotificationPane;
 
 public class Main extends Application {
 
-	private static final double version = 1.21;
+	private static final double version = 0.1;
 	private static final String changelogURL = "file:///C:/Users/Arthur/Documents/GitHub/LifeOrganizer-GUI/changelog";
 //			"https://raw.githubusercontent.com/AvatarHurden/LifeOrganizer-GUI/master/changelog?token=AE2NPpgsr9kr3FbS2khMJ-zKXVUK5OrCks5VPufAwA%3D%3D";
 	

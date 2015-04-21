@@ -6,14 +6,15 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Optional;
 
+import javafx.application.Platform;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ProgressIndicator;
 import javafx.stage.Modality;
 
 import org.controlsfx.control.NotificationPane;
 import org.controlsfx.control.action.Action;
-import org.controlsfx.dialog.Dialogs;
 import org.json.JSONObject;
 
 import com.littlebigberry.httpfiledownloader.FileDownloader;
@@ -22,6 +23,7 @@ import com.littlebigberry.httpfiledownloader.FileDownloaderDelegate;
 public class Updater implements FileDownloaderDelegate {
 
 	private NotificationPane pane;
+	ProgressIndicator p;
 	
     private double currentVersion, latestVersion;
     private String latestChanges;
@@ -37,6 +39,7 @@ public class Updater implements FileDownloaderDelegate {
         this.latestVersion = changeLog.getJSONObject("current").getDouble("version");
         this.latestChanges = changeLog.getJSONObject("current").getString("changes");
         this.fileLocation = changeLog.getJSONObject("current").getString("url");
+        System.out.println(fileLocation);
         } catch (IOException e) {
         	e.printStackTrace();
         }
@@ -62,15 +65,22 @@ public class Updater implements FileDownloaderDelegate {
 
 		pane.getStyleClass().add(NotificationPane.STYLE_CLASS_DARK);
 		
-		pane.getActions().add(new Action("Changes", event -> 
-			Dialogs.create()
-			.title("Mudanças da versão nova")
-			.message(this.latestChanges)
-			.showInformation()));
+		pane.getActions().add(new Action("Changes", event -> {
+			Alert alert = new Alert(AlertType.INFORMATION);
+			alert.initModality(Modality.NONE);
+			alert.setTitle("Mudanças da versão nova");
+			alert.setHeaderText(null);
+			alert.setContentText(this.latestChanges);
+			alert.show();
+		}));
+			
+
+		System.out.println(Thread.currentThread());
 		
-		pane.getActions().add(new Action("Yes", event -> { 
+		pane.getActions().add(new Action("Yes", event -> {
+			p = new ProgressIndicator();
+			pane.setGraphic(new ProgressIndicator());
 			beginDownload();
-			pane.hide();
 		}));
 		pane.getActions().add(new Action("No", event -> {
 			Alert alert = new Alert(AlertType.CONFIRMATION);
@@ -87,6 +97,8 @@ public class Updater implements FileDownloaderDelegate {
 			
 			pane.hide();
 		}));
+		
+		System.out.println("Hi");
 		pane.show("Do you wish to update from version " + this.currentVersion + " to version " + this.latestVersion + "?");
         
     }
@@ -104,19 +116,26 @@ public class Updater implements FileDownloaderDelegate {
 
     @Override
     public void didStartDownload(FileDownloader fileDownloader) {
+    	pane.setGraphic(p);
     }
 
     @Override
     public void didProgressDownload(FileDownloader fileDownloader) {
-    	System.out.println(fileDownloader.getPercentComplete());
+    	Platform.runLater(() -> {
+    		p.setProgress(Double.valueOf(fileDownloader.getPercentComplete().replace("%", "").replace(",", "."))/100.0);
+    	});
     }
 
     @Override
     public void didFinishDownload(FileDownloader fileDownloader) {
-    	System.out.println(Main.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+		Platform.runLater(() -> {
+			pane.getActions().clear();
+		});
     }
 
     @Override
     public void didFailDownload(FileDownloader fileDownloader) {
+    	System.out.println(fileDownloader.getPercentComplete());
+		System.out.println(Thread.currentThread());
     }
 }
