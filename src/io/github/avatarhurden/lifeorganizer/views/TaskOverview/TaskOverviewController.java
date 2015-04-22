@@ -194,33 +194,33 @@ public class TaskOverviewController {
 		configStage.showAndWait();
 	}
 	
-	public void saveState(Config config) {
-		config.setListProperty("column_order", table.getColumnOrder());
-		config.setListProperty("column_width", table.getColumnWidth(), d -> d.toString());
-		config.setListProperty("column_shown", table.getColumnShown(), b -> b.toString());
-		config.setListProperty("column_sort", table.getColumnSortOrder());
+	public void saveState() {
+		Config.get().setListProperty("column_order", table.getColumnOrder());
+		Config.get().setListProperty("column_width", table.getColumnWidth(), d -> d.toString());
+		Config.get().setListProperty("column_shown", table.getColumnShown(), b -> b.toString());
+		Config.get().setListProperty("column_sort", table.getColumnSortOrder());
 		
-		config.setListProperty("view_split", String.valueOf(splitPane.getDividerPositions()[0]));
+		Config.get().setListProperty("view_split", String.valueOf(splitPane.getDividerPositions()[0]));
 	}
 	
-	public void loadState(Config config) {
-		List<String> colOrder = config.getListProperty("column_order");
+	public void loadState() {
+		List<String> colOrder = Config.get().getListProperty("column_order");
 		if (colOrder != null && !colOrder.isEmpty())
 			table.setColumnOrder(colOrder);
 		
-		List<Double> colWidth = config.getListProperty("column_width", s -> Double.valueOf(s));
+		List<Double> colWidth = Config.get().getListProperty("column_width", s -> Double.valueOf(s));
 		if (colWidth != null && !colWidth.isEmpty())
 			table.setColumnWidth(colWidth);
 		
-		List<Boolean> colShown = config.getListProperty("column_shown", s -> Boolean.valueOf(s));
+		List<Boolean> colShown = Config.get().getListProperty("column_shown", s -> Boolean.valueOf(s));
 		if (colShown != null && !colShown.isEmpty())
 			table.setColumnShown(colShown);
 		
-		List<String> colSort = config.getListProperty("column_sort");
+		List<String> colSort = Config.get().getListProperty("column_sort");
 		if (colSort != null && !colSort.isEmpty())
 			table.setColumnSortOrder(colSort);
 		
-		splitPane.setDividerPosition(0, config.getProperty("view_split", s -> Double.valueOf(s), 0.5d));
+		splitPane.setDividerPosition(0, Config.get().getProperty("view_split", s -> Double.valueOf(s), 0.5d));
 	}
 	
 	@FXML

@@ -14,11 +14,13 @@ import javafx.util.Callback;
 
 public class Config {
 
+	private static final Config config = new Config(new File("config.txt"));
+	
 	private File configFile;
 	private Properties prop;
 //	private Ini apiIni;
 	
-	public Config(File configFile) throws IOException {
+	private Config(File configFile){
 //		try {
 //			apiIni = new Ini(apiFile);
 //		} catch (IOException e) {
@@ -29,7 +31,9 @@ public class Config {
 		try {
 			prop.load(new FileInputStream(configFile));
 		} catch (IOException e) {
-			setDefaults();
+			try {
+				setDefaults();
+			} catch (IOException e1) {}
 		}
 	}
 	
@@ -37,13 +41,22 @@ public class Config {
 		this.configFile = source.configFile;
 		this.prop = source.prop;
 	}
+
+	public static Config get() {
+		return config;
+	}
 	
+	public static void save() {
+		try {
+			config.saveConfig();
+		} catch (IOException e) {}
+	}
 
 	public void restore(Config source) {
 		this.configFile = source.configFile;
 		this.prop = source.prop;
 	}
-
+	
 	private void setDefaults() throws FileNotFoundException, IOException {
 		prop.setProperty("default_folder", new File("data").getAbsolutePath());
 		prop.setProperty("todo_file", "todo.txt");
@@ -163,7 +176,7 @@ public class Config {
 		return objects;
 	}
 	
-	public void save() throws FileNotFoundException, IOException {
+	public void saveConfig() throws FileNotFoundException, IOException {
 		prop.store(new FileOutputStream(configFile), "LifeOrganizer Properties");
 	}
 	

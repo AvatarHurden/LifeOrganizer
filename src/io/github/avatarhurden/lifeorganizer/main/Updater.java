@@ -1,10 +1,16 @@
 package io.github.avatarhurden.lifeorganizer.main;
 
+import io.github.avatarhurden.lifeorganizer.tools.Config;
+
+
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Optional;
+
+
 
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
@@ -13,9 +19,13 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ProgressIndicator;
 import javafx.stage.Modality;
 
+
+
 import org.controlsfx.control.NotificationPane;
 import org.controlsfx.control.action.Action;
 import org.json.JSONObject;
+
+
 
 import com.littlebigberry.httpfiledownloader.FileDownloader;
 import com.littlebigberry.httpfiledownloader.FileDownloaderDelegate;
@@ -56,15 +66,18 @@ public class Updater implements FileDownloaderDelegate {
     }
     
     public void start() {
-//        if (Config.<Boolean>getProperty("ask_for_updates", s -> Boolean.valueOf(s), false)) {
-//            return;
-//        }
+        if (Config.get().<Boolean>getProperty("skip_updates", s -> Boolean.valueOf(s), false))
+            return;
+        
     	if (currentVersion >= latestVersion)
     		return;
 
-//		pane.getStyleClass().add(NotificationPane.STYLE_CLASS_DARK);
-		
-		pane.getActions().add(new Action("Changes", event -> {
+		Platform.runLater(() -> requestUserUpdate());
+        
+    }
+    
+    private void requestUserUpdate() {
+    	pane.getActions().add(new Action("Changes", event -> {
 			Alert alert = new Alert(AlertType.INFORMATION);
 			alert.initModality(Modality.NONE);
 			alert.setTitle("Mudanças da versão nova");
@@ -81,6 +94,7 @@ public class Updater implements FileDownloaderDelegate {
 		pane.getActions().add(new Action("No", event -> {
 			Alert alert = new Alert(AlertType.CONFIRMATION);
 			alert.initModality(Modality.APPLICATION_MODAL);
+			alert.setHeaderText(null);
 			alert.setTitle("Novas atualizações");
 			alert.setContentText("Deseja receber novas atualizações no futuro?");
 			ButtonType sim = new ButtonType("Sim");
@@ -89,13 +103,12 @@ public class Updater implements FileDownloaderDelegate {
 			Optional<ButtonType> result = alert.showAndWait();
 			
 			if (result.get() == nao)
-				System.out.println("no more");
+				Config.get().setProperty("skip_updates", String.valueOf(true));
 			
 			pane.hide();
 		}));
 		
 		pane.show("Do you wish to update from version " + this.currentVersion + " to version " + this.latestVersion + "?");
-        
     }
 
 
@@ -105,7 +118,7 @@ public class Updater implements FileDownloaderDelegate {
     private void beginDownload() {
         FileDownloader fileDownloader = new FileDownloader(this);
         fileDownloader.setUrl(fileLocation);
-        fileDownloader.setLocalLocation("test.jar"); //Main.class.getProtectionDomain().getCodeSource().getLocation().getPath());
+        fileDownloader.setLocalLocation(Main.class.getProtectionDomain().getCodeSource().getLocation().getPath());
         fileDownloader.beginDownload();
     }
 
@@ -124,7 +137,8 @@ public class Updater implements FileDownloaderDelegate {
     @Override
     public void didFinishDownload(FileDownloader fileDownloader) {
 		Platform.runLater(() -> {
-			pane.getActions().clear();
+			pane.setText("Restart the program for the changes to take place");
+			pane.getActions().setAll(new Action("Ok", event -> Main.exit()));
 		});
     }
 

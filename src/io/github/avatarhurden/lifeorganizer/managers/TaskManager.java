@@ -10,14 +10,12 @@ import io.github.avatarhurden.lifeorganizer.tools.StoredList;
 
 public class TaskManager {
 
-	Config config;
 	StoredList<Task> todo, done;
 	
-	public TaskManager(Config config) {
-		this.config = config;
+	public TaskManager() {
 		
-		if (!new File(config.getPropertyAndSave("default_folder", new File("data").getAbsolutePath())).exists())
-			new File(config.getProperty("default_folder")).mkdir();
+		if (!new File(Config.get().getPropertyAndSave("default_folder", new File("data").getAbsolutePath())).exists())
+			new File(Config.get().getProperty("default_folder")).mkdir();
 			
 		todo = new StoredList<Task>(getTodoFile(), false, task -> task.encode(), string -> Task.decode(string), task -> task.EditDateProperty());
 		done = new StoredList<Task>(getDoneFile(), false, task -> task.encode(), string -> Task.decode(string), task -> task.EditDateProperty());
@@ -26,18 +24,18 @@ public class TaskManager {
 	}
 	
 	private File getTodoFile() {
-		String path = config.getPropertyAndSave("todo_file", "todo.txt");
+		String path = Config.get().getPropertyAndSave("todo_file", "todo.txt");
 		if (!new File(path).isAbsolute()) {
-			String folder = config.getProperty("default_folder", "data");
+			String folder = Config.get().getProperty("default_folder", "data");
 			path = new File(folder, path).getAbsolutePath();
 		}
 		return new File(path);
 	}
 	
 	private File getDoneFile() {
-		String path = config.getPropertyAndSave("done_file", "done.txt");
+		String path = Config.get().getPropertyAndSave("done_file", "done.txt");
 		if (!new File(path).isAbsolute()) {
-			String folder = config.getProperty("default_folder", "data");
+			String folder = Config.get().getProperty("default_folder", "data");
 			path = new File(folder, path).getAbsolutePath();
 		}
 		return new File(path);

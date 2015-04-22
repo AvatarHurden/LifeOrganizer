@@ -17,7 +17,7 @@ import io.github.avatarhurden.lifeorganizer.tools.Config;
 	
 public class ConfigViewController {
 	
-	private Config config, oldConfig;
+	private Config oldConfig;
 	
 	private List<Runnable> actions;
 	
@@ -27,15 +27,12 @@ public class ConfigViewController {
 	@FXML
 	private void initialize() {
 		actions = new ArrayList<Runnable>();
-	}
 	
-	public void setConfig(Config config) {
-		this.config = config;
-		this.oldConfig = new Config(config);
+		oldConfig = new Config(Config.get());
 		
-		folderPath.setText(config.getProperty("default_folder"));
-		todoPath.setText(config.getProperty("todo_file"));
-		donePath.setText(config.getProperty("done_file"));
+		folderPath.setText(oldConfig.getProperty("default_folder"));
+		todoPath.setText(oldConfig.getProperty("todo_file"));
+		donePath.setText(oldConfig.getProperty("done_file"));
 	}
 	
 	@FXML
@@ -71,10 +68,10 @@ public class ConfigViewController {
 	
 	@FXML
 	private void apply() throws FileNotFoundException, IOException {
-		config.setProperty("default_folder", folderPath.getText());
-		config.setProperty("todo_file", todoPath.getText());
-		config.setProperty("done_file", donePath.getText());
-		config.save();
+		Config.get().setProperty("default_folder", folderPath.getText());
+		Config.get().setProperty("todo_file", todoPath.getText());
+		Config.get().setProperty("done_file", donePath.getText());
+		Config.save();
 	}
 	
 	@FXML
@@ -87,7 +84,7 @@ public class ConfigViewController {
 	
 	@FXML
 	private void cancel() {
-		config.restore(oldConfig);
+		Config.get().restore(oldConfig);
 		((Stage) folderPath.getScene().getWindow()).close();
 	}
 
