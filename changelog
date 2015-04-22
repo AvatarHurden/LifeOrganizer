@@ -1,8 +1,15 @@
 {
 	"current": 
 	{
-	"url": "",
+	"url": "https://github.com/AvatarHurden/LifeOrganizer/releases/download/0.1/LifeOrganizer-0.1.jar",
 	"version" : 0.1,
-	"changes": "First Version",
+	"changes": "First Version test"
+	},
+	"all versions": [
+	{
+	"url": "https://github.com/AvatarHurden/LifeOrganizer/releases/download/0.1/LifeOrganizer-0.1.jar",
+	"version" : 0.1,
+	"changes": "First Version test"
 	}
+	]
 }
