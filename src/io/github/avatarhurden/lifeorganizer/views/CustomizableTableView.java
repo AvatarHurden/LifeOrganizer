@@ -64,6 +64,7 @@ public class CustomizableTableView<T> extends TableView<T> {
 	}
 	
 	public <S> void addColumn(String name, TableColumn<T, S> column) {
+		column.setText(name);
 		getColumns().add(column);
 		columnList.put(name, column);
 		

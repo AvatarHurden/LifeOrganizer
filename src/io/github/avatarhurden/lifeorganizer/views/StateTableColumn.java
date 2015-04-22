@@ -10,7 +10,7 @@ import javafx.scene.control.TableColumn;
 public class StateTableColumn extends TableColumn<Task, State>{
 	
 	public StateTableColumn() {
-		super("State");
+		super();
 		
 		setCellFactory();
 		setCellValueFactory();
@@ -50,6 +50,7 @@ public class StateTableColumn extends TableColumn<Task, State>{
 					setGraphic(null);
 				} else {
 					CheckBox box = new CheckBox();
+					box.setFocusTraversable(false);
 					box.setAllowIndeterminate(true);
 					
 					box.setIndeterminate(state.equals(Task.State.FAILED));

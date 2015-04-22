@@ -1,5 +1,13 @@
 package io.github.avatarhurden.lifeorganizer.views.SingleTaskView;
 
+import io.github.avatarhurden.lifeorganizer.objects.Context;
+import io.github.avatarhurden.lifeorganizer.objects.Project;
+import io.github.avatarhurden.lifeorganizer.objects.Task;
+import io.github.avatarhurden.lifeorganizer.views.ObjectListView;
+import io.github.avatarhurden.lifeorganizer.views.DueDateView.DueDateViewController;
+
+import java.util.Locale;
+
 import javafx.beans.property.Property;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
@@ -12,15 +20,9 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
-import io.github.avatarhurden.lifeorganizer.objects.Context;
-import io.github.avatarhurden.lifeorganizer.objects.Project;
-import io.github.avatarhurden.lifeorganizer.objects.Task;
 
 import org.joda.time.DateTime;
 import org.ocpsoft.prettytime.PrettyTime;
-
-import io.github.avatarhurden.lifeorganizer.views.ObjectListView;
-import io.github.avatarhurden.lifeorganizer.views.DueDateView.DueDateViewController;
 
 
 public class SingleTaskViewController {
@@ -61,7 +63,7 @@ public class SingleTaskViewController {
 	private void initialize() {
 		
 		editDateListener = (obs, oldValue, newValue) -> {
-			lastEditLabel.setText(new PrettyTime().format(newValue.toDate()));
+			lastEditLabel.setText(new PrettyTime(Locale.US).format(newValue.toDate()));
 		};
 		
 		stateListener = (obs, oldValue, newValue) -> {
@@ -143,7 +145,7 @@ public class SingleTaskViewController {
 		if (this.task != null)
 			this.task.EditDateProperty().removeListener(editDateListener);
 		task.EditDateProperty().addListener(editDateListener);
-		lastEditLabel.setText(new PrettyTime().format(task.getEditDate().toDate()));
+		lastEditLabel.setText(new PrettyTime(Locale.US).format(task.getEditDate().toDate()));
 		
 		projectsView.setList(task.ProjectsProperty());
 		

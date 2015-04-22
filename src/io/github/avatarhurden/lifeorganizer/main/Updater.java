@@ -39,7 +39,6 @@ public class Updater implements FileDownloaderDelegate {
         this.latestVersion = changeLog.getJSONObject("current").getDouble("version");
         this.latestChanges = changeLog.getJSONObject("current").getString("changes");
         this.fileLocation = changeLog.getJSONObject("current").getString("url");
-        System.out.println(fileLocation);
         } catch (IOException e) {
         	e.printStackTrace();
         }
@@ -63,7 +62,7 @@ public class Updater implements FileDownloaderDelegate {
     	if (currentVersion >= latestVersion)
     		return;
 
-		pane.getStyleClass().add(NotificationPane.STYLE_CLASS_DARK);
+//		pane.getStyleClass().add(NotificationPane.STYLE_CLASS_DARK);
 		
 		pane.getActions().add(new Action("Changes", event -> {
 			Alert alert = new Alert(AlertType.INFORMATION);

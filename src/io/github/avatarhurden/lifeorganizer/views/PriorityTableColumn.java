@@ -8,7 +8,7 @@ import javafx.scene.control.TableColumn;
 public class PriorityTableColumn extends TableColumn<Task, Character>{
 	
 	public PriorityTableColumn() {
-		super("Priority");
+		super();
 		
 		setCellFactory();
 		setCellValueFactory();

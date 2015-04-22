@@ -5,12 +5,15 @@ import io.github.avatarhurden.lifeorganizer.objects.Context;
 import io.github.avatarhurden.lifeorganizer.objects.Project;
 import io.github.avatarhurden.lifeorganizer.objects.Task;
 import io.github.avatarhurden.lifeorganizer.tools.Config;
+import io.github.avatarhurden.lifeorganizer.views.ContextsTableColumn;
 import io.github.avatarhurden.lifeorganizer.views.CustomizableTableView;
+import io.github.avatarhurden.lifeorganizer.views.DateTimeTableColumn;
+import io.github.avatarhurden.lifeorganizer.views.NoteTableColumn;
 import io.github.avatarhurden.lifeorganizer.views.PriorityTableColumn;
+import io.github.avatarhurden.lifeorganizer.views.ProjectsTableColumn;
 import io.github.avatarhurden.lifeorganizer.views.StateTableColumn;
 import io.github.avatarhurden.lifeorganizer.views.SingleTaskView.SingleTaskViewController;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javafx.collections.ObservableList;
@@ -21,7 +24,6 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
@@ -98,65 +100,27 @@ public class TaskOverviewController {
 		table.getStylesheets().add("/io/github/avatarhurden/lifeorganizer/views/style.css");
 		
 		table.<Task.State>addColumn("State", new StateTableColumn());
-		table.<DateTime>addColumn("Completion Date", t -> t.CompletionDateProperty(), null,  col -> new DueDateCell());
+		
+		table.<DateTime>addColumn("Completion Date", 
+				new DateTimeTableColumn(t -> t.CompletionDateProperty()));
+		
 		table.<Character>addColumn("Priority", new PriorityTableColumn());
-		table.<DateTime>addColumn("Due Date", t -> t.DueDateProperty(), 
-				(c1, c2) -> c1 == null ? c2 == null ? 0 : 1 : c2 == null ? -1 : c1.compareTo(c2), col -> new DueDateCell());
-		table.<DateTime>addColumn("Creation Date", t -> t.CreationDateProperty(), null, col -> new DueDateCell());
+		
+		table.<DateTime>addColumn("Due Date", 
+				new DateTimeTableColumn(t -> t.DueDateProperty()));
+		
+		table.<DateTime>addColumn("Creation Date", 
+				new DateTimeTableColumn(t -> t.CreationDateProperty()));
+		
 		table.<String>addColumn("Name", t -> t.NameProperty());
-		table.<ObservableList<Context>>addColumn("Contexts", t -> t.ContextsProperty(), null, (event) -> {
-			return new TableCell<Task, ObservableList<Context>>() {
-				protected void updateItem(ObservableList<Context> date, boolean empty) {
-					super.updateItem(date, empty);
-					
-					if (date == null || empty) {
-						setText(null);
-						setStyle("");
-					} else {
-						List<String> strings = new ArrayList<String>();
-						for (Context p : date)
-							strings.add(p.getName());
-			            	
-						setText(String.join(",", strings));
-					}
-				}
-			};
-		});
 		
-		table.<ObservableList<Project>>addColumn("Projects", t -> t.ProjectsProperty(), null, (event) -> {
-			return new TableCell<Task, ObservableList<Project>>() {
-				protected void updateItem(ObservableList<Project> date, boolean empty) {
-					super.updateItem(date, empty);
-					
-					if (date == null || empty) {
-						setText(null);
-						setStyle("");
-					} else {
-						List<String> strings = new ArrayList<String>();
-						for (Project p : date)
-							strings.add(p.getName());
-			            	
-						setText(String.join(",", strings));
-					}
-				}
-			};
-		});
+		table.<ObservableList<Context>>addColumn("Contexts", new ContextsTableColumn());
 		
-		table.<String>addColumn("Note", t -> t.NoteProperty(), null, (event) -> {
-			return new TableCell<Task, String>() {
-				protected void updateItem(String date, boolean empty) {
-					super.updateItem(date, empty);
-					
-					if (date == null || empty) {
-						setText(null);
-						setStyle("");
-					} else {
-						setText(date.split("\n")[0]);
-					}
-				}
-			};
-		});
-		table.<DateTime>addColumn("Edit Date", t -> t.EditDateProperty(), null, col -> new DueDateCell());
+		table.<ObservableList<Project>>addColumn("Projects", new ProjectsTableColumn());
+		
+		table.<String>addColumn("Note", new NoteTableColumn());
+		
+		table.<DateTime>addColumn("Last Edit", new DateTimeTableColumn(t -> t.EditDateProperty()));
 		
 		tablePane.getChildren().clear();
 		tablePane.getChildren().add(table);
@@ -186,7 +150,7 @@ public class TaskOverviewController {
 				protected void updateItem(Task t, boolean empty) {
 					super.updateItem(t, empty);
 					if (t == null || empty) {
-						getStyleClass().remove("table-row-highlight");
+//						getStyleClass().remove("table-row-highlight");
 						return;
 					}
 					
@@ -194,10 +158,10 @@ public class TaskOverviewController {
 					item.setOnAction(event -> table.getItems().remove(table.getSelectionModel().getSelectedItem()));
 					setContextMenu(new ContextMenu(item));
 					
-					if (t.getDueDate() != null && t.getDueDate().isAfterNow())
-						getStyleClass().add("table-row-highlight");
-					else
-						getStyleClass().remove("table-row-highlight");
+//					if (t.getDueDate() != null && t.getDueDate().isAfterNow())
+//						getStyleClass().add("table-row-highlight");
+//					else
+//						getStyleClass().remove("table-row-highlight");
 				}
 			};
 		});
@@ -280,18 +244,5 @@ public class TaskOverviewController {
 			default:
 				break;
 			}
-	}
-	
-	private class DueDateCell extends TableCell<Task, DateTime> {
-		protected void updateItem(DateTime date, boolean empty) {
-			super.updateItem(date, empty);
-
-			if (date == null || empty) {
-				setText(null);
-				setStyle("");
-			} else {
-				setText(date.toString("YYYY.MM.dd@HH:mm"));
-			}
-		}
 	}
 }		
