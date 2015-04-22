@@ -31,10 +31,6 @@ public class CustomizableTableView<T> extends TableView<T> {
 			if (event.getCode().equals(KeyCode.DELETE))
 				getItems().remove(getSelectionModel().getSelectedItem());
 		});
-		
-		MenuItem item = new MenuItem("Deletar");
-		item.setOnAction(event -> getItems().remove(getSelectionModel().getSelectedItem()));
-		setContextMenu(new ContextMenu(item));
 	}
 	
 	public <S> void addColumn(String name) {
@@ -62,6 +58,14 @@ public class CustomizableTableView<T> extends TableView<T> {
 			column.setCellFactory(cellFactory);
 		if (comparator != null)
 			column.setComparator(comparator);
+		
+		menu.getItems().add(createColumnMenuItem(column.getText(), column));
+		column.setContextMenu(menu);
+	}
+	
+	public <S> void addColumn(String name, TableColumn<T, S> column) {
+		getColumns().add(column);
+		columnList.put(name, column);
 		
 		menu.getItems().add(createColumnMenuItem(column.getText(), column));
 		column.setContextMenu(menu);

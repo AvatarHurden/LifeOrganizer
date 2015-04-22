@@ -6,6 +6,8 @@ import io.github.avatarhurden.lifeorganizer.objects.Project;
 import io.github.avatarhurden.lifeorganizer.objects.Task;
 import io.github.avatarhurden.lifeorganizer.tools.Config;
 import io.github.avatarhurden.lifeorganizer.views.CustomizableTableView;
+import io.github.avatarhurden.lifeorganizer.views.PriorityTableColumn;
+import io.github.avatarhurden.lifeorganizer.views.StateTableColumn;
 import io.github.avatarhurden.lifeorganizer.views.SingleTaskView.SingleTaskViewController;
 
 import java.util.ArrayList;
@@ -15,6 +17,8 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableCell;
@@ -93,9 +97,9 @@ public class TaskOverviewController {
 		table = new CustomizableTableView<Task>();
 		table.getStylesheets().add("/io/github/avatarhurden/lifeorganizer/views/style.css");
 		
-		table.<Task.State>addColumn("State", t -> t.StateProperty());
+		table.<Task.State>addColumn("State", new StateTableColumn());
 		table.<DateTime>addColumn("Completion Date", t -> t.CompletionDateProperty(), null,  col -> new DueDateCell());
-		table.<Character>addColumn("Priority", t -> t.PriorityProperty(), (c1, c2) -> c1 == null ? c2 == null ? 0 : 1 : c2 == null ? -1 : c1.compareTo(c2));
+		table.<Character>addColumn("Priority", new PriorityTableColumn());
 		table.<DateTime>addColumn("Due Date", t -> t.DueDateProperty(), 
 				(c1, c2) -> c1 == null ? c2 == null ? 0 : 1 : c2 == null ? -1 : c1.compareTo(c2), col -> new DueDateCell());
 		table.<DateTime>addColumn("Creation Date", t -> t.CreationDateProperty(), null, col -> new DueDateCell());
@@ -179,9 +183,16 @@ public class TaskOverviewController {
 		table.setRowFactory(table -> {
 			return new TableRow<Task>() {
 				@Override
-				protected void 	updateItem(Task t, boolean empty) {
+				protected void updateItem(Task t, boolean empty) {
 					super.updateItem(t, empty);
-					if (t == null || empty) return;
+					if (t == null || empty) {
+						getStyleClass().remove("table-row-highlight");
+						return;
+					}
+					
+					MenuItem item = new MenuItem("Deletar");
+					item.setOnAction(event -> table.getItems().remove(table.getSelectionModel().getSelectedItem()));
+					setContextMenu(new ContextMenu(item));
 					
 					if (t.getDueDate() != null && t.getDueDate().isAfterNow())
 						getStyleClass().add("table-row-highlight");

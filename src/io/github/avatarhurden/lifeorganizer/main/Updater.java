@@ -74,9 +74,6 @@ public class Updater implements FileDownloaderDelegate {
 			alert.show();
 		}));
 			
-
-		System.out.println(Thread.currentThread());
-		
 		pane.getActions().add(new Action("Yes", event -> {
 			p = new ProgressIndicator();
 			pane.setGraphic(new ProgressIndicator());
@@ -98,7 +95,6 @@ public class Updater implements FileDownloaderDelegate {
 			pane.hide();
 		}));
 		
-		System.out.println("Hi");
 		pane.show("Do you wish to update from version " + this.currentVersion + " to version " + this.latestVersion + "?");
         
     }
@@ -135,7 +131,5 @@ public class Updater implements FileDownloaderDelegate {
 
     @Override
     public void didFailDownload(FileDownloader fileDownloader) {
-    	System.out.println(fileDownloader.getPercentComplete());
-		System.out.println(Thread.currentThread());
     }
 }
