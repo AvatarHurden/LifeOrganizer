@@ -62,6 +62,8 @@ public class SingleTaskViewController {
 	@FXML
 	private void initialize() {
 		
+		noteArea.setWrapText(true);
+		
 		editDateListener = (obs, oldValue, newValue) -> {
 			lastEditLabel.setText(new PrettyTime(Locale.US).format(newValue.toDate()));
 		};

@@ -1,5 +1,7 @@
 package io.github.avatarhurden.lifeorganizer.views.DueDateView;
 
+import io.github.avatarhurden.lifeorganizer.objects.DueDate;
+
 import java.time.LocalDate;
 
 import javafx.beans.property.Property;
@@ -9,7 +11,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.input.KeyCode;
 
-import org.joda.time.DateTime;
 import org.joda.time.MutableDateTime;
 
 
@@ -22,7 +23,7 @@ public class DueDateViewController {
 	@FXML
 	private Slider hourSlider, minuteSlider;
 	
-	private Property<DateTime> timeProperty;
+	private Property<DueDate> timeProperty;
 	
 	@FXML
 	private void initialize() {
@@ -43,14 +44,16 @@ public class DueDateViewController {
 			setTimeEnabled(newValue != null);
 			
 			if (newValue == null)
-				timeProperty.setValue(null);
+				timeProperty.getValue().setDateTime(null);
 			else {
 				MutableDateTime t = new MutableDateTime(newValue.toString());
 				
-				t.setHourOfDay(timeProperty.getValue() == null ? 0 : timeProperty.getValue().getHourOfDay());
-				t.setMinuteOfHour(timeProperty.getValue() == null ? 0 : timeProperty.getValue().getMinuteOfHour());
+				t.setHourOfDay(timeProperty.getValue() == null ? 
+						0 : timeProperty.getValue().getDateTime().getHourOfDay());
+				t.setMinuteOfHour(timeProperty.getValue() == null ? 
+						0 : timeProperty.getValue().getDateTime().getMinuteOfHour());
 					
-				timeProperty.setValue(t.toDateTime());
+				timeProperty.getValue().setDateTime(t.toDateTime());
 			}
 		});
 		
@@ -64,14 +67,30 @@ public class DueDateViewController {
 		minuteSlider.setBlockIncrement(5);
 		minuteSlider.setMax(59);
 		
+		hourSlider.setOnMouseClicked(event -> {
+			if (hourSlider.isDisabled() && !timeProperty.getValue().getHasTime()) {
+				setTimeEnabled(true);
+				timeProperty.getValue().setHasTime(true);
+			}
+		});
+
+		minuteSlider.setOnMouseClicked(event -> {
+			if (minuteSlider.isDisabled() && !timeProperty.getValue().getHasTime()) {
+				setTimeEnabled(true);
+				timeProperty.getValue().setHasTime(true);
+			}
+		});
+		
 		hourSlider.valueProperty().addListener((obs, oldValue, newValue) -> {
 			if (timeProperty != null && timeProperty.getValue() != null)
-				timeProperty.setValue(timeProperty.getValue().hourOfDay().setCopy(newValue.intValue()));
+				timeProperty.getValue().setDateTime(
+						timeProperty.getValue().getDateTime().hourOfDay().setCopy(newValue.intValue()));
 		});
 	
 		minuteSlider.valueProperty().addListener((obs, oldValue, newValue) -> {
 			if (timeProperty != null && timeProperty.getValue() != null)
-				timeProperty.setValue(timeProperty.getValue().minuteOfHour().setCopy(newValue.intValue()));
+				timeProperty.getValue().setDateTime(
+						timeProperty.getValue().getDateTime().minuteOfHour().setCopy(newValue.intValue()));
 		});
 		
 		// Changes the text on the label to show the selected time
@@ -82,7 +101,7 @@ public class DueDateViewController {
 		
 	}
 	
-	public void setTimeProperty(Property<DateTime> timeProperty) {
+	public void setTimeProperty(Property<DueDate> timeProperty) {
 		this.timeProperty = null; // Allows to edit the nodes without editing the time property
 		if (timeProperty.getValue() == null) {
 			// If task has no due date, resets the Nodes
@@ -93,11 +112,11 @@ public class DueDateViewController {
 			this.timeProperty = timeProperty;
 			return;
 		} else
-			setTimeEnabled(true);
+			setTimeEnabled(timeProperty.getValue().getHasTime());
 		
-		datePicker.setValue(LocalDate.parse(timeProperty.getValue().toString("YYYY-MM-dd"))); // LocalDate parse only accepts this format
-		hourSlider.setValue(timeProperty.getValue().getHourOfDay());
-		minuteSlider.setValue(timeProperty.getValue().getMinuteOfHour());
+		datePicker.setValue(LocalDate.parse(timeProperty.getValue().getDateTime().toString("YYYY-MM-dd"))); // LocalDate parse only accepts this format
+		hourSlider.setValue(timeProperty.getValue().getDateTime().getHourOfDay());
+		minuteSlider.setValue(timeProperty.getValue().getDateTime().getMinuteOfHour());
 		this.timeProperty = timeProperty;
 	}
 	

@@ -48,7 +48,7 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 	
 	private String note;
 	
-	private DateTime dueDate;
+	private DueDate dueDate;
 	
 	private DateTime creationDate;
 	private DateTime editDate;
@@ -58,7 +58,7 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 	private Property<State> stateProperty;
 	private Property<String> nameProperty;
 	private Property<Character> priorityProperty;
-	private Property<DateTime> dueDateProperty;
+	private Property<DueDate> dueDateProperty;
 	private Property<DateTime> creationDateProperty;
 	private Property<DateTime> completionDateProperty;
 	private Property<String> noteProperty;
@@ -106,13 +106,16 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		matcher = pattern.matcher(s);
 		if (matcher.find()) {
 			if (matcher.group(1).length() == 0)
-				setDueDate(null);
+				setDueDate(new DueDate(null, false));
 			else {	
 				HashMap<String, Integer> defaults = new HashMap<String, Integer>();
-				if (!matcher.group(1).contains("@"))
-					defaults.put("H", 0);
 				defaults.put("m", 0);
-				setDueDate(DateUtils.parseMultiFormat(matcher.group(1), defaults));
+				
+				DueDate dueDate = new DueDate();
+				dueDate.setHasTime(matcher.group(1).contains("@"));
+				dueDate.setDateTime(DateUtils.parseMultiFormat(matcher.group(1), defaults));
+				
+				setDueDate(dueDate);
 			}
 			s = s.replace(matcher.group(), "");
 		}
@@ -178,7 +181,8 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		Pattern dueP = Pattern.compile("DUE=(\\S*) ");
 		Matcher dueM = dueP.matcher(s);	
 		if (dueM.find())
-			t.dueDate = DateUtils.parseDateTime(dueM.group(1), "yyyy.MM.dd@HH:mm");
+			t.dueDate = new DueDate(DateUtils.parseDateTime(
+					dueM.group(1), "yyyy.MM.dd@HH:mm", "yyyy.MM.dd"), dueM.group(1).contains("@"));
 		
 		// Defining projects
 		Pattern projP = Pattern.compile("PROJS=(\\S*) ");
@@ -245,8 +249,11 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 			parts.add(String.format("(%c)", priority));
 		
 		if (dueDate != null)
-			parts.add("DUE=" + DateUtils.format(dueDate, "yyyy.MM.dd@HH:mm"));
-		
+			if (dueDate.getHasTime())
+				parts.add("DUE=" + DateUtils.format(dueDate.getDateTime(), "yyyy.MM.dd@HH:mm"));
+			else
+				parts.add("DUE=" + DateUtils.format(dueDate.getDateTime(), "yyyy.MM.dd"));
+				
 		parts.add("MADE=" + DateUtils.format(creationDate, "yyyy.MM.dd@HH:mm"));
 		
 		parts.add("NAME=\"" + name.replace("\"", "\\\"") + "\"");
@@ -292,9 +299,9 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		return priorityProperty;
 	}
 	
-	public Property<DateTime> DueDateProperty() {
+	public Property<DueDate> DueDateProperty() {
 		if (dueDateProperty == null)
-			dueDateProperty = new TaskObjectProperty<DateTime>("dueDate").get();
+			dueDateProperty = new TaskObjectProperty<DueDate>("dueDate").get();
 		return dueDateProperty;
 	}
 	
@@ -484,12 +491,12 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		return note;
 	}
 	
-	public void setDueDate(DateTime dueDate) {
+	public void setDueDate(DueDate dueDate) {
 		setEditDateIfDifferent(this.dueDate, dueDate);
 		this.dueDate = dueDate;
 	}
 	
-	public DateTime getDueDate() {
+	public DueDate getDueDate() {
 		return dueDate;
 	}
 	

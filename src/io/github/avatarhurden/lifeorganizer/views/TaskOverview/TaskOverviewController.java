@@ -2,12 +2,14 @@ package io.github.avatarhurden.lifeorganizer.views.TaskOverview;
 
 import io.github.avatarhurden.lifeorganizer.managers.TaskManager;
 import io.github.avatarhurden.lifeorganizer.objects.Context;
+import io.github.avatarhurden.lifeorganizer.objects.DueDate;
 import io.github.avatarhurden.lifeorganizer.objects.Project;
 import io.github.avatarhurden.lifeorganizer.objects.Task;
 import io.github.avatarhurden.lifeorganizer.tools.Config;
 import io.github.avatarhurden.lifeorganizer.views.ContextsTableColumn;
 import io.github.avatarhurden.lifeorganizer.views.CustomizableTableView;
 import io.github.avatarhurden.lifeorganizer.views.DateTimeTableColumn;
+import io.github.avatarhurden.lifeorganizer.views.DueDateTableColumn;
 import io.github.avatarhurden.lifeorganizer.views.NoteTableColumn;
 import io.github.avatarhurden.lifeorganizer.views.PriorityTableColumn;
 import io.github.avatarhurden.lifeorganizer.views.ProjectsTableColumn;
@@ -106,8 +108,7 @@ public class TaskOverviewController {
 		
 		table.<Character>addColumn("Priority", new PriorityTableColumn());
 		
-		table.<DateTime>addColumn("Due Date", 
-				new DateTimeTableColumn(t -> t.DueDateProperty()));
+		table.<DueDate>addColumn("Due Date", new DueDateTableColumn());
 		
 		table.<DateTime>addColumn("Creation Date", 
 				new DateTimeTableColumn(t -> t.CreationDateProperty()));

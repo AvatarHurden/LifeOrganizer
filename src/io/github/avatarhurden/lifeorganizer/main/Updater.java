@@ -49,9 +49,7 @@ public class Updater implements FileDownloaderDelegate {
         this.latestVersion = changeLog.getJSONObject("current").getDouble("version");
         this.latestChanges = changeLog.getJSONObject("current").getString("changes");
         this.fileLocation = changeLog.getJSONObject("current").getString("url");
-        } catch (IOException e) {
-        	e.printStackTrace();
-        }
+        } catch (IOException e) {}
         
     }
 
