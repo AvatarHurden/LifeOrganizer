@@ -4,12 +4,18 @@ import io.github.avatarhurden.lifeorganizer.objects.DueDate;
 
 import java.time.LocalDate;
 
+import javafx.animation.FadeTransition;
 import javafx.beans.property.Property;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.util.Duration;
 
 import org.joda.time.MutableDateTime;
 
@@ -21,12 +27,24 @@ public class DueDateViewController {
 	@FXML
 	private Label timeLabel;
 	@FXML
-	private Slider hourSlider, minuteSlider;
+	private Slider hourSlider, minuteSlider;	
+	
+	@FXML
+	private HBox timeBox, closeHBox, dueDateBox;
+	@FXML
+	private StackPane buttonPane;
+	@FXML
+	private Button closeButton;
 	
 	private Property<DueDate> timeProperty;
+	private boolean timeEnabled;
 	
 	@FXML
 	private void initialize() {
+		
+		timeBox.managedProperty().bind(timeBox.visibleProperty());
+		buttonPane.managedProperty().bind(buttonPane.visibleProperty());
+		
 		// Allows to cycle through days with the keyboard
 		datePicker.getEditor().setOnKeyPressed((event) -> {
 			if (datePicker.getEditor().getText().equals("") && (event.getCode().equals(KeyCode.UP) || event.getCode().equals(KeyCode.DOWN)))
@@ -41,10 +59,8 @@ public class DueDateViewController {
 			if (timeProperty == null)
 				return;
 			
-			setTimeEnabled(newValue != null);
-			
 			if (newValue == null)
-				timeProperty.getValue().setDateTime(null);
+				timeProperty.setValue(null);
 			else {
 				MutableDateTime t = new MutableDateTime(newValue.toString());
 				
@@ -53,8 +69,11 @@ public class DueDateViewController {
 				t.setMinuteOfHour(timeProperty.getValue() == null ? 
 						0 : timeProperty.getValue().getDateTime().getMinuteOfHour());
 					
-				timeProperty.getValue().setDateTime(t.toDateTime());
+				timeProperty.setValue(new DueDate(t.toDateTime(), timeBox.isVisible()));
 			}
+			
+			setTimeEnabled(timeProperty.getValue().getHasTime());
+			
 		});
 		
 		hourSlider.setSnapToTicks(true);
@@ -83,22 +102,35 @@ public class DueDateViewController {
 		
 		hourSlider.valueProperty().addListener((obs, oldValue, newValue) -> {
 			if (timeProperty != null && timeProperty.getValue() != null)
-				timeProperty.getValue().setDateTime(
-						timeProperty.getValue().getDateTime().hourOfDay().setCopy(newValue.intValue()));
+				timeProperty.setValue(new DueDate(
+						timeProperty.getValue().getDateTime().hourOfDay().setCopy(newValue.intValue()), true));
 		});
 	
 		minuteSlider.valueProperty().addListener((obs, oldValue, newValue) -> {
 			if (timeProperty != null && timeProperty.getValue() != null)
-				timeProperty.getValue().setDateTime(
-						timeProperty.getValue().getDateTime().minuteOfHour().setCopy(newValue.intValue()));
+				timeProperty.setValue(new DueDate(
+						timeProperty.getValue().getDateTime().minuteOfHour().setCopy(newValue.intValue()), true));
 		});
 		
 		// Changes the text on the label to show the selected time
-		hourSlider.valueProperty().addListener((event) -> 
-			timeLabel.setText(String.format("%02d:%02d", hourSlider.valueProperty().intValue(), minuteSlider.valueProperty().intValue())));
-		minuteSlider.valueProperty().addListener((event) -> 
-			timeLabel.setText(String.format("%02d:%02d", hourSlider.valueProperty().intValue(), minuteSlider.valueProperty().intValue())));
+		hourSlider.valueProperty().addListener((obs, oldValue, newValue) -> 
+			timeLabel.setText(String.format("%02d", newValue.intValue()) + timeLabel.getText().substring(2)));
+		minuteSlider.valueProperty().addListener((obs, oldValue, newValue) -> 
+			timeLabel.setText(timeLabel.getText().substring(0, 2) + String.format(":%02d", newValue.intValue())));
 		
+		Region clearButton = new Region();
+		clearButton.getStylesheets().add("/io/github/avatarhurden/lifeorganizer/views/style.css");
+        clearButton.getStyleClass().addAll("graphic");
+        
+        StackPane clearButtonPane = new StackPane(clearButton);
+        
+        clearButtonPane.getStyleClass().addAll("clear-button");
+        clearButtonPane.setOpacity(1.0);
+        clearButtonPane.setOnMouseReleased(e -> setTimeEnabled(false));
+        
+        closeHBox.getChildren().add(0, clearButtonPane);
+        
+		setTimeEnabled(true); // Just to set the layout correctly
 	}
 	
 	public void setTimeProperty(Property<DueDate> timeProperty) {
@@ -112,7 +144,7 @@ public class DueDateViewController {
 			this.timeProperty = timeProperty;
 			return;
 		} else
-			setTimeEnabled(timeProperty.getValue().getHasTime());
+			setTimeEnabled(timeProperty.getValue() == null ? false : timeProperty.getValue().getHasTime());
 		
 		datePicker.setValue(LocalDate.parse(timeProperty.getValue().getDateTime().toString("YYYY-MM-dd"))); // LocalDate parse only accepts this format
 		hourSlider.setValue(timeProperty.getValue().getDateTime().getHourOfDay());
@@ -121,9 +153,45 @@ public class DueDateViewController {
 	}
 	
 	private void setTimeEnabled(boolean enabled) {
-		hourSlider.setDisable(!enabled);
-		minuteSlider.setDisable(!enabled);
-		timeLabel.setText(enabled ? "00:00" : "");
+		if (enabled == this.timeEnabled)
+			return;
+		
+		FadeTransition timeBoxFader = new FadeTransition(Duration.millis(350), timeBox);
+		timeBoxFader.setCycleCount(1);
+		timeBoxFader.setFromValue(enabled ? 0.0 : 1.0);
+		timeBoxFader.setToValue(enabled ? 1.0 : 0.0);
+		
+		FadeTransition buttonPaneFader = new FadeTransition(Duration.millis(350), buttonPane);
+		buttonPaneFader.setCycleCount(1);
+		buttonPaneFader.setFromValue(!enabled ? 0.0 : 1.0);
+		buttonPaneFader.setToValue(!enabled ? 1.0 : 0.0);
+
+		buttonPaneFader.play();
+		timeBoxFader.play();
+
+		timeBox.setVisible(enabled);
+		buttonPane.setVisible(!enabled);
+		
+		if (timeProperty != null && timeProperty.getValue() != null)
+			timeProperty.setValue(new DueDate(timeProperty.getValue().getDateTime(), enabled));
+		
+		timeLabel.setText("00:00");
+		if (enabled)
+			hourSlider.requestFocus();
+		else {
+			hourSlider.setValue(0);
+			minuteSlider.setValue(0);
+		}
+		this.timeEnabled = enabled;
 	}
 	
+	@FXML
+	private void enableTime() {
+		setTimeEnabled(true);
+	}
+
+	@FXML
+	private void disableTime() {
+		setTimeEnabled(false);
+	}
 }

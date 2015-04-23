@@ -116,6 +116,7 @@ public class SingleTaskViewController {
 		projectsView = new ObjectListView<Project>(s -> s.length() > 0 ? new Project(s) : null,
 				p -> p.NameProperty());
 		projectsView.setPromptText("Add Project");
+		projectsView.setMaxWidth(Double.MAX_VALUE);
 		
 		projectsBox.getChildren().add(projectsView);
 		
@@ -150,8 +151,10 @@ public class SingleTaskViewController {
 		lastEditLabel.setText(new PrettyTime(Locale.US).format(task.getEditDate().toDate()));
 		
 		projectsView.setList(task.ProjectsProperty());
+		projectsView.clearTextField();
 		
 		contextsView.setList(task.ContextsProperty());
+		contextsView.clearTextField();
 		
 		if (this.task != null)
 			nameTextField.textProperty().unbindBidirectional(this.task.NameProperty());

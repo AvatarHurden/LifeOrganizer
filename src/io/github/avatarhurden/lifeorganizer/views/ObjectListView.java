@@ -1,14 +1,20 @@
 package io.github.avatarhurden.lifeorganizer.views;
 
+import javafx.animation.FadeTransition;
 import javafx.beans.property.Property;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
-import javafx.scene.control.ContextMenu;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.util.Duration;
+
+import org.controlsfx.control.textfield.TextFields;
 
 public class ObjectListView<T> extends HBox {
 
@@ -45,9 +51,10 @@ public class ObjectListView<T> extends HBox {
 	}
 	
 	private void initialize() {
-		textField = new TextField();
+		textField = TextFields.createClearableTextField();
 	
 		HBox.setMargin(textField, new Insets(0, 5, 0, 5));
+		setAlignment(Pos.CENTER_LEFT);
 		
 		textField.setOnAction((event) -> {
 				T object = instantiator.newInstance(textField.getText());
@@ -61,28 +68,48 @@ public class ObjectListView<T> extends HBox {
 	}
 	
 	private void addLabel(T object) {
-		Label label = new Label();
-		label.setFocusTraversable(true);
-		label.setOnMousePressed((event) -> {
+		HBox itemBox = new HBox(0);
+		
+		itemBox.setFocusTraversable(true);
+		itemBox.setOnMousePressed((event) -> {
 			event.consume();
-			label.requestFocus();
+			itemBox.requestFocus();
 		});
-		label.getStyleClass().add("objectlistLabel");
-		label.textProperty().bindBidirectional(property.getProperty(object));
-		
-		MenuItem item = new MenuItem("Delete");
-		item.setOnAction((value) -> {
-			getChildren().remove(label);
-			objects.getValue().remove(object);
-		});
-		label.setContextMenu(new ContextMenu(item));
 
-		getChildren().add(objects.getValue().indexOf(object), label);
+		itemBox.getStyleClass().add("object-box");
 		
+		Label label = new Label();
+		label.textProperty().bindBidirectional(property.getProperty(object));
 		label.setPrefHeight(25);
+		HBox.setMargin(label, new Insets(0, 5, 0, 0));
+        itemBox.getChildren().add(label);
 		
-		label.setPadding(new Insets(0, 5, 0, 5));
-		HBox.setMargin(label, new Insets(0, 5, 0, 5));
+		Region clearButton = new Region();
+        clearButton.getStyleClass().addAll("graphic");
+        
+        StackPane clearButtonPane = new StackPane(clearButton);
+        clearButtonPane.getStyleClass().addAll("clear-button");
+        clearButtonPane.setOnMouseReleased(event -> {
+        	fadeObject(itemBox, false).setOnFinished(finished -> getChildren().remove(itemBox));
+			objects.getValue().remove(object);
+        });
+        clearButtonPane.visibleProperty().bind(itemBox.hoverProperty());
+
+        itemBox.getChildren().add(clearButtonPane);
+		
+		getChildren().add(objects.getValue().indexOf(object), itemBox);
+    	fadeObject(itemBox, true);
+		HBox.setMargin(itemBox, new Insets(0, 5, 0, 5));
+		
+		itemBox.hoverProperty().addListener((obs, oldValue, newValue) -> fadeObject(clearButtonPane, newValue));
+	}
+	
+	private FadeTransition fadeObject(Node object, boolean toVisible) {
+		FadeTransition fader = new FadeTransition(Duration.millis(350), object);
+		fader.setFromValue(toVisible ? 0.0 : 1.0);
+		fader.setToValue(toVisible ? 1.0 : 0.0);
+		fader.play();
+		return fader;
 	}
 	
 	public interface Constructor<T> {
@@ -91,6 +118,10 @@ public class ObjectListView<T> extends HBox {
 	
 	public interface StringPropertyGetter<T> {
 		public Property<String> getProperty(T object);
+	}
+
+	public void clearTextField() {
+		textField.clear();
 	}
 	
 }

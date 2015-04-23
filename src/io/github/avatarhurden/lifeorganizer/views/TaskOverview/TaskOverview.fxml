@@ -13,7 +13,7 @@
           <AnchorPane fx:id="tablePane" minHeight="0.0" minWidth="0.0" prefHeight="239.0" prefWidth="978.0" />
             <AnchorPane>
                <children>
-                  <ScrollPane fx:id="mainPane" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                  <ScrollPane fx:id="mainPane" fitToHeight="true" fitToWidth="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
                </children>
             </AnchorPane>
         </items>

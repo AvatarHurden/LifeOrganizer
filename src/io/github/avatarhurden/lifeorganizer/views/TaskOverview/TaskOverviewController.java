@@ -18,6 +18,7 @@ import io.github.avatarhurden.lifeorganizer.views.SingleTaskView.SingleTaskViewC
 
 import java.util.List;
 
+import javafx.animation.FadeTransition;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -34,6 +35,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import org.controlsfx.control.StatusBar;
 import org.joda.time.DateTime;
@@ -60,7 +62,8 @@ public class TaskOverviewController {
 	private AnchorPane statusBox, notificationBox;
 	private StatusBar statusBar;
 	
-	private SingleTaskViewController controller;
+	private SingleTaskViewController taskViewController;
+	private AnchorPane taskView;
 	
 	private TaskManager manager;
 	private Stage configStage;
@@ -132,16 +135,25 @@ public class TaskOverviewController {
 		
 		table.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, newValue) -> {
 			if (newValue != null) {
-				if (controller == null) {
+				if (taskView == null) {
 					FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/github/avatarhurden/lifeorganizer/views/SingleTaskView/SingleTaskView.fxml"));
 					try {
-						mainPane.setContent(loader.load());
-						controller = loader.<SingleTaskViewController>getController();
+						taskView = loader.load();
+						mainPane.setContent(taskView);
+						taskViewController = loader.<SingleTaskViewController>getController();
 					} catch (Exception e) {
 						e.printStackTrace();
 					}
 				}
-				controller.setTask(newValue);
+				FadeTransition fader = new FadeTransition(Duration.millis(350), taskView);
+				fader.setCycleCount(1);
+				fader.setFromValue(0.0);
+				fader.setToValue(1.0);
+				
+				taskView.setOpacity(0);
+				taskViewController.setTask(newValue);
+				
+				fader.play();
 			}
 		});
 		

@@ -4,6 +4,7 @@ import io.github.avatarhurden.lifeorganizer.objects.DueDate;
 import io.github.avatarhurden.lifeorganizer.objects.Task;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.Tooltip;
 
 public class DueDateTableColumn extends TableColumn<Task, DueDate>{
 	
@@ -39,8 +40,7 @@ public class DueDateTableColumn extends TableColumn<Task, DueDate>{
 					setStyle("");
 				} else {
 					setText(date.getPrettyTime());
-//					setTooltip(new Tooltip(date.toString(
-//							date.getMinuteOfDay() == 0 ? "dd/MM/YYYY" : "dd/MM/YYYY HH:mm")));
+					setTooltip(new Tooltip(date.getDateTime().toString("dd/MM/YYYY")));
 //					setAlignment(Pos.CENTER);
 				}
 			}

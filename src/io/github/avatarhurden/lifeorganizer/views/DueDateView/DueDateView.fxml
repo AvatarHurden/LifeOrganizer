@@ -1,22 +1,61 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.text.*?>
+<?import javafx.scene.paint.*?>
 <?import java.lang.*?>
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<VBox fx:id="dueDateBox" prefHeight="112.0" prefWidth="120.0" style="-fx-border-color: lightgray; -fx-border-image-width: 2; -fx-border-radius: 6; -fx-padding: 4;" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.avatarhurden.lifeorganizer.views.DueDateView.DueDateViewController">
+
+<HBox fx:id="dueDateBox" alignment="CENTER" prefHeight="45.0" spacing="5.0" style="-fx-border-radius: 6; -fx-border-color: lightgrey;" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.avatarhurden.lifeorganizer.views.DueDateView.DueDateViewController">
    <children>
-      <DatePicker fx:id="datePicker" promptText="dd/mm/yyyy" />
-      <Label fx:id="timeLabel" alignment="CENTER" contentDisplay="CENTER" prefHeight="17.0" prefWidth="112.0">
-         <VBox.margin>
-            <Insets bottom="10.0" top="10.0" />
-         </VBox.margin></Label>
-      <Slider fx:id="hourSlider" />
-      <Slider fx:id="minuteSlider" />
+      <DatePicker fx:id="datePicker" prefHeight="25.0" prefWidth="110.0" promptText="dd/mm/yyyy">
+         <opaqueInsets>
+            <Insets />
+         </opaqueInsets>
+      </DatePicker>
+      <Separator orientation="VERTICAL" prefHeight="200.0">
+         <HBox.margin>
+            <Insets left="5.0" />
+         </HBox.margin>
+      </Separator>
+      <HBox fx:id="timeBox" prefHeight="6.0" prefWidth="234.0">
+         <HBox.margin>
+            <Insets />
+         </HBox.margin>
+         <children>
+            <HBox fx:id="closeHBox">
+               <HBox.margin>
+                  <Insets />
+               </HBox.margin>
+               <children>
+                  <Label fx:id="timeLabel" alignment="CENTER" contentDisplay="CENTER" prefHeight="43.0" prefWidth="80.0" text=" " />
+               </children>
+            </HBox>
+            <VBox spacing="5.0">
+               <children>
+                  <Slider fx:id="hourSlider" />
+                  <Slider fx:id="minuteSlider" prefHeight="14.0" prefWidth="101.0" />
+               </children>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </VBox>
+         </children>
+      </HBox>
+      <StackPane fx:id="buttonPane" maxHeight="-Infinity" minHeight="43.0" prefHeight="43.0" prefWidth="100.0">
+         <children>
+            <Button fx:id="addTimeButton" mnemonicParsing="false" onAction="#enableTime" text="Set Time">
+               <StackPane.margin>
+                  <Insets right="8.0" />
+               </StackPane.margin>
+            </Button>
+         </children>
+      </StackPane>
    </children>
-   <opaqueInsets>
-      <Insets />
-   </opaqueInsets>
-</VBox>
+   <padding>
+      <Insets left="5.0" />
+   </padding>
+</HBox>
