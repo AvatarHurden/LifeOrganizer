@@ -194,12 +194,16 @@ public class TaskOverviewController {
 	
 	@FXML
 	private void showTodo() {
+		List<String> sorts = table.getColumnSortOrder();
 		table.setItems(manager.getTodoList());
+		table.setColumnSortOrder(sorts);
 	}
 	
 	@FXML
 	private void showDone() {
+		List<String> sorts = table.getColumnSortOrder();
 		table.setItems(manager.getDoneList());
+		table.setColumnSortOrder(sorts);
 	}
 
 	@FXML
