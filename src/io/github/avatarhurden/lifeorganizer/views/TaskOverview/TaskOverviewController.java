@@ -182,9 +182,11 @@ public class TaskOverviewController {
 	
 	@FXML
 	private void click() {
-		manager.addTask(new Task(textField.getText()));
+		Task t = new Task(textField.getText());
+		manager.addTask(t);
 		table.sort();
 		textField.setText("");
+		table.getSelectionModel().select(t);
 	}
 	
 	@FXML

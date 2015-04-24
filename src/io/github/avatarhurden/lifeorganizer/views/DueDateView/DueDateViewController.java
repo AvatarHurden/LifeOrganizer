@@ -123,10 +123,15 @@ public class DueDateViewController {
         clearButton.getStyleClass().addAll("graphic");
         
         StackPane clearButtonPane = new StackPane(clearButton);
+        clearButtonPane.setFocusTraversable(true);
         
         clearButtonPane.getStyleClass().addAll("clear-button");
         clearButtonPane.setOpacity(1.0);
         clearButtonPane.setOnMouseReleased(e -> setTimeEnabled(false));
+        clearButtonPane.setOnKeyPressed(event -> {
+        	if (event.getCode().equals(KeyCode.ENTER))
+        		setTimeEnabled(false);
+        });
         
         closeHBox.getChildren().add(0, clearButtonPane);
         
@@ -176,9 +181,7 @@ public class DueDateViewController {
 			timeProperty.setValue(new DueDate(timeProperty.getValue().getDateTime(), enabled));
 		
 		timeLabel.setText("00:00");
-		if (enabled)
-			hourSlider.requestFocus();
-		else {
+		if (!enabled) {
 			hourSlider.setValue(0);
 			minuteSlider.setValue(0);
 		}

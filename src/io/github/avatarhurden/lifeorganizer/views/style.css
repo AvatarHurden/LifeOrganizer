@@ -37,6 +37,10 @@
     -fx-background-color: #ee4444;
 }
 
+.clear-button:focused > .graphic {
+    -fx-background-color: #ee4444;
+}
+
 .clear-button:pressed > .graphic {
     -fx-background-color: #ff1111;
 }

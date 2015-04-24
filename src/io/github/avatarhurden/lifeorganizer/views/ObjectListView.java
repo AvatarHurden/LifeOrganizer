@@ -9,6 +9,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -69,18 +70,19 @@ public class ObjectListView<T> extends HBox {
 	
 	private void addLabel(T object) {
 		HBox itemBox = new HBox(0);
+		itemBox.getStyleClass().add("object-box");
 		
 		itemBox.setFocusTraversable(true);
 		itemBox.setOnMousePressed((event) -> {
 			event.consume();
 			itemBox.requestFocus();
 		});
-
-		itemBox.getStyleClass().add("object-box");
+		
 		
 		Label label = new Label();
 		label.textProperty().bindBidirectional(property.getProperty(object));
 		label.setPrefHeight(25);
+		
 		HBox.setMargin(label, new Insets(0, 5, 0, 0));
         itemBox.getChildren().add(label);
 		
@@ -89,19 +91,24 @@ public class ObjectListView<T> extends HBox {
         
         StackPane clearButtonPane = new StackPane(clearButton);
         clearButtonPane.getStyleClass().addAll("clear-button");
-        clearButtonPane.setOnMouseReleased(event -> {
-        	fadeObject(itemBox, false).setOnFinished(finished -> getChildren().remove(itemBox));
-			objects.getValue().remove(object);
-        });
         clearButtonPane.visibleProperty().bind(itemBox.hoverProperty());
 
         itemBox.getChildren().add(clearButtonPane);
+		itemBox.hoverProperty().addListener((obs, oldValue, newValue) -> fadeObject(clearButtonPane, newValue));
+        
 		
+		Runnable delete = () -> {
+			fadeObject(itemBox, false).setOnFinished(finished -> getChildren().remove(itemBox));
+			objects.getValue().remove(object);
+			textField.requestFocus();
+		};
+		
+		itemBox.setOnKeyPressed(event -> { if (event.getCode().equals(KeyCode.DELETE)) delete.run(); });
+		clearButtonPane.setOnMouseReleased(event -> delete.run());
+
 		getChildren().add(objects.getValue().indexOf(object), itemBox);
     	fadeObject(itemBox, true);
 		HBox.setMargin(itemBox, new Insets(0, 5, 0, 5));
-		
-		itemBox.hoverProperty().addListener((obs, oldValue, newValue) -> fadeObject(clearButtonPane, newValue));
 	}
 	
 	private FadeTransition fadeObject(Node object, boolean toVisible) {

@@ -6,17 +6,21 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.io.StringWriter;
 import java.net.URL;
 import java.util.Optional;
 
 import javafx.application.Platform;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.TextArea;
+import javafx.scene.effect.BlendMode;
 import javafx.scene.layout.HBox;
+import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Modality;
@@ -24,6 +28,8 @@ import javafx.stage.Modality;
 import org.controlsfx.control.NotificationPane;
 import org.controlsfx.control.action.Action;
 import org.json.JSONObject;
+import org.tautua.markdownpapers.Markdown;
+import org.tautua.markdownpapers.parser.ParseException;
 
 import com.littlebigberry.httpfiledownloader.FileDownloader;
 import com.littlebigberry.httpfiledownloader.FileDownloaderDelegate;
@@ -79,11 +85,7 @@ public class Updater implements FileDownloaderDelegate {
 			alert.setTitle("Changes in new version");
 			alert.setHeaderText(null);
 			
-			TextArea textArea = new TextArea(this.latestChanges);
-			textArea.setEditable(false);
-			textArea.setWrapText(true);
-			
-			alert.getDialogPane().setContent(new HBox(textArea));
+			alert.getDialogPane().setContent(getChangeLogView(latestChanges));
 			alert.show();
 		}));
 			
@@ -119,6 +121,24 @@ public class Updater implements FileDownloaderDelegate {
 		}));
 		
 		pane.show("Do you wish to update from version " + this.currentVersion + " to version " + this.latestVersion + "?");
+    }
+    
+    private Node getChangeLogView(String changes) {
+    	WebView webView = new WebView();
+    	
+        try {
+            StringWriter writer = new StringWriter();
+			new Markdown().transform(new StringReader(changes), writer);
+			changes = writer.toString();
+		} catch (ParseException e) {}
+    
+        webView.getEngine().loadContent(changes);
+        webView.setBlendMode(BlendMode.DARKEN);
+        
+        HBox box = new HBox(webView);
+        box.setPadding(new Insets(5));
+    	
+        return box;
     }
 
 
