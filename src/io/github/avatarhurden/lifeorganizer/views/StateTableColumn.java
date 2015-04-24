@@ -41,6 +41,9 @@ public class StateTableColumn extends TableColumn<Task, State>{
 	private void setCellFactory() {
 		setCellFactory(value -> 
 			new TableCell<Task, State>() {
+				
+				private boolean isSelected, isIndeterminate, wasPressed;
+				
 			protected void updateItem(State state, boolean empty) {
 				super.updateItem(state, empty);
 
@@ -52,6 +55,28 @@ public class StateTableColumn extends TableColumn<Task, State>{
 					CheckBox box = new CheckBox();
 					box.setFocusTraversable(false);
 					box.setAllowIndeterminate(true);
+					
+					// The mouse listeners are to change the order of the states. I want unselected -> selected -> indeterminate
+					box.setOnMousePressed(event -> {
+						this.isSelected = box.isSelected();
+						this.isIndeterminate = box.isIndeterminate();
+						this.wasPressed = true;
+					});
+					
+					box.setOnMouseExited(event -> this.wasPressed = false);
+					box.setOnMouseEntered(event -> this.wasPressed = box.isPressed());
+					
+					box.setOnMouseReleased(event -> {
+						if (this.wasPressed) {
+							if (this.isIndeterminate) {
+								box.setSelected(false);
+								box.setIndeterminate(false);
+							} else if (!this.isSelected)
+								box.setSelected(true);
+							else
+								box.setIndeterminate(true);
+						}
+					});
 					
 					box.setIndeterminate(state.equals(Task.State.FAILED));
 					if (!box.isIndeterminate())
