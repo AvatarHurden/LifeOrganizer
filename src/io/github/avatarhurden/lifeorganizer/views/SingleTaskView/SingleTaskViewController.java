@@ -61,7 +61,6 @@ public class SingleTaskViewController {
 	@SuppressWarnings("unchecked")
 	@FXML
 	private void initialize() {
-		
 		noteArea.setWrapText(true);
 		
 		editDateListener = (obs, oldValue, newValue) -> {
