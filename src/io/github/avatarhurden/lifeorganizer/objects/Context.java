@@ -30,4 +30,18 @@ public class Context {
 		return name;
 	}
 	
+	public String toString() {
+		return name.getValue();
+	}
+	
+	public boolean equals(Object obj) {
+		if (!(obj instanceof Context))
+			return false;
+		else
+			return getName().equals(((Context) obj).getName());
+	}
+	
+	public int hashCode() {
+		return getName().hashCode();
+	}
 }

@@ -30,4 +30,19 @@ public class Project {
 		return name;
 	}
 	
+	public String toString() {
+		return name.getValue();
+	}
+	
+	public boolean equals(Object obj) {
+		if (!(obj instanceof Project))
+			return false;
+		else
+			return getName().equals(((Project) obj).getName());
+	}
+	
+	public int hashCode() {
+		return getName().hashCode();
+	}
+	
 }

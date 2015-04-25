@@ -7,7 +7,7 @@ task as failed when needed.
 
 Besides what is supported by **todo.txt**, LifeOrganizer also provides built-in due dates and notes (and failing tasks, of course).
 
-It is intended to be complete usable using only a keyboard, but it also has a simple and easy to use graphical interface.
+It is intended to be completely usable with only a keyboard, but it also has a simple and easy to use graphical interface.
 
 ### Task Creation
 

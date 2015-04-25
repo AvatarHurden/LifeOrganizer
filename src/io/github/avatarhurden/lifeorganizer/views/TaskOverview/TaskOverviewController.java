@@ -151,7 +151,7 @@ public class TaskOverviewController {
 				fader.setToValue(1.0);
 				
 				taskView.setOpacity(0);
-				taskViewController.setTask(newValue);
+				taskViewController.setTask(newValue, manager);
 				
 				fader.play();
 			}
@@ -182,8 +182,7 @@ public class TaskOverviewController {
 	
 	@FXML
 	private void click() {
-		Task t = new Task(textField.getText());
-		manager.addTask(t);
+		Task t = manager.addTask(textField.getText());
 		table.sort();
 		textField.setText("");
 		table.getSelectionModel().select(t);

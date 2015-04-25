@@ -37,18 +37,20 @@ public class ObjectListView<T> extends HBox {
 		textField.setPromptText(text);
 	}
 	
-	public void setList(Property<ObservableList<T>> objects) {
+	public void setList(Property<ObservableList<T>> objects, ObservableList<T> suggestions) {
 		// Clears the list of labels
 		if (getChildren().size() > 1)
 			getChildren().remove(0, getChildren().size() - 1);
 		
 		this.objects = objects;
+		
 		// Adds listener so that the property fires a changeEvent when the list fires an event
 		ObservableList<T> list = objects.getValue();
 		list.addListener((ListChangeListener.Change<? extends T> listener) -> this.objects.setValue(list));
 		
 		for (T object : objects.getValue())
 			addLabel(object);
+		TextFields.bindAutoCompletion(textField, suggestions);
 	}
 	
 	private void initialize() {
@@ -59,7 +61,7 @@ public class ObjectListView<T> extends HBox {
 		
 		textField.setOnAction((event) -> {
 				T object = instantiator.newInstance(textField.getText());
-				if (object != null) {
+				if (object != null && !objects.getValue().contains(object)) {
 					objects.getValue().add(object);
 					addLabel(object);
 					textField.clear();
@@ -96,7 +98,6 @@ public class ObjectListView<T> extends HBox {
         itemBox.getChildren().add(clearButtonPane);
 		itemBox.hoverProperty().addListener((obs, oldValue, newValue) -> fadeObject(clearButtonPane, newValue));
         
-		
 		Runnable delete = () -> {
 			fadeObject(itemBox, false).setOnFinished(finished -> getChildren().remove(itemBox));
 			objects.getValue().remove(object);
@@ -105,7 +106,7 @@ public class ObjectListView<T> extends HBox {
 		
 		itemBox.setOnKeyPressed(event -> { if (event.getCode().equals(KeyCode.DELETE)) delete.run(); });
 		clearButtonPane.setOnMouseReleased(event -> delete.run());
-
+		
 		getChildren().add(objects.getValue().indexOf(object), itemBox);
     	fadeObject(itemBox, true);
 		HBox.setMargin(itemBox, new Insets(0, 5, 0, 5));

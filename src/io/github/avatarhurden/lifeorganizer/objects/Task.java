@@ -1,5 +1,7 @@
 package io.github.avatarhurden.lifeorganizer.objects;
 
+import io.github.avatarhurden.lifeorganizer.managers.ContextManager;
+import io.github.avatarhurden.lifeorganizer.managers.ProjectManager;
 import io.github.avatarhurden.lifeorganizer.tools.DateUtils;
 
 import java.util.ArrayList;
@@ -66,18 +68,24 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 	private Property<ObservableList<Context>> contextsProperty;
 	private Property<DateTime> editDateProperty;
 	
-	public Task() {
+	private ProjectManager projectManager;
+	private ContextManager contextManager;
+	
+	public Task(ProjectManager projectManager, ContextManager contextManager) {
 		StateProperty().setValue(State.TODO);
 		
 		projects = FXCollections.observableArrayList(p -> new Observable[] {p.NameProperty()});
 		contexts = FXCollections.observableArrayList(p -> new Observable[] {p.NameProperty()});
 		
+		this.projectManager = projectManager;
+		this.contextManager = contextManager;
+		
 		CreationDateProperty().setValue(new DateTime());
 		setEditDateNow();
 	}
 	
-	public Task(String input) {
-		this();
+	public Task(String input, ProjectManager projectManager, ContextManager contextManager) {
+		this(projectManager, contextManager);
 		parseString(input);
 	}
 	
@@ -146,8 +154,8 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		setName(s.trim());
 	}
 	
-	public static Task decode(String s) {
-		Task t = new Task();
+	public static Task decode(String s, ProjectManager projectManager, ContextManager contextManager) {
+		Task t = new Task(projectManager, contextManager);
 
 		// Defining state
 		Pattern stateP = Pattern.compile("^\\[(x| |-)\\] ");
@@ -189,14 +197,14 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		Matcher projM = projP.matcher(s);
 		if (projM.find())
 			for (String proj : projM.group(1).split(","))
-				t.projects.add(new Project(proj));
+				t.addProject(proj);
 		
 		// Defining contexts
 		Pattern contP = Pattern.compile("CONTEXTS=(\\S*) ");
 		Matcher contM = contP.matcher(s);
 		if (contM.find())
 			for (String cont : contM.group(1).split(","))
-				t.contexts.add(new Context(cont));
+				t.addContext(cont);
 		
 		// Defining creationDate
 		Pattern madeP = Pattern.compile("MADE=(\\S*) ");
@@ -441,20 +449,20 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 	}
 
 	public void setProjects(ObservableList<Project> projects) {
-		// This manual way must be done in order to allow for changes to be fired on the property
-		setEditDateNow();
-		if (this.projects == projects)
-			return;
 		for (Project p : this.projects)
 			if (!projects.contains(p))
 				this.projects.remove(p);
 		for (Project p : projects)
 			if (!this.projects.contains(p))
 				this.projects.add(p);
+		setEditDateNow();
 	}
 	
 	private void addProject(String name) {
-		projects.add(new Project(name));
+		Project project = projectManager.getProject(name);
+		if (project == null)
+			project = projectManager.createProject(name);
+		projects.add(project);
 		setEditDateNow();
 	}
 	
@@ -474,7 +482,10 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 	}
 	
 	private void addContext(String name) {
-		contexts.add(new Context(name));
+		Context context = contextManager.getContext(name);
+		if (context == null)
+			context = contextManager.createContext(name);
+		contexts.add(context);
 		setEditDateNow();
 	}
 	

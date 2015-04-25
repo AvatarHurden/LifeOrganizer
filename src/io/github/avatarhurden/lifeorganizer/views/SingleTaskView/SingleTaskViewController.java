@@ -1,5 +1,6 @@
 package io.github.avatarhurden.lifeorganizer.views.SingleTaskView;
 
+import io.github.avatarhurden.lifeorganizer.managers.TaskManager;
 import io.github.avatarhurden.lifeorganizer.objects.Context;
 import io.github.avatarhurden.lifeorganizer.objects.Project;
 import io.github.avatarhurden.lifeorganizer.objects.Task;
@@ -115,13 +116,14 @@ public class SingleTaskViewController {
 		projectsView = new ObjectListView<Project>(s -> s.length() > 0 ? new Project(s) : null,
 				p -> p.NameProperty());
 		projectsView.setPromptText("Add Project");
-		projectsView.setMaxWidth(Double.MAX_VALUE);
 		
 		projectsBox.getChildren().add(projectsView);
 		
 		contextsView = new ObjectListView<Context>(s -> s.length() > 0 ? new Context(s) : null,
 				p -> p.NameProperty());
 		contextsView.setPromptText("Add Context");
+		
+		contextsBox.getChildren().add(contextsView);
 		
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/github/avatarhurden/lifeorganizer/views/DueDateView/DueDateView.fxml"));
 		try {
@@ -130,11 +132,9 @@ public class SingleTaskViewController {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
-		contextsBox.getChildren().add(contextsView);
 	}
 
-	public void setTask(Task task) {
+	public void setTask(Task task, TaskManager manager) {
 		priorityBox.setUserData(task.PriorityProperty());
 		priorityBox.setValue(task.getPriority());
 		
@@ -149,10 +149,10 @@ public class SingleTaskViewController {
 		task.EditDateProperty().addListener(editDateListener);
 		lastEditLabel.setText(new PrettyTime(Locale.US).format(task.getEditDate().toDate()));
 		
-		projectsView.setList(task.ProjectsProperty());
+		projectsView.setList(task.ProjectsProperty(), manager.getActiveProjects().getActiveProjects());
 		projectsView.clearTextField();
 		
-		contextsView.setList(task.ContextsProperty());
+		contextsView.setList(task.ContextsProperty(), manager.getActiveContexts().getActiveContexts());
 		contextsView.clearTextField();
 		
 		if (this.task != null)
