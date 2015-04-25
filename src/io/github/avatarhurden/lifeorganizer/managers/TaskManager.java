@@ -17,7 +17,7 @@ public class TaskManager {
 	
 	public TaskManager() {
 		
-		if (!new File(Config.get().getPropertyAndSave("default_folder", new File("data").getAbsolutePath())).exists())
+		if (!new File(Config.get().getProperty("default_folder")).exists())
 			new File(Config.get().getProperty("default_folder")).mkdir();
 		
 		activeProjects = new ProjectManager();
@@ -50,7 +50,7 @@ public class TaskManager {
 	private File getTodoFile() {
 		String path = Config.get().getPropertyAndSave("todo_file", "todo.txt");
 		if (!new File(path).isAbsolute()) {
-			String folder = Config.get().getProperty("default_folder", "data");
+			String folder = Config.get().getProperty("default_folder");
 			path = new File(folder, path).getAbsolutePath();
 		}
 		return new File(path);
@@ -59,7 +59,7 @@ public class TaskManager {
 	private File getDoneFile() {
 		String path = Config.get().getPropertyAndSave("done_file", "done.txt");
 		if (!new File(path).isAbsolute()) {
-			String folder = Config.get().getProperty("default_folder", "data");
+			String folder = Config.get().getProperty("default_folder");
 			path = new File(folder, path).getAbsolutePath();
 		}
 		return new File(path);

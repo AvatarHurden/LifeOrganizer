@@ -1,4 +1,4 @@
-package io.github.avatarhurden.lifeorganizer.views;
+package io.github.avatarhurden.lifeorganizer.views.TableView;
 
 import io.github.avatarhurden.lifeorganizer.objects.Task;
 import javafx.scene.control.TableCell;

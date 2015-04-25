@@ -1,4 +1,4 @@
-package io.github.avatarhurden.lifeorganizer.views;
+package io.github.avatarhurden.lifeorganizer.views.TableView;
 
 import java.util.ArrayList;
 import java.util.Comparator;

@@ -6,15 +6,15 @@ import io.github.avatarhurden.lifeorganizer.objects.DueDate;
 import io.github.avatarhurden.lifeorganizer.objects.Project;
 import io.github.avatarhurden.lifeorganizer.objects.Task;
 import io.github.avatarhurden.lifeorganizer.tools.Config;
-import io.github.avatarhurden.lifeorganizer.views.ContextsTableColumn;
-import io.github.avatarhurden.lifeorganizer.views.CustomizableTableView;
-import io.github.avatarhurden.lifeorganizer.views.DateTimeTableColumn;
-import io.github.avatarhurden.lifeorganizer.views.DueDateTableColumn;
-import io.github.avatarhurden.lifeorganizer.views.NoteTableColumn;
-import io.github.avatarhurden.lifeorganizer.views.PriorityTableColumn;
-import io.github.avatarhurden.lifeorganizer.views.ProjectsTableColumn;
-import io.github.avatarhurden.lifeorganizer.views.StateTableColumn;
 import io.github.avatarhurden.lifeorganizer.views.SingleTaskView.SingleTaskViewController;
+import io.github.avatarhurden.lifeorganizer.views.TableView.ContextsTableColumn;
+import io.github.avatarhurden.lifeorganizer.views.TableView.CustomizableTableView;
+import io.github.avatarhurden.lifeorganizer.views.TableView.DateTimeTableColumn;
+import io.github.avatarhurden.lifeorganizer.views.TableView.DueDateTableColumn;
+import io.github.avatarhurden.lifeorganizer.views.TableView.NoteTableColumn;
+import io.github.avatarhurden.lifeorganizer.views.TableView.PriorityTableColumn;
+import io.github.avatarhurden.lifeorganizer.views.TableView.ProjectsTableColumn;
+import io.github.avatarhurden.lifeorganizer.views.TableView.StateTableColumn;
 
 import java.util.List;
 

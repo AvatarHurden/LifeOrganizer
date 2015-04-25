@@ -5,18 +5,33 @@ import io.github.avatarhurden.lifeorganizer.tools.Config;
 import io.github.avatarhurden.lifeorganizer.views.ConfigView.ConfigViewController;
 import io.github.avatarhurden.lifeorganizer.views.TaskOverview.TaskOverviewController;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 
 import org.controlsfx.control.NotificationPane;
+
 
 public class Main extends Application {
 
@@ -33,6 +48,10 @@ public class Main extends Application {
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 		Main.primaryStage = primaryStage;
+		
+		if (Config.get().getProperty("default_folder") == null)
+			defineDataFolder();
+		
 		manager = new TaskManager();
 		
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/github/avatarhurden/lifeorganizer/views/TaskOverview/TaskOverview.fxml"));
@@ -71,6 +90,62 @@ public class Main extends Application {
 			Updater up = new Updater(version, changelogURL, pane);
 			up.start();
 		}).start();
+	}
+	
+	private void defineDataFolder() {
+		Alert alert = new Alert(AlertType.INFORMATION);
+		alert.setTitle("Choose file location");
+		alert.getDialogPane().lookupButton(alert.getButtonTypes().get(0)).setDisable(true);
+		alert.setHeaderText(null);
+		
+		VBox box = new VBox();
+		box.setPrefWidth(370);
+		box.getChildren().add(new Label("Please select the folder in which to save your data."));
+		
+		HBox pathBox = new HBox();
+		VBox.setMargin(pathBox, new Insets(5));
+		
+		TextField field = new TextField();
+		field.setPrefWidth(300);
+		field.textProperty().addListener((obs, oldValue, newValue) -> {
+			if (new File(newValue).exists())
+				alert.getDialogPane().lookupButton(alert.getButtonTypes().get(0)).setDisable(false);
+			else
+				alert.getDialogPane().lookupButton(alert.getButtonTypes().get(0)).setDisable(true);
+		});
+		
+		pathBox.getChildren().add(field);
+		
+		ImageView image = new ImageView(new Image("/folderIcon.png"));
+		image.setPreserveRatio(true);
+		image.setFitHeight(21);
+		image.setFitWidth(30);
+
+		Button button = new Button("", image);
+		button.setPadding(new Insets(2, 5, 2, 5));
+		
+		button.setOnAction(event -> {
+			DirectoryChooser chooser = new DirectoryChooser();
+			if (!field.getText().equals(""))
+				chooser.setInitialDirectory(new File(field.getText()));
+			File selected = chooser.showDialog(primaryStage);
+			if (selected != null)
+				field.setText(selected.getAbsolutePath());
+		});
+		
+		pathBox.getChildren().add(button);
+		HBox.setMargin(button, new Insets(0, 0, 0, 5));
+		
+		box.getChildren().add(pathBox);
+		
+		alert.getDialogPane().setContent(box);
+		
+		
+		Optional<ButtonType> response = alert.showAndWait();
+		if (response.get() == ButtonType.OK)
+			Config.get().setProperty("default_folder", field.getText());
+		else
+			exit();
 	}
 	
 	private Stage getConfigStage() throws IOException {
