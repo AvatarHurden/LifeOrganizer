@@ -28,6 +28,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.stage.Window;
 
 import org.controlsfx.control.NotificationPane;
@@ -59,12 +60,12 @@ public class Main extends Application {
 		NotificationPane pane = new NotificationPane(loader.load());
 		Scene scene = new Scene(pane);
 		
-		startUpdater(pane);
-		
 		TaskOverviewController controller = loader.<TaskOverviewController>getController();
 		controller.setTaskManager(manager);
 		controller.setConfigStage(getConfigStage());
 		controller.loadState();
+
+		startUpdater(pane);
 		
 		primaryStage.setTitle("LifeOrganizer");
 		primaryStage.setScene(scene);
@@ -82,7 +83,6 @@ public class Main extends Application {
 				e.printStackTrace();
 			}
 		});
-		
 	}
 	
 	private void startUpdater(NotificationPane pane) {
@@ -94,6 +94,7 @@ public class Main extends Application {
 	
 	private void defineDataFolder() {
 		Alert alert = new Alert(AlertType.INFORMATION);
+		alert.initStyle(StageStyle.UTILITY);
 		alert.setTitle("Choose file location");
 		alert.getDialogPane().lookupButton(alert.getButtonTypes().get(0)).setDisable(true);
 		alert.setHeaderText(null);

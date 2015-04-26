@@ -22,7 +22,7 @@
       <Button fx:id="addButton" layoutX="527.0" layoutY="361.0" mnemonicParsing="false" onAction="#click" text="Add" AnchorPane.bottomAnchor="37.0" AnchorPane.rightAnchor="20.0" />
       <Button layoutX="935.0" layoutY="2.0" mnemonicParsing="false" onAction="#archive" text="Archive" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="5.0" />
       <Button layoutX="14.0" layoutY="5.0" mnemonicParsing="false" onAction="#openConfig" text="Configs" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="5.0" />
-      <HBox layoutX="455.0" layoutY="5.0" prefHeight="25.0" prefWidth="90.0" AnchorPane.topAnchor="5.0">
+      <HBox fx:id="buttonGroup" alignment="CENTER" layoutY="5.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="5.0">
          <children>
             <ToggleButton fx:id="todoButton" mnemonicParsing="false" onAction="#showTodo" prefWidth="45.0" text="Todo" />
             <ToggleButton fx:id="doneButton" mnemonicParsing="false" onAction="#showDone" text="Done" />
