@@ -11,22 +11,22 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="297.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.avatarhurden.lifeorganizer.views.SingleTaskView.SingleTaskViewController">
+<AnchorPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="298.0" prefWidth="530.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.avatarhurden.lifeorganizer.views.SingleTaskView.SingleTaskViewController">
    <children>
-      <HBox layoutX="14.0" layoutY="14.0" prefHeight="25.0" prefWidth="138.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="448.0" AnchorPane.topAnchor="14.0">
+      <HBox layoutX="14.0" layoutY="10.0" prefHeight="25.0" prefWidth="138.0" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="10.0">
          <children>
             <ToggleButton fx:id="todoButton" mnemonicParsing="false" text="Todo" />
             <ToggleButton fx:id="doneButton" mnemonicParsing="false" text="Done" />
             <ToggleButton fx:id="failedButton" mnemonicParsing="false" text="Failed" />
          </children>
       </HBox>
-      <ComboBox fx:id="priorityBox" layoutX="14.0" layoutY="47.0" prefHeight="25.0" prefWidth="55.0" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="47.0" />
-      <TextField fx:id="nameTextField" layoutX="83.0" layoutY="47.0" prefHeight="25.0" prefWidth="377.0" AnchorPane.leftAnchor="83.0" AnchorPane.topAnchor="47.0" />
-      <HBox fx:id="projectsBox" layoutX="12.0" layoutY="82.0" maxWidth="1.7976931348623157E308" minHeight="-Infinity" prefHeight="25.0" prefWidth="1000.0" AnchorPane.leftAnchor="12.0" AnchorPane.rightAnchor="12.0" AnchorPane.topAnchor="82.0" />
-      <HBox fx:id="contextsBox" layoutX="12.0" layoutY="114.0" minWidth="-Infinity" prefHeight="25.0" prefWidth="1000.0" AnchorPane.leftAnchor="12.0" AnchorPane.rightAnchor="12.0" AnchorPane.topAnchor="114.0" />
-      <Label layoutX="184.0" layoutY="18.0" prefHeight="25.0" text="Last edit:" textFill="#0000007a" AnchorPane.leftAnchor="170.0" AnchorPane.topAnchor="14.0" />
-      <Label fx:id="lastEditLabel" layoutX="224.0" layoutY="18.0" prefHeight="25.0" textFill="#0000007a" AnchorPane.leftAnchor="230.0" AnchorPane.topAnchor="14.0" />
-   	  <TextArea fx:id="noteArea" layoutX="14.0" layoutY="149.0" prefHeight="120.0" prefWidth="447.0" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="149.0" />
-      <AnchorPane fx:id="dueDatePane" layoutX="468.0" layoutY="25.0" prefHeight="45.0" prefWidth="110.0" AnchorPane.leftAnchor="468.0" AnchorPane.topAnchor="25.0" />
+      <ComboBox fx:id="priorityBox" layoutX="14.0" layoutY="43.0" prefHeight="25.0" prefWidth="55.0" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="43.0" />
+      <TextField fx:id="nameTextField" layoutX="83.0" layoutY="43.0" maxWidth="700.0" prefHeight="25.0" prefWidth="433.0" AnchorPane.leftAnchor="83.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="43.0" />
+      <HBox fx:id="projectsBox" layoutX="14.0" layoutY="78.0" maxWidth="1.7976931348623157E308" minHeight="-Infinity" prefHeight="25.0" prefWidth="1000.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="78.0" />
+      <HBox fx:id="contextsBox" layoutX="14.0" layoutY="110.0" minWidth="-Infinity" prefHeight="25.0" prefWidth="1000.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="110.0" />
+      <Label layoutX="14.0" layoutY="267.0" prefHeight="25.0" text="Last edit:" textFill="#0000007a" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="267.0" />
+      <Label fx:id="lastEditLabel" layoutX="69.0" layoutY="267.0" prefHeight="25.0" textFill="#0000007a" AnchorPane.leftAnchor="69.0" AnchorPane.topAnchor="267.0" />
+   	  <TextArea fx:id="noteArea" layoutX="14.0" layoutY="145.0" maxWidth="700.0" prefHeight="120.0" prefWidth="700.0" promptText="Add Note" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="145.0" />
+      <AnchorPane fx:id="dueDatePane" layoutX="161.0" layoutY="5.0" prefHeight="35.0" prefWidth="110.0" AnchorPane.leftAnchor="161.0" AnchorPane.topAnchor="5.0" />
    </children>
 </AnchorPane>

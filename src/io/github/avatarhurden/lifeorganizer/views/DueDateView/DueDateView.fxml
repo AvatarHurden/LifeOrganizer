@@ -8,15 +8,14 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.AnchorPane?>
 
-
-<HBox fx:id="dueDateBox" alignment="CENTER" prefHeight="45.0" spacing="5.0" style="-fx-border-radius: 6; -fx-border-color: lightgrey;" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.avatarhurden.lifeorganizer.views.DueDateView.DueDateViewController">
+<HBox fx:id="dueDateBox" alignment="CENTER" prefHeight="33.0" spacing="5.0" style="-fx-border-radius: 6; -fx-border-color: lightgrey;" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.avatarhurden.lifeorganizer.views.DueDateView.DueDateViewController">
    <children>
-      <DatePicker fx:id="datePicker" prefHeight="25.0" prefWidth="110.0" promptText="dd/mm/yyyy">
+      <DatePicker fx:id="datePicker" prefWidth="110.0" promptText="dd/mm/yyyy">
          <opaqueInsets>
             <Insets />
          </opaqueInsets>
       </DatePicker>
-      <Separator orientation="VERTICAL" prefHeight="200.0">
+      <Separator orientation="VERTICAL">
          <HBox.margin>
             <Insets left="5.0" />
          </HBox.margin>
@@ -31,21 +30,21 @@
                   <Insets />
                </HBox.margin>
                <children>
-                  <Label fx:id="timeLabel" alignment="CENTER" contentDisplay="CENTER" prefHeight="43.0" prefWidth="80.0" text=" " />
+                  <Label fx:id="timeLabel" alignment="CENTER" contentDisplay="CENTER" prefHeight="31.0" prefWidth="80.0" text=" " />
                </children>
             </HBox>
-            <VBox spacing="5.0">
+            <VBox spacing="3.0">
                <children>
                   <Slider fx:id="hourSlider" />
                   <Slider fx:id="minuteSlider" prefHeight="14.0" prefWidth="101.0" />
                </children>
                <padding>
-                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                  <Insets left="5.0" right="5.0" />
                </padding>
             </VBox>
          </children>
       </HBox>
-      <StackPane fx:id="buttonPane" maxHeight="-Infinity" minHeight="43.0" prefHeight="43.0" prefWidth="100.0">
+      <StackPane fx:id="buttonPane" maxHeight="-Infinity" prefHeight="33.0" prefWidth="100.0">
          <children>
             <Button fx:id="addTimeButton" mnemonicParsing="false" onAction="#enableTime" text="Set Time">
                <StackPane.margin>
