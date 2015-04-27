@@ -32,27 +32,36 @@ public class TaskManager {
 		projectManager = new ProjectManager();
 		contextManager = new ContextManager();
 			
-		done = new StoredList<Task>(getDoneFile(), false, 
-				task -> task.encode(), string -> decode(string, false), task -> task.EditDateProperty());
 		todo = new StoredList<Task>(getTodoFile(), false, 
 				task -> task.encode(), string -> decode(string, true) , task -> task.EditDateProperty());
+		done = new StoredList<Task>(getDoneFile(), false, 
+				task -> task.encode(), string -> decode(string, false), task -> task.EditDateProperty());
+		done.close();
 		
 		todo.setSaveOnEdits(10);
 	}
 	
 	public void save() {
 		try {
-			done.save();
 			todo.save();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
+	
+	public void loadArchive() {
+		try {
+			done.load();
+		} catch (IOException e) {}
+	}
+	
+	public void closeArchive() {
+		done.close();
+	}
 
 	public void reload() {
 		try {
 			todo.setFile(getTodoFile(), false);
-			done.setFile(getDoneFile(), false);
 		} catch (IOException e) {}
 	}	
 	
@@ -81,14 +90,10 @@ public class TaskManager {
 	public StoredList<Task> getDoneList() {
 		return done;
 	}
-	
-	public Task addTask(String input, boolean active) {
-		Task t = parseString(input, active);
-		todo.add(t);
-		return t;
-	}
   	
 	public void archiveTasks() {
+		loadArchive();
+		
 		List<Task> dones = todo.filter(task -> !task.getState().equals(Task.State.TODO));
 		
 		for (Task t : dones)
@@ -99,8 +104,9 @@ public class TaskManager {
 		
 		done.addAll(dones);
 		todo.removeAll(dones);
+		
+		closeArchive();
 		try {
-			done.save();
 			todo.save();
 		} catch (IOException e) {}
 	}
@@ -124,20 +130,21 @@ public class TaskManager {
 	public ContextManager getContextManager() {
 		return contextManager;
 	}
+
+	public Task addTask(String input, boolean active) {
+		Task t = parseString(input, active);
+		todo.add(t);
+		return t;
+	}
 	
 	private void addProject(Task t, String proj, boolean active) {
-		Project project = projectManager.getProject(proj);
-		if (project == null)
-			project = projectManager.createProject(proj, active);
-		projectManager.incrementProject(project, active);
+		Project project = projectManager.createProject(proj, active);
 		t.getProjects().add(project);
 		t.setEditDateNow();	
 	}
 	
 	private void addContext(Task t, String cont, boolean active) {
-		Context context = contextManager.getContext(cont, false);
-		if (context == null)
-			context = contextManager.createContext(cont, active);
+		Context context = contextManager.createContext(cont, active);
 		t.getContexts().add(context);
 		t.setEditDateNow();
 	}
@@ -202,13 +209,13 @@ public class TaskManager {
 		
 		// Defining name
 		// Accepts things between unescaped quotes (NAME="Read \"this book\" now")
-		Pattern nameP = Pattern.compile("NAME=\"((?:\\\\.|[^\"\\\\])*)\"");
+		Pattern nameP = Pattern.compile("NAME=\"([^\"\\\\]*(?:\\\\.[^\"\\\\]*)*)\"");
 		Matcher nameM = nameP.matcher(s);
 		nameM.find();
 		t.setName(nameM.group(1).replace("\\\"", "\""));
 		
 		// Defining note
-		Pattern noteP = Pattern.compile("NOTE=\"((?:\\\\.|[^\"\\\\])*)\"");
+		Pattern noteP = Pattern.compile("NOTE=\"([^\"\\\\]*(?:\\\\.[^\"\\\\]*)*)\"");
 		Matcher noteM = noteP.matcher(s);
 		if (noteM.find())
 			t.setNote(noteM.group(1).replace("\\\\n", "\n").replace("\\\"", "\""));

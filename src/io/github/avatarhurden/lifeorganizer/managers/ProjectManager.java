@@ -25,11 +25,20 @@ public class ProjectManager {
 	
 	public void decrementProject(Project p, boolean isActive) {
 		p.decrementCount(isActive);
+		if (!p.isActive() && p.getInactiveTasks() == 0)
+			projects.remove(p);
 	}
 	
 	public Project createProject(String name, boolean isActive) {
+		Project p = getProject(name);
+		if (p == null)
+			p = addProject(name);
+		p.incrementCount(isActive);
+		return p;
+	}
+	
+	public Project addProject(String name) {
 		Project project = new Project(name);
-		project.incrementCount(isActive);
 		projects.add(project);
 		return project;
 	}

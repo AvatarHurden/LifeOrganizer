@@ -39,7 +39,7 @@ public class StoredList<T extends Comparable<T>> extends SimpleListProperty<T> {
 	private Thread saveThread;
 	private int editsToSave = 0, edits = 0;
 	
-	private Property<Boolean> isSaved;
+	private Property<Boolean> isSaved, isClosed;
 	
 	public StoredList(File file, boolean sorted, Callback<T, String> encoder, Callback<String, T> decoder, Callback<T, Property> property) {
 		super(FXCollections.observableArrayList());
@@ -50,6 +50,7 @@ public class StoredList<T extends Comparable<T>> extends SimpleListProperty<T> {
 		this.property = property;
 
 		isSaved = new SimpleBooleanProperty(true);
+		isClosed = new SimpleBooleanProperty(true);
 		
 		try {
 			load();
@@ -86,6 +87,7 @@ public class StoredList<T extends Comparable<T>> extends SimpleListProperty<T> {
 		while ((line = reader.readLine()) != null)
 			add(decoder.call(line));
 		reader.close();
+		isClosed.setValue(false);
 	}
 	
 	public void save() throws IOException {
@@ -212,11 +214,15 @@ public class StoredList<T extends Comparable<T>> extends SimpleListProperty<T> {
 	}
 
 	/**
-	 * Saves the content of the file and stops the time based autosave, if present. 
+	 * Saves the content to the file, clears the list and stops the time based autosave, if present. 
 	 */
 	public void close() {
+		if (isClosed.getValue())
+			return;
 		try {
 			save();
+			clear();
+			isClosed.setValue(true);
 		} catch (IOException e) {}
 		finally {
 			if (saveThread != null)

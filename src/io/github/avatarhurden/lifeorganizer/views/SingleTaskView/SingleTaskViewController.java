@@ -7,12 +7,14 @@ import io.github.avatarhurden.lifeorganizer.objects.Task;
 import io.github.avatarhurden.lifeorganizer.views.ObjectListView;
 import io.github.avatarhurden.lifeorganizer.views.DueDateView.DueDateViewController;
 
+import java.io.IOException;
 import java.util.Locale;
 
 import javafx.beans.property.Property;
 import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
@@ -58,6 +60,22 @@ public class SingleTaskViewController {
 	
 	@FXML
 	private TextArea noteArea;
+	
+	private FXMLLoader loader;
+	
+	public SingleTaskViewController() {
+		loader = new FXMLLoader(
+				getClass().getResource("/io/github/avatarhurden/lifeorganizer/views/SingleTaskView/SingleTaskView.fxml"));
+		loader.setController(this);
+		
+		try {
+			loader.load();
+		} catch (IOException e) {}
+	}
+	
+	public Node getView() {	
+		return loader.getRoot();
+	}
 	
 	@SuppressWarnings("unchecked")
 	@FXML
@@ -113,25 +131,18 @@ public class SingleTaskViewController {
 				priorityBox.setValue(event.getCharacter().toUpperCase().charAt(0));
 		});
 		
-		projectsView = new ObjectListView<Project>(s -> s.length() > 0 ? new Project(s) : null,
-				p -> p.NameProperty());
+		projectsView = new ObjectListView<Project>(p -> p.NameProperty());
 		projectsView.setPromptText("Add Project");
 		
 		projectsBox.getChildren().add(projectsView);
 		
-		contextsView = new ObjectListView<Context>(s -> s.length() > 0 ? new Context(s) : null,
-				p -> p.NameProperty());
+		contextsView = new ObjectListView<Context>(p -> p.NameProperty());
 		contextsView.setPromptText("Add Context");
 		
 		contextsBox.getChildren().add(contextsView);
 		
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/github/avatarhurden/lifeorganizer/views/DueDateView/DueDateView.fxml"));
-		try {
-			dueDatePane.getChildren().add(loader.load());
-			dueDateController = loader.<DueDateViewController>getController();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		dueDateController = new DueDateViewController();
+		dueDatePane.getChildren().add(dueDateController.getView());
 	}
 
 	public void setTask(Task task, TaskManager manager) {
@@ -149,14 +160,16 @@ public class SingleTaskViewController {
 		task.EditDateProperty().addListener(editDateListener);
 		lastEditLabel.setText(new PrettyTime(Locale.US).format(task.getEditDate().toDate()));
 		
-		for (Project p : manager.getProjectManager().getProjects())
-			System.out.println(p.getName() + " " + p.isActive() +  " " + p.getActiveTasks() + " " +
-					p.getInactiveTasks());
-		
-		projectsView.setList(task.ProjectsProperty(), manager.getProjectManager().getActiveProjects());
+		projectsView.setList(task.ProjectsProperty());
+		projectsView.setSuggestions(manager.getProjectManager().getActiveProjects());
+		projectsView.setCreationPolicy(s -> manager.getProjectManager().createProject(s, true));
+		projectsView.setDeletionPolicy(proj -> manager.getProjectManager().decrementProject(proj, true));
 		projectsView.clearTextField();
 		
-		contextsView.setList(task.ContextsProperty(), manager.getContextManager().getActiveContexts());
+		contextsView.setList(task.ContextsProperty());
+		contextsView.setSuggestions(manager.getContextManager().getActiveContexts());
+		contextsView.setCreationPolicy(s -> manager.getContextManager().createContext(s, true));
+		contextsView.setDeletionPolicy(proj -> manager.getContextManager().decrementContext(proj, true));
 		contextsView.clearTextField();
 		
 		if (this.task != null)

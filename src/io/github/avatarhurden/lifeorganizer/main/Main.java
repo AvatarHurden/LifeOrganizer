@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Optional;
 
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -54,16 +53,14 @@ public class Main extends Application {
 			defineDataFolder();
 		
 		manager = new TaskManager();
-		
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/github/avatarhurden/lifeorganizer/views/TaskOverview/TaskOverview.fxml"));
 
-		NotificationPane pane = new NotificationPane(loader.load());
-		Scene scene = new Scene(pane);
-		
-		TaskOverviewController controller = loader.<TaskOverviewController>getController();
+		TaskOverviewController controller = new TaskOverviewController();
 		controller.loadState();
 		controller.setTaskManager(manager);
 		controller.setConfigStage(getConfigStage());
+		
+		NotificationPane pane = new NotificationPane(controller.getView());
+		Scene scene = new Scene(pane);
 		
 		startUpdater(pane);
 		
@@ -83,6 +80,8 @@ public class Main extends Application {
 				e.printStackTrace();
 			}
 		});
+		
+		System.out.println(manager.getDoneList().size());
 	}
 	
 	private void startUpdater(NotificationPane pane) {
@@ -150,14 +149,13 @@ public class Main extends Application {
 	}
 	
 	private Stage getConfigStage() throws IOException {
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/github/avatarhurden/lifeorganizer/views/ConfigView/ConfigView.fxml"));
-
+		ConfigViewController configView = new ConfigViewController();
+		
+		
 		Stage stage = new Stage();
-		stage.setScene(new Scene((Parent) loader.load()));
+		stage.setScene(new Scene((Parent) configView.getView()));
 		
-		ConfigViewController controller = loader.<ConfigViewController>getController();
-		
-		controller.addActionOnExit(() -> manager.reload());
+		configView.addActionOnExit(() -> manager.reload());
 		
 		return stage;
 	}

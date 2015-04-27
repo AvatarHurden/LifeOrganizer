@@ -7,12 +7,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
-
 import io.github.avatarhurden.lifeorganizer.tools.Config;
 	
 public class ConfigViewController {
@@ -24,6 +25,22 @@ public class ConfigViewController {
 	@FXML
 	private TextField folderPath, todoPath, donePath;
 
+	private FXMLLoader loader;
+	
+	public ConfigViewController() {
+		loader = new FXMLLoader(
+				getClass().getResource("/io/github/avatarhurden/lifeorganizer/views/ConfigView/ConfigView.fxml"));
+		loader.setController(this);
+		
+		try {
+			loader.load();
+		} catch (IOException e) {}
+	}
+	
+	public Node getView() {	
+		return loader.getRoot();
+	}
+	
 	@FXML
 	private void initialize() {
 		actions = new ArrayList<Runnable>();

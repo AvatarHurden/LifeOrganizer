@@ -2,27 +2,27 @@ package io.github.avatarhurden.lifeorganizer.objects;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 
 public class Context {
 
 	private Property<String> name;
-	private Property<Boolean> active;
+	private Property<Boolean> isActive;
+	private SimpleIntegerProperty activeTasks, inactiveTasks;
 	
 	public Context() {
 		name = new SimpleStringProperty();
-		active = new SimpleBooleanProperty();
+		activeTasks = new SimpleIntegerProperty(0);
+		inactiveTasks = new SimpleIntegerProperty(0);
+
+		isActive = new SimpleBooleanProperty();
+		isActive.bind(activeTasks.greaterThan(0));
 	}
 	
 	public Context(String name) {
 		this();
 		setName(name);
-	}
-	
-	public Context(String name, boolean isActive) {
-		this();
-		setName(name);
-		setActive(isActive);
 	}
 
 	public void setName(String name) {
@@ -39,18 +39,35 @@ public class Context {
 		return name;
 	}
 	
-	public void setActive(boolean isActive) {
-		this.active.setValue(isActive);
-	}
-	
 	public boolean isActive() {
-		return active.getValue();
+		return isActive.getValue();
 	}
 	
 	public Property<Boolean> activeProperty() {
-		return active;
+		return isActive;
 	}
 	
+	public int getActiveTasks() {
+		return activeTasks.intValue();
+	}
+	
+	public int getInactiveTasks() {
+		return inactiveTasks.intValue();
+	}
+	
+	public void incrementCount(boolean active) {
+		if (active)
+			activeTasks.set(getActiveTasks() + 1);
+		else
+			inactiveTasks.set(getInactiveTasks() + 1);
+	}
+	
+	public void decrementCount(boolean active) {
+		if (active)
+			activeTasks.set(getActiveTasks() - 1);
+		else
+			inactiveTasks.set(getInactiveTasks() - 1);
+	}
 	public String toString() {
 		return name.getValue();
 	}

@@ -1,16 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.image.*?>
 <?import javafx.geometry.*?>
 <?import java.lang.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onKeyPressed="#keyboardShorcuts" prefHeight="665.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.avatarhurden.lifeorganizer.views.TaskOverview.TaskOverviewController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" onKeyPressed="#keyboardShorcuts" prefHeight="684.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <SplitPane fx:id="splitPane" dividerPositions="0.5" layoutX="8.0" layoutY="36.0" orientation="VERTICAL" prefHeight="524.0" prefWidth="980.0" AnchorPane.bottomAnchor="70.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="35.0">
+   <fx:define>
+    <Image fx:id="folderIcon" url="folderIcon.png" />
+</fx:define>
+      <ButtonBar layoutX="721.0" layoutY="14.0" prefHeight="40.0" prefWidth="200.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="14.0">
+         <buttons>
+            <Button fx:id="archiveButton" mnemonicParsing="false" onAction="#archive">
+               <graphic>
+                  <ImageView fitHeight="41.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="archive.png" />
+                     </image></ImageView>
+               </graphic>
+            </Button>
+            <Button fx:id="restoreButton" mnemonicParsing="false" prefHeight="38.0" prefWidth="64.0">
+               <graphic>
+                  <ImageView fitHeight="41.0" fitWidth="40.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="restore.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+            </Button>
+            <Button mnemonicParsing="false" onAction="#openConfig" prefHeight="40.0">
+               <graphic>
+                  <ImageView fitHeight="41.0" fitWidth="47.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="cogs.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+            </Button>
+         </buttons>
+      </ButtonBar>
+      <SplitPane fx:id="splitPane" dividerPositions="0.5" layoutX="10.0" layoutY="78.0" orientation="VERTICAL" prefHeight="537.0" prefWidth="980.0" AnchorPane.bottomAnchor="69.0" AnchorPane.leftAnchor="10.0" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="78.0">
         <items>
-          <AnchorPane fx:id="tablePane" minHeight="0.0" minWidth="0.0" prefHeight="239.0" prefWidth="978.0" />
+          <AnchorPane fx:id="tablePane" minHeight="0.0" minWidth="0.0" prefHeight="286.0" prefWidth="978.0" />
             <AnchorPane>
                <children>
                   <ScrollPane fx:id="mainPane" fitToHeight="true" fitToWidth="true" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
@@ -20,15 +54,28 @@
       </SplitPane>
       <TextField fx:id="textField" layoutX="23.0" layoutY="374.0" onAction="#click" prefHeight="25.0" prefWidth="510.0" promptText="Ctrl + N" AnchorPane.bottomAnchor="37.0" AnchorPane.leftAnchor="25.0" AnchorPane.rightAnchor="65.0" />
       <Button fx:id="addButton" layoutX="527.0" layoutY="361.0" mnemonicParsing="false" onAction="#click" text="Add" AnchorPane.bottomAnchor="37.0" AnchorPane.rightAnchor="20.0" />
-      <Button fx:id="archiveButton" layoutX="935.0" layoutY="2.0" mnemonicParsing="false" onAction="#archive" text="Archive" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="5.0" />
-      <Button layoutX="14.0" layoutY="5.0" mnemonicParsing="false" onAction="#openConfig" text="Configs" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="5.0" />
-      <HBox alignment="CENTER" layoutY="5.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="5.0">
-         <children>
-            <ToggleButton fx:id="todoButton" mnemonicParsing="false" onAction="#showTodo" prefWidth="45.0" text="Todo" />
-            <ToggleButton fx:id="doneButton" mnemonicParsing="false" onAction="#showDone" text="Done" />
-         </children>
-      </HBox>
       <AnchorPane fx:id="statusBox" layoutX="790.0" layoutY="516.0" prefHeight="30.0" prefWidth="400.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" />
-      <AnchorPane fx:id="notificationBox" layoutY="637.0" prefHeight="30.0" prefWidth="593.0" />
+      <ButtonBar layoutX="14.0" layoutY="19.0" nodeOrientation="RIGHT_TO_LEFT" prefHeight="49.0" prefWidth="184.0" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="14.0">
+         <buttons>
+            <Button mnemonicParsing="false" onAction="#save" prefHeight="49.0" prefWidth="50.0">
+               <graphic>
+                  <ImageView fitHeight="40.0" fitWidth="41.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="save.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+            </Button>
+            <Button mnemonicParsing="false" onAction="#refresh">
+               <graphic>
+                  <ImageView fitHeight="41.0" fitWidth="95.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="refresh.png" />
+                     </image>
+                  </ImageView>
+               </graphic>
+            </Button>
+         </buttons>
+      </ButtonBar>
    </children>
 </AnchorPane>

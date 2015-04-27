@@ -1,5 +1,7 @@
 package io.github.avatarhurden.lifeorganizer.views;
 
+import java.util.function.Consumer;
+
 import javafx.animation.FadeTransition;
 import javafx.beans.property.Property;
 import javafx.collections.ListChangeListener;
@@ -13,20 +15,24 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.util.Callback;
 import javafx.util.Duration;
 
+import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
 
 public class ObjectListView<T> extends HBox {
 
-	private Constructor<T> instantiator;
+	private Callback<String, T> creationPolicy;
+	private Consumer<T> deletionPolicy;
 	private StringPropertyGetter<T> property;
 	private Property<ObservableList<T>> objects;
 	
+	private AutoCompletionBinding<T> autoCompletion;
+	
 	private TextField textField;
 	
-	public ObjectListView(Constructor<T> instantiator, StringPropertyGetter<T> property) {
-		this.instantiator = instantiator;
+	public ObjectListView(StringPropertyGetter<T> property) {
 		this.property = property;
 		getStylesheets().add("/io/github/avatarhurden/lifeorganizer/views/style.css");
 	
@@ -37,7 +43,7 @@ public class ObjectListView<T> extends HBox {
 		textField.setPromptText(text);
 	}
 	
-	public void setList(Property<ObservableList<T>> objects, ObservableList<T> suggestions) {
+	public void setList(Property<ObservableList<T>> objects) {
 		// Clears the list of labels
 		if (getChildren().size() > 1)
 			getChildren().remove(0, getChildren().size() - 1);
@@ -50,7 +56,21 @@ public class ObjectListView<T> extends HBox {
 		
 		for (T object : objects.getValue())
 			addLabel(object);
-		TextFields.bindAutoCompletion(textField, suggestions);
+		
+	}
+
+	public void setSuggestions(ObservableList<T> suggestions) {
+		if (autoCompletion != null)
+			autoCompletion.dispose();
+		autoCompletion = TextFields.bindAutoCompletion(textField, suggestions);
+	}
+	
+	public void setCreationPolicy(Callback<String, T> policy) {
+		creationPolicy = policy;
+	}
+	
+	public void setDeletionPolicy(Consumer<T> policy) {
+		deletionPolicy = policy;
 	}
 	
 	private void initialize() {
@@ -60,7 +80,7 @@ public class ObjectListView<T> extends HBox {
 		setAlignment(Pos.CENTER_LEFT);
 		
 		textField.setOnAction((event) -> {
-				T object = instantiator.newInstance(textField.getText());
+				T object = creationPolicy.call(textField.getText());
 				if (object != null && !objects.getValue().contains(object)) {
 					objects.getValue().add(object);
 					addLabel(object);
@@ -102,6 +122,7 @@ public class ObjectListView<T> extends HBox {
 			fadeObject(itemBox, false).setOnFinished(finished -> getChildren().remove(itemBox));
 			objects.getValue().remove(object);
 			textField.requestFocus();
+			deletionPolicy.accept(object);
 		};
 		
 		itemBox.setOnKeyPressed(event -> { if (event.getCode().equals(KeyCode.DELETE)) delete.run(); });
@@ -120,10 +141,6 @@ public class ObjectListView<T> extends HBox {
 		return fader;
 	}
 	
-	public interface Constructor<T> {
-		public T newInstance(String s);
-	}
-	
 	public interface StringPropertyGetter<T> {
 		public Property<String> getProperty(T object);
 	}
@@ -131,5 +148,4 @@ public class ObjectListView<T> extends HBox {
 	public void clearTextField() {
 		textField.clear();
 	}
-	
 }

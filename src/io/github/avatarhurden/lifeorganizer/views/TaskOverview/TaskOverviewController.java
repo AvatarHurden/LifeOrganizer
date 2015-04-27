@@ -16,12 +16,15 @@ import io.github.avatarhurden.lifeorganizer.views.TableView.PriorityTableColumn;
 import io.github.avatarhurden.lifeorganizer.views.TableView.ProjectsTableColumn;
 import io.github.avatarhurden.lifeorganizer.views.TableView.StateTableColumn;
 
+import java.io.IOException;
 import java.util.List;
 
 import javafx.animation.FadeTransition;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
@@ -29,9 +32,6 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleButton;
-import javafx.scene.control.ToggleGroup;
-import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
@@ -52,37 +52,35 @@ public class TaskOverviewController {
 	@FXML
 	private TextField textField;
 	@FXML 
-	private Button archiveButton;
+	private Button archiveButton, restoreButton;
 	@FXML
 	private Button addButton;
 	@FXML
 	private ScrollPane mainPane;
-	@FXML
-	private ToggleButton todoButton, doneButton;
-	private ToggleGroup shownTaskGroup;
 	
 	@FXML
-	private AnchorPane statusBox, notificationBox;
+	private AnchorPane statusBox;
 	private StatusBar statusBar;
 	
 	private SingleTaskViewController taskViewController;
-	private AnchorPane taskView;
 	
 	private TaskManager manager;
 	private Stage configStage;
 
-	public void setTaskManager(TaskManager manager) {
-		this.manager = manager;
+	private FXMLLoader loader;
+	
+	public TaskOverviewController() {
+		loader = new FXMLLoader(
+				getClass().getResource("/io/github/avatarhurden/lifeorganizer/views/TaskOverview/TaskOverview.fxml"));
+		loader.setController(this);
 		
-		manager.getTodoList().savedProperty().addListener((obs, oldValue, newValue) -> {
-			statusBar.setText(newValue ? "Saved" : "Not Saved");
-		});
-		statusBar.setText(manager.getTodoList().isSaved() ? "Saved" : "Not Saved");
-		showTodo();
+		try {
+			loader.load();
+		} catch (IOException e) {}
 	}
-
-	public void setConfigStage(Stage config) {
-		this.configStage = config;
+	
+	public Node getView() {
+		return loader.getRoot();
 	}
 	
 	@FXML
@@ -94,15 +92,8 @@ public class TaskOverviewController {
 		AnchorPane.setLeftAnchor(statusBar, 0d);
 		AnchorPane.setRightAnchor(statusBar, 0d);
 		
-		shownTaskGroup = new ToggleGroup();
-		todoButton.setToggleGroup(shownTaskGroup);
-		doneButton.setToggleGroup(shownTaskGroup);
-		todoButton.setSelected(true);
-		
-		shownTaskGroup.selectedToggleProperty().addListener((obs, oldValue, newValue) -> {
-			if (newValue == null)
-				oldValue.setSelected(true);
-		});
+		archiveButton.managedProperty().bind(archiveButton.visibleProperty());
+		restoreButton.managedProperty().bind(restoreButton.visibleProperty());
 		
 		table = new CustomizableTableView<Task>();
 		table.getStylesheets().add("/io/github/avatarhurden/lifeorganizer/views/style.css");
@@ -138,22 +129,11 @@ public class TaskOverviewController {
 		
 		table.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, newValue) -> {
 			if (newValue != null) {
-				if (taskView == null) {
-					FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/github/avatarhurden/lifeorganizer/views/SingleTaskView/SingleTaskView.fxml"));
-					try {
-						taskView = loader.load();
-						mainPane.setContent(taskView);
-						taskViewController = loader.<SingleTaskViewController>getController();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-				FadeTransition fader = new FadeTransition(Duration.millis(350), taskView);
+				FadeTransition fader = new FadeTransition(Duration.millis(350), taskViewController.getView());
 				fader.setCycleCount(1);
 				fader.setFromValue(0.0);
 				fader.setToValue(1.0);
 				
-				taskView.setOpacity(0);
 				taskViewController.setTask(newValue, manager);
 				
 				fader.play();
@@ -181,13 +161,34 @@ public class TaskOverviewController {
 				}
 			};
 		});
+		
+		taskViewController = new SingleTaskViewController();
+		mainPane.setContent(taskViewController.getView());
+		
+		Platform.runLater(() -> textField.requestFocus());
+	}
+
+	public void setTaskManager(TaskManager manager) {
+		this.manager = manager;
+		
+		manager.getTodoList().savedProperty().addListener((obs, oldValue, newValue) -> {
+			statusBar.setText(newValue ? "Saved" : "Not Saved");
+		});
+		statusBar.setText(manager.getTodoList().isSaved() ? "Saved" : "Not Saved");
+		
+		showTodo();
+		table.getSelectionModel().select(0);
+	}
+
+	public void setConfigStage(Stage config) {
+		this.configStage = config;
 	}
 	
 	@FXML
 	private void click() {
 		if (textField.getText().trim().length() == 0)
 			return;
-		Task t = manager.addTask(textField.getText(), todoButton.isSelected());
+		Task t = manager.addTask(textField.getText(), true);
 		table.sort();
 		textField.setText("");
 		table.getSelectionModel().select(t);
@@ -204,34 +205,45 @@ public class TaskOverviewController {
 	}
 	
 	@FXML
+	private void refresh() {
+		manager.reload();
+	}
+	
+	@FXML
+	private void save() {
+		manager.save();
+	}
+	
+	@FXML
 	private void showTodo() {
+		manager.closeArchive();
+		
 		List<String> sorts = table.getColumnSortOrder();
 		table.setItems(manager.getTodoList());
 		table.setColumnSortOrder(sorts);
 	
 		textField.setDisable(false);
 		addButton.setDisable(false);
-		if (taskView != null)
-		taskView.setDisable(false);
+		taskViewController.getView().setDisable(false);
 		
-		archiveButton.setOnAction(event -> archive());
-		archiveButton.setText("Archive");
-		archiveButton.setTooltip(new Tooltip("Archive all done and failed tasks"));
+		archiveButton.setVisible(true);
+		restoreButton.setVisible(false);
 	}
 	
 	@FXML
 	private void showDone() {
+		manager.loadArchive();
+		
 		List<String> sorts = table.getColumnSortOrder();
 		table.setItems(manager.getDoneList());
 		table.setColumnSortOrder(sorts);
 		
 		textField.setDisable(true);
 		addButton.setDisable(true);
-		taskView.setDisable(true);
+		taskViewController.getView().setDisable(true);
 		
-		archiveButton.setOnAction(event -> restore());
-		archiveButton.setText("Restore");
-		archiveButton.setTooltip(new Tooltip("Restore selected task to todo file"));
+		archiveButton.setVisible(false);
+		restoreButton.setVisible(true);
 	}
 
 	@FXML
@@ -288,6 +300,9 @@ public class TaskOverviewController {
 				break;
 			case A:
 				archive();
+				break;
+			case S:
+				save();
 			default:
 				break;
 			}

@@ -2,11 +2,14 @@ package io.github.avatarhurden.lifeorganizer.views.DueDateView;
 
 import io.github.avatarhurden.lifeorganizer.objects.DueDate;
 
+import java.io.IOException;
 import java.time.LocalDate;
 
 import javafx.animation.FadeTransition;
 import javafx.beans.property.Property;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
@@ -38,6 +41,22 @@ public class DueDateViewController {
 	
 	private Property<DueDate> timeProperty;
 	private boolean timeEnabled;
+
+	private FXMLLoader loader;
+	
+	public DueDateViewController() {
+		loader = new FXMLLoader(
+				getClass().getResource("/io/github/avatarhurden/lifeorganizer/views/DueDateView/DueDateView.fxml"));
+		loader.setController(this);
+		
+		try {
+			loader.load();
+		} catch (IOException e) {}
+	}
+	
+	public Node getView() {	
+		return loader.getRoot();
+	}
 	
 	@FXML
 	private void initialize() {
