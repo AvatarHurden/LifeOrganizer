@@ -59,3 +59,6 @@ $RECYCLE.BIN/
 /target/
 /build/
 /config.txt
+/changelogConverter.py
+/build.fxbuild
+/data/
