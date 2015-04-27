@@ -1,19 +1,28 @@
 package io.github.avatarhurden.lifeorganizer.objects;
 
 import javafx.beans.property.Property;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 
 public class Context {
 
 	private Property<String> name;
+	private Property<Boolean> active;
 	
 	public Context() {
 		name = new SimpleStringProperty();
+		active = new SimpleBooleanProperty();
 	}
 	
 	public Context(String name) {
 		this();
 		setName(name);
+	}
+	
+	public Context(String name, boolean isActive) {
+		this();
+		setName(name);
+		setActive(isActive);
 	}
 
 	public void setName(String name) {
@@ -28,6 +37,18 @@ public class Context {
 	
 	public Property<String> NameProperty() {
 		return name;
+	}
+	
+	public void setActive(boolean isActive) {
+		this.active.setValue(isActive);
+	}
+	
+	public boolean isActive() {
+		return active.getValue();
+	}
+	
+	public Property<Boolean> activeProperty() {
+		return active;
 	}
 	
 	public String toString() {

@@ -149,10 +149,10 @@ public class SingleTaskViewController {
 		task.EditDateProperty().addListener(editDateListener);
 		lastEditLabel.setText(new PrettyTime(Locale.US).format(task.getEditDate().toDate()));
 		
-		projectsView.setList(task.ProjectsProperty(), manager.getActiveProjects().getActiveProjects());
+		projectsView.setList(task.ProjectsProperty(), manager.getProjectManager().getActiveProjects());
 		projectsView.clearTextField();
 		
-		contextsView.setList(task.ContextsProperty(), manager.getActiveContexts().getActiveContexts());
+		contextsView.setList(task.ContextsProperty(), manager.getContextManager().getActiveContexts());
 		contextsView.clearTextField();
 		
 		if (this.task != null)

@@ -1,16 +1,9 @@
 package io.github.avatarhurden.lifeorganizer.objects;
 
-import io.github.avatarhurden.lifeorganizer.managers.ContextManager;
-import io.github.avatarhurden.lifeorganizer.managers.ProjectManager;
 import io.github.avatarhurden.lifeorganizer.tools.DateUtils;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import javafx.beans.Observable;
 import javafx.beans.property.Property;
@@ -25,19 +18,6 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 
 	public enum State {
 		TODO, DONE, FAILED;
-		
-		public String toString() {
-			switch (this) {
-			case TODO:
-				return "Todo";
-			case DONE:
-				return "Done";
-			case FAILED:
-				return "Failed";
-			default: 
-				throw new IllegalArgumentException();
-			}
-		}
 	}
 	
 	private State state;
@@ -68,170 +48,14 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 	private Property<ObservableList<Context>> contextsProperty;
 	private Property<DateTime> editDateProperty;
 	
-	private ProjectManager projectManager;
-	private ContextManager contextManager;
-	
-	public Task(ProjectManager projectManager, ContextManager contextManager) {
+	public Task() {
 		StateProperty().setValue(State.TODO);
 		
 		projects = FXCollections.observableArrayList(p -> new Observable[] {p.NameProperty()});
 		contexts = FXCollections.observableArrayList(p -> new Observable[] {p.NameProperty()});
 		
-		this.projectManager = projectManager;
-		this.contextManager = contextManager;
-		
 		CreationDateProperty().setValue(new DateTime());
 		setEditDateNow();
-	}
-	
-	public Task(String input, ProjectManager projectManager, ContextManager contextManager) {
-		this(projectManager, contextManager);
-		parseString(input);
-	}
-	
-	private void parseString(String s) {
-		if (!s.endsWith(" "))
-			s = s + " "; //Adds whitespace to match pattern if at end
-		
-		// Parsing the priority
-		Pattern pattern = Pattern.compile("^\\(([A-Za-z])\\) ");
-		Matcher matcher = pattern.matcher(s);
-		if (!matcher.find()) {
-			pattern = Pattern.compile("pri=([A-Za-z]) ");
-			matcher = pattern.matcher(s);
-		}
-		
-		if (matcher.find(0)) {
-			setPriority(matcher.group(1).charAt(0));
-			s = s.replace(matcher.group(), "");
-		} else {
-			setPriority(null);
-			s = s.replace("pri= ", "");
-		}
-		
-		// Parsing the due date
-		pattern = Pattern.compile("due=(\\S*) ");
-		matcher = pattern.matcher(s);
-		if (matcher.find()) {
-			if (matcher.group(1).length() == 0)
-				setDueDate(new DueDate(null, false));
-			else {	
-				HashMap<String, Integer> defaults = new HashMap<String, Integer>();
-				defaults.put("m", 0);
-				
-				DueDate dueDate = new DueDate();
-				dueDate.setHasTime(matcher.group(1).contains("@"));
-				dueDate.setDateTime(DateUtils.parseMultiFormat(matcher.group(1), defaults));
-				
-				setDueDate(dueDate);
-			}
-			s = s.replace(matcher.group(), "");
-		}
-		
-		// Parsing the note
-		pattern = Pattern.compile("note=\"(.+)\" ");
-		matcher = pattern.matcher(s);
-		if (matcher.find()) {
-			setNote(matcher.group(1));
-			s = s.replace(matcher.group(), "");
-		}
-		
-		// Parsing the projects and contexts
-		List<String> words = Arrays.asList(s.split(" "));
-		List<String> projects = words.stream().filter(word -> word.startsWith("+")).collect(Collectors.toList());
-		List<String> contexts = words.stream().filter(word -> word.startsWith("@")).collect(Collectors.toList());
-		
-		for (String proj : projects)
-			addProject(proj);
-		for (String cont : contexts)
-			addContext(cont);
-		
-		// Removes projects and contexts from the list of "normal" words
-		words = words.stream().filter(word -> !projects.contains(word) && !contexts.contains(word)).collect(Collectors.toList());
-		s = String.join(" ", words);
-		
-		
-		setName(s.trim());
-	}
-	
-	public static Task decode(String s, ProjectManager projectManager, ContextManager contextManager) {
-		Task t = new Task(projectManager, contextManager);
-
-		// Defining state
-		Pattern stateP = Pattern.compile("^\\[(x| |-)\\] ");
-		Matcher stateM = stateP.matcher(s);
-		stateM.find();
-		
-		switch (stateM.group().charAt(1)) {
-		case 'x':
-			t.state = Task.State.DONE;
-			break;
-		case ' ':
-			t.state = Task.State.TODO;
-			break;
-		case '-':
-			t.state = Task.State.FAILED;
-		}
-		
-		// Defining completion date
-		Pattern doneP = Pattern.compile("DONE=(\\S*) ");
-		Matcher doneM = doneP.matcher(s);	
-		if (doneM.find())
-			t.completionDate = DateUtils.parseDateTime(doneM.group(1), "yyyy.MM.dd@HH:mm");
-
-		// Defining priority
-		Pattern priP = Pattern.compile("\\(([A-Z])\\) ");
-		Matcher priM = priP.matcher(s);
-		if (priM.find())
-			t.priority = priM.group(1).charAt(0);
-		
-		// Defining due date
-		Pattern dueP = Pattern.compile("DUE=(\\S*) ");
-		Matcher dueM = dueP.matcher(s);	
-		if (dueM.find())
-			t.dueDate = new DueDate(DateUtils.parseDateTime(
-					dueM.group(1), "yyyy.MM.dd@HH:mm", "yyyy.MM.dd"), dueM.group(1).contains("@"));
-		
-		// Defining projects
-		Pattern projP = Pattern.compile("PROJS=(\\S*) ");
-		Matcher projM = projP.matcher(s);
-		if (projM.find())
-			for (String proj : projM.group(1).split(","))
-				t.addProject(proj);
-		
-		// Defining contexts
-		Pattern contP = Pattern.compile("CONTEXTS=(\\S*) ");
-		Matcher contM = contP.matcher(s);
-		if (contM.find())
-			for (String cont : contM.group(1).split(","))
-				t.addContext(cont);
-		
-		// Defining creationDate
-		Pattern madeP = Pattern.compile("MADE=(\\S*) ");
-		Matcher madeM = madeP.matcher(s);	
-		madeM.find();
-		t.creationDate = DateUtils.parseDateTime(madeM.group(1), "yyyy.MM.dd@HH:mm");
-		
-		// Defining name
-		// Accepts things between unescaped quotes (NAME="Read \"this book\" now")
-		Pattern nameP = Pattern.compile("NAME=\"((?:\\\\.|[^\"\\\\])*)\"");
-		Matcher nameM = nameP.matcher(s);
-		nameM.find();
-		t.name = nameM.group(1).replace("\\\"", "\"");
-		
-		// Defining note
-		Pattern noteP = Pattern.compile("NOTE=\"((?:\\\\.|[^\"\\\\])*)\"");
-		Matcher noteM = noteP.matcher(s);
-		if (noteM.find())
-			t.note = noteM.group(1).replace("\\\\n", "\n").replace("\\\"", "\"");
-				
-		// Defining edtDate
-		Pattern editP = Pattern.compile("EDIT=(\\S*)[\n]?$");
-		Matcher editM = editP.matcher(s);	
-		editM.find();
-		t.editDate = DateUtils.parseDateTime(editM.group(1), "yyyy.MM.dd@HH:mm");
-
-		return t;
 	}
 	
 	public String encode() {
@@ -458,14 +282,6 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		setEditDateNow();
 	}
 	
-	private void addProject(String name) {
-		Project project = projectManager.getProject(name);
-		if (project == null)
-			project = projectManager.createProject(name);
-		projects.add(project);
-		setEditDateNow();
-	}
-	
 	public ObservableList<Project> getProjects() {
 		return projects;
 	}
@@ -480,15 +296,7 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 				this.contexts.add(p);
 		setEditDateNow();
 	}
-	
-	private void addContext(String name) {
-		Context context = contextManager.getContext(name);
-		if (context == null)
-			context = contextManager.createContext(name);
-		contexts.add(context);
-		setEditDateNow();
-	}
-	
+
 	public ObservableList<Context> getContexts() {
 		return contexts;
 	}

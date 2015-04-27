@@ -6,27 +6,31 @@ import io.github.avatarhurden.lifeorganizer.objects.Context;
 
 public class ContextManager {
 
-	private ObservableList<Context> activeContexts;
+	private ObservableList<Context> contexts;
 	
 	public ContextManager() {
-		activeContexts = FXCollections.observableArrayList();
+		contexts = FXCollections.observableArrayList();
 	}
 	
-	public Context getContext(String name) {
-		for (Context p : activeContexts)
+	public Context getContext(String name, boolean filterActive) {
+		for (Context p : contexts.filtered(c -> filterActive ? c.isActive() : true))
 			if (p.getName().equals(name))
 				return p;
 		return null;
 	}
 	
-	public Context createContext(String name) {
-		Context context = new Context(name);
-		activeContexts.add(context);
+	public Context createContext(String name, boolean isActive) {
+		Context context = new Context(name, isActive);
+		contexts.add(context);
 		return context;
 	}
 	
+	public ObservableList<Context> getContexts() {
+		return contexts;
+	}
+	
 	public ObservableList<Context> getActiveContexts() {
-		return activeContexts;
+		return contexts.filtered(c -> c.isActive());
 	}
 	
 }

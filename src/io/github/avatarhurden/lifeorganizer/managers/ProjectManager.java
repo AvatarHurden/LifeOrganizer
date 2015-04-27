@@ -6,28 +6,31 @@ import javafx.collections.ObservableList;
 
 public class ProjectManager {
 
-	private ObservableList<Project> activeProjects;
+	private ObservableList<Project> projects;
 	
 	public ProjectManager() {
-		activeProjects = FXCollections.observableArrayList();
+		projects = FXCollections.observableArrayList();
 	}
 	
-	public Project getProject(String name) {
-		for (Project p : activeProjects)
+	public Project getProject(String name, boolean filterActive) {
+		for (Project p : projects.filtered(p -> filterActive ? p.isActive() : true))
 			if (p.getName().equals(name))
 				return p;
 		return null;
 	}
 	
-	public Project createProject(String name) {
-		Project project = new Project(name);
-		activeProjects.add(project);
+	public Project createProject(String name, boolean isActive) {
+		Project project = new Project(name, isActive);
+		projects.add(project);
 		return project;
 	}
 	
-	public ObservableList<Project> getActiveProjects() {
-		return activeProjects;
+	public ObservableList<Project> getProjects() {
+		return projects;
 	}
 	
+	public ObservableList<Project> getActiveProjects() {
+		return projects.filtered(p -> p.isActive());
+	}	
 
 }
