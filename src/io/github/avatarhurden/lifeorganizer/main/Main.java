@@ -35,7 +35,7 @@ import org.controlsfx.control.NotificationPane;
 
 public class Main extends Application {
 
-	private static final double version = 0.1;
+	private static final double version = 0.2;
 	private static final String changelogURL = "https://raw.githubusercontent.com/AvatarHurden/LifeOrganizer/master/changelog";
 
 	private TaskManager manager;
