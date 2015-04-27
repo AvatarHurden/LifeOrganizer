@@ -12,15 +12,24 @@ public class ProjectManager {
 		projects = FXCollections.observableArrayList();
 	}
 	
-	public Project getProject(String name, boolean filterActive) {
-		for (Project p : projects.filtered(p -> filterActive ? p.isActive() : true))
+	public Project getProject(String name) {
+		for (Project p : projects)
 			if (p.getName().equals(name))
 				return p;
 		return null;
 	}
 	
+	public void incrementProject(Project p, boolean isActive) {
+		p.incrementCount(isActive);
+	}
+	
+	public void decrementProject(Project p, boolean isActive) {
+		p.decrementCount(isActive);
+	}
+	
 	public Project createProject(String name, boolean isActive) {
-		Project project = new Project(name, isActive);
+		Project project = new Project(name);
+		project.incrementCount(isActive);
 		projects.add(project);
 		return project;
 	}

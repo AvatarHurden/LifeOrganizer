@@ -149,6 +149,10 @@ public class SingleTaskViewController {
 		task.EditDateProperty().addListener(editDateListener);
 		lastEditLabel.setText(new PrettyTime(Locale.US).format(task.getEditDate().toDate()));
 		
+		for (Project p : manager.getProjectManager().getProjects())
+			System.out.println(p.getName() + " " + p.isActive() +  " " + p.getActiveTasks() + " " +
+					p.getInactiveTasks());
+		
 		projectsView.setList(task.ProjectsProperty(), manager.getProjectManager().getActiveProjects());
 		projectsView.clearTextField();
 		

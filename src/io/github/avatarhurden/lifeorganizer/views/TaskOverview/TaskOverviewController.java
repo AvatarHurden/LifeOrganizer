@@ -31,6 +31,7 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
@@ -50,6 +51,8 @@ public class TaskOverviewController {
 	private AnchorPane tablePane;
 	@FXML
 	private TextField textField;
+	@FXML 
+	private Button archiveButton;
 	@FXML
 	private Button addButton;
 	@FXML
@@ -67,7 +70,7 @@ public class TaskOverviewController {
 	
 	private TaskManager manager;
 	private Stage configStage;
-	
+
 	public void setTaskManager(TaskManager manager) {
 		this.manager = manager;
 		
@@ -182,6 +185,8 @@ public class TaskOverviewController {
 	
 	@FXML
 	private void click() {
+		if (textField.getText().trim().length() == 0)
+			return;
 		Task t = manager.addTask(textField.getText(), todoButton.isSelected());
 		table.sort();
 		textField.setText("");
@@ -194,10 +199,24 @@ public class TaskOverviewController {
 	}
 	
 	@FXML
+	private void restore() {
+		manager.restore(table.getSelectionModel().getSelectedItem());
+	}
+	
+	@FXML
 	private void showTodo() {
 		List<String> sorts = table.getColumnSortOrder();
 		table.setItems(manager.getTodoList());
 		table.setColumnSortOrder(sorts);
+	
+		textField.setDisable(false);
+		addButton.setDisable(false);
+		if (taskView != null)
+		taskView.setDisable(false);
+		
+		archiveButton.setOnAction(event -> archive());
+		archiveButton.setText("Archive");
+		archiveButton.setTooltip(new Tooltip("Archive all done and failed tasks"));
 	}
 	
 	@FXML
@@ -205,6 +224,14 @@ public class TaskOverviewController {
 		List<String> sorts = table.getColumnSortOrder();
 		table.setItems(manager.getDoneList());
 		table.setColumnSortOrder(sorts);
+		
+		textField.setDisable(true);
+		addButton.setDisable(true);
+		taskView.setDisable(true);
+		
+		archiveButton.setOnAction(event -> restore());
+		archiveButton.setText("Restore");
+		archiveButton.setTooltip(new Tooltip("Restore selected task to todo file"));
 	}
 
 	@FXML
@@ -259,6 +286,8 @@ public class TaskOverviewController {
 			case N:
 				textField.requestFocus();
 				break;
+			case A:
+				archive();
 			default:
 				break;
 			}

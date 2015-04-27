@@ -61,10 +61,10 @@ public class Main extends Application {
 		Scene scene = new Scene(pane);
 		
 		TaskOverviewController controller = loader.<TaskOverviewController>getController();
+		controller.loadState();
 		controller.setTaskManager(manager);
 		controller.setConfigStage(getConfigStage());
-		controller.loadState();
-
+		
 		startUpdater(pane);
 		
 		primaryStage.setTitle("LifeOrganizer");

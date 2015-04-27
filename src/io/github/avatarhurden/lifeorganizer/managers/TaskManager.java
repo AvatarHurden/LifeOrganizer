@@ -32,11 +32,11 @@ public class TaskManager {
 		projectManager = new ProjectManager();
 		contextManager = new ContextManager();
 			
-		todo = new StoredList<Task>(getTodoFile(), false, 
-				task -> task.encode(), string -> decode(string, true) , task -> task.EditDateProperty());
 		done = new StoredList<Task>(getDoneFile(), false, 
 				task -> task.encode(), string -> decode(string, false), task -> task.EditDateProperty());
-	
+		todo = new StoredList<Task>(getTodoFile(), false, 
+				task -> task.encode(), string -> decode(string, true) , task -> task.EditDateProperty());
+		
 		todo.setSaveOnEdits(10);
 	}
 	
@@ -90,12 +90,31 @@ public class TaskManager {
   	
 	public void archiveTasks() {
 		List<Task> dones = todo.filter(task -> !task.getState().equals(Task.State.TODO));
+		
+		for (Task t : dones)
+			for (Project p : t.getProjects()) {
+				projectManager.decrementProject(p, true);
+				projectManager.incrementProject(p, false);
+			}
+		
 		done.addAll(dones);
 		todo.removeAll(dones);
 		try {
 			done.save();
 			todo.save();
 		} catch (IOException e) {}
+	}
+	
+	public void restore(Task task) {
+		if (!done.contains(task))
+			return;
+		done.remove(task);
+		todo.add(task);
+		
+		for (Project p : task.getProjects()) {
+			projectManager.decrementProject(p, false);
+			projectManager.incrementProject(p, true);
+		}
 	}
 	
 	public ProjectManager getProjectManager() {
@@ -107,15 +126,16 @@ public class TaskManager {
 	}
 	
 	private void addProject(Task t, String proj, boolean active) {
-		Project project = projectManager.getProject(proj, active);
+		Project project = projectManager.getProject(proj);
 		if (project == null)
 			project = projectManager.createProject(proj, active);
+		projectManager.incrementProject(project, active);
 		t.getProjects().add(project);
 		t.setEditDateNow();	
 	}
 	
 	private void addContext(Task t, String cont, boolean active) {
-		Context context = contextManager.getContext(cont, active);
+		Context context = contextManager.getContext(cont, false);
 		if (context == null)
 			context = contextManager.createContext(cont, active);
 		t.getContexts().add(context);
@@ -264,5 +284,4 @@ public class TaskManager {
 		
 		return t;
 	}
-
 }

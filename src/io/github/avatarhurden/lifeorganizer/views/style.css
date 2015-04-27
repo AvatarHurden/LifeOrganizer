@@ -11,6 +11,10 @@
     -fx-padding: 0.166667em 0.624999em 0.25em 0.624999em; /* 2 7,5 3 7,5 */ 
 }
 
+.object-box:disabled {
+	-fx-color: #B1BDC6;
+}
+
 .object-box:focused {
     -fx-color: #b4dafa;
     -fx-background-color: -fx-focus-color, -fx-outer-border, -fx-inner-border, -fx-body-color;
