@@ -149,7 +149,7 @@ public class TaskManager {
 		t.setEditDateNow();
 	}
 	
-	private Task decode(String s, boolean active) {
+	public Task decode(String s, boolean active) {
 		Task t = new Task();
 
 		// Defining state

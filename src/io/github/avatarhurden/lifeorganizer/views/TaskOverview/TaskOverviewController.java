@@ -32,6 +32,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.AnchorPane;
@@ -52,7 +53,7 @@ public class TaskOverviewController {
 	@FXML
 	private TextField textField;
 	@FXML 
-	private Button archiveButton, restoreButton;
+	private Button archiveButton, restoreButton, configButton, saveButton, reloadButton;
 	@FXML
 	private Button addButton;
 	@FXML
@@ -94,6 +95,13 @@ public class TaskOverviewController {
 		
 		archiveButton.managedProperty().bind(archiveButton.visibleProperty());
 		restoreButton.managedProperty().bind(restoreButton.visibleProperty());
+		
+		archiveButton.setTooltip(new Tooltip("Archive completed tasks"));
+		restoreButton.setTooltip(new Tooltip("Restore selected task from archive"));
+		saveButton.setTooltip(new Tooltip("Save tasks"));
+		reloadButton.setTooltip(new Tooltip("Reload tasks from file"));
+		configButton.setTooltip(new Tooltip("Open settings screen"));
+		
 		
 		table = new CustomizableTableView<Task>();
 		table.getStylesheets().add("/io/github/avatarhurden/lifeorganizer/views/style.css");
@@ -150,9 +158,14 @@ public class TaskOverviewController {
 						return;
 					}
 					
-					MenuItem item = new MenuItem("Deletar");
-					item.setOnAction(event -> table.getItems().remove(table.getSelectionModel().getSelectedItem()));
-					setContextMenu(new ContextMenu(item));
+					MenuItem delete = new MenuItem("Delete");
+					delete.setOnAction(event -> table.getItems().remove(table.getSelectionModel().getSelectedItem()));
+					MenuItem clone = new MenuItem("Clone");
+					clone.setOnAction(event -> {
+						String encoding = table.getSelectionModel().getSelectedItem().encode();
+						table.getItems().add(manager.decode(encoding, true));
+					});
+					setContextMenu(new ContextMenu(delete, clone));
 					
 //					if (t.getDueDate() != null && t.getDueDate().isAfterNow())
 //						getStyleClass().add("table-row-highlight");

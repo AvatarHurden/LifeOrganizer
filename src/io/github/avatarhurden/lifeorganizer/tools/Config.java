@@ -32,7 +32,7 @@ public class Config {
 			prop.load(new FileInputStream(configFile));
 		} catch (IOException e) {
 			try {
-				setDefaults();
+				saveConfig();
 			} catch (IOException e1) {}
 		}
 	}
@@ -55,13 +55,6 @@ public class Config {
 	public void restore(Config source) {
 		this.configFile = source.configFile;
 		this.prop = source.prop;
-	}
-	
-	private void setDefaults() throws FileNotFoundException, IOException {
-		prop.setProperty("default_folder", new File("data").getAbsolutePath());
-		prop.setProperty("todo_file", "todo.txt");
-		prop.setProperty("done_file", "done.txt");
-		prop.store(new FileOutputStream(configFile), "");
 	}
 	
 	public void setProperty(String name, String value) {

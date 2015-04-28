@@ -1,3 +1,9 @@
+# [Version 0.3]
+
+- **Additions**
+	- Added tooltips to the buttons.
+
+
 # [Version 0.2](https://github.com/AvatarHurden/LifeOrganizer/releases/download/0.2/LifeOrganizer-0.2.exe)
 
 **Do not download this version using the autoupdater. You must download the installer from the website**

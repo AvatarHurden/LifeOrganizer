@@ -31,7 +31,7 @@
                   </ImageView>
                </graphic>
             </Button>
-            <Button mnemonicParsing="false" onAction="#openConfig" prefHeight="40.0">
+            <Button fx:id="configButton" mnemonicParsing="false" onAction="#openConfig" prefHeight="40.0">
                <graphic>
                   <ImageView fitHeight="41.0" fitWidth="47.0" pickOnBounds="true" preserveRatio="true">
                      <image>
@@ -57,7 +57,7 @@
       <AnchorPane fx:id="statusBox" layoutX="790.0" layoutY="516.0" prefHeight="30.0" prefWidth="400.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0" />
       <ButtonBar layoutX="14.0" layoutY="19.0" nodeOrientation="RIGHT_TO_LEFT" prefHeight="49.0" prefWidth="184.0" AnchorPane.leftAnchor="14.0" AnchorPane.topAnchor="14.0">
          <buttons>
-            <Button mnemonicParsing="false" onAction="#save" prefHeight="49.0" prefWidth="50.0">
+            <Button fx:id="saveButton" mnemonicParsing="false" onAction="#save" prefHeight="49.0" prefWidth="50.0">
                <graphic>
                   <ImageView fitHeight="40.0" fitWidth="41.0" pickOnBounds="true" preserveRatio="true">
                      <image>
@@ -66,7 +66,7 @@
                   </ImageView>
                </graphic>
             </Button>
-            <Button mnemonicParsing="false" onAction="#refresh">
+            <Button fx:id="reloadButton" mnemonicParsing="false" onAction="#refresh">
                <graphic>
                   <ImageView fitHeight="41.0" fitWidth="95.0" pickOnBounds="true" preserveRatio="true">
                      <image>
