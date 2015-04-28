@@ -1,6 +1,9 @@
 package io.github.avatarhurden.lifeorganizer.managers;
 
 import io.github.avatarhurden.lifeorganizer.objects.Project;
+
+import java.util.List;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -19,14 +22,30 @@ public class ProjectManager {
 		return null;
 	}
 	
-	public void incrementProject(Project p, boolean isActive) {
-		p.incrementCount(isActive);
+	public void incrementProjects(boolean isActive, Project... p) {
+		for (Project project : p)
+			project.incrementCount(isActive);
+	}
+
+	public void incrementProjects(boolean isActive, List<Project> p) {
+		for (Project project : p)
+			project.incrementCount(isActive);
 	}
 	
-	public void decrementProject(Project p, boolean isActive) {
-		p.decrementCount(isActive);
-		if (!p.isActive() && p.getInactiveTasks() == 0)
-			projects.remove(p);
+	public void decrementProjects(boolean isActive, Project... p) {
+		for (Project project : p) {
+			project.decrementCount(isActive);
+			if (!project.isActive() && project.getInactiveTasks() == 0)
+				projects.remove(project);
+		}
+	}
+	
+	public void decrementProjects(boolean isActive, List<Project> p) {
+		for (Project project : p) {
+			project.decrementCount(isActive);
+			if (!project.isActive() && project.getInactiveTasks() == 0)
+				projects.remove(project);
+		}
 	}
 	
 	public Project createProject(String name, boolean isActive) {

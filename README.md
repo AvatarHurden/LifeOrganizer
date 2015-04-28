@@ -9,7 +9,7 @@ Besides what is supported by **todo.txt**, LifeOrganizer also provides built-in 
 
 It is intended to be completely usable with only a keyboard, but it also has a simple and easy to use graphical interface.
 
-### Task Creation
+### Quick-Add
 
 To create a task, simply type what you want to do and press enter. You can set every parameter of you task in this initial insertion, by following
 these rules:
@@ -48,9 +48,9 @@ irrelevant, but this order was chosen as to allow for a simple alphabetical orde
 priority first, followed by closest due dates, etc.)
 	
 1. The first 3 characters of a line indicate whether the task is pending, done or failed.
-	- *[ ]* indicates the task is pending
-	- *[x]* indicates the task is done
-	- *[-]* indicates the task is failed
+	- **[ ]** indicates the task is pending
+	- **[x]** indicates the task is done
+	- **[-]** indicates the task is failed
 	
 	This must always be the first part of a line. If it is not present, the line is not counted as a task.
 

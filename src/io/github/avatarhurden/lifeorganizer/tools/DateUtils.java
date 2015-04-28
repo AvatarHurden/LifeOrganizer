@@ -2,6 +2,7 @@ package io.github.avatarhurden.lifeorganizer.tools;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
@@ -48,7 +49,8 @@ public class DateUtils {
 	 * 
 	 * @param string The String to be parsed
 	 * @param defaults Values that will be set if they are not provided by the string.
-	 * <p>The accepted keys are <code>"d", "M", "Y", "H", "m"</code>
+	 * <p>The accepted keys are <code>"d", "M", "Y", "H", "m", "s", "ms"</code>, for day, month,
+	 * year, hour, minute, second and millisecond, respectively.
 	 * 
 	 * @return
 	 */
@@ -71,31 +73,32 @@ public class DateUtils {
 		formats.add("@H:m");
 		formats.add("@H");
 		
-		Consumer<MutableDateTime> delta = d -> d.add(0);;
-		if (string.substring(0, 3).equals("tom")) { // If string starts with "tod" or "tom", sets the day accordingly
-			delta = date -> date.setDayOfMonth(DateTime.now().getDayOfMonth() + 1);
+		List<Consumer<MutableDateTime>> deltas = new ArrayList<Consumer<MutableDateTime>>();
+		if (string.startsWith("tom")) { // If string starts with "tod" or "tom", sets the day accordingly
+			deltas.add(date -> date.setDayOfMonth(DateTime.now().getDayOfMonth() + 1));
 			accepted = true;
 			string = string.replace("tom", "");
-		} else if (string.substring(0, 3).equals("tod")) {
-			delta = date -> date.setDayOfMonth(DateTime.now().getDayOfMonth());
+		} else if (string.startsWith("tod")) {
+			deltas.add(date -> date.setDayOfMonth(DateTime.now().getDayOfMonth()));
 			accepted = true;
 			string = string.replace("tod", "");
 		} else {
 			// If there is a "+num", gets the last char to know what unit to increment and increments the amount on the final date
-			Matcher p = Pattern.compile("\\+([0-9]*)([dwmyDWMY])").matcher(string);
-			int number = 0;
-			char pattern = 0; 
-			if (p.find()) {
+			Matcher p = Pattern.compile("\\+([0-9]*)([dwmyhDWMYH])").matcher(string);
+			
+			while (p.find()) {
 				accepted = true;
-				number = Integer.parseInt(p.group(1));
-				pattern = p.group(2).toLowerCase().charAt(0);
+				int number = Integer.parseInt(p.group(1));
+				char pattern = p.group(2).toLowerCase().charAt(0);
 				string = string.replace(p.group(), "");
+				
+				if (pattern == 'd') deltas.add(date -> date.addDays(number));
+				else if (pattern == 'w') deltas.add(date -> date.addWeeks(number));
+				else if (pattern == 'm') deltas.add(date -> date.addMonths(number));
+				else if (pattern == 'y') deltas.add(date -> date.addYears(number));
+				else if (pattern == 'h') deltas.add(date -> date.addHours(number));
+			
 			}
-			final int increment = number;
-			if (pattern == 'd') delta = date -> date.addDays(increment);
-			else if (pattern == 'w') delta = date -> date.addWeeks(increment);
-			else if (pattern == 'm') delta = date -> date.addMonths(increment);
-			else if (pattern == 'y') delta = date -> date.addYears(increment);
 		}
 		
 		for (String p : formats)
@@ -117,16 +120,19 @@ public class DateUtils {
 		if (!accepted)
 			return null;
 		
-		delta.accept(now); // Applies the delta that was defined earlier
+		for (Consumer<MutableDateTime> delta : deltas)
+			delta.accept(now); // Applies the delta that was defined earlier
 				
 		if (defaults != null) // Applies the default values
 			for (Entry<String, Integer> pair : defaults.entrySet())
-					 if (pair.getKey().equals("Y")) now.setYear(Integer.valueOf(pair.getValue()));
-				else if (pair.getKey().equals("M")) now.setMonthOfYear(Integer.valueOf(pair.getValue()));
-				else if (pair.getKey().equals("d")) now.setDayOfMonth(Integer.valueOf(pair.getValue()));
-				else if (pair.getKey().equals("H")) now.setHourOfDay(Integer.valueOf(pair.getValue()));
-				else if (pair.getKey().equals("m")) now.setMinuteOfHour(Integer.valueOf(pair.getValue()));
-	
+					 if (pair.getKey().equals("Y")) now.setYear(pair.getValue());
+				else if (pair.getKey().equals("M")) now.setMonthOfYear(pair.getValue());
+				else if (pair.getKey().equals("d")) now.setDayOfMonth(pair.getValue());
+				else if (pair.getKey().equals("H")) now.setHourOfDay(pair.getValue());
+				else if (pair.getKey().equals("m")) now.setMinuteOfHour(pair.getValue());
+				else if (pair.getKey().equals("s")) now.setSecondOfMinute(pair.getValue());
+				else if (pair.getKey().equals("ms")) now.setMillisOfSecond(pair.getValue());
+		
 		// "now" has all the values that were provided by the user, and the ones that were not modified are
 		// already the ones that correspond to the current date and time.
 		return now.toDateTime();

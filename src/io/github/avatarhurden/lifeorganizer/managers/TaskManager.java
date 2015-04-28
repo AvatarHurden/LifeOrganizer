@@ -17,6 +17,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.joda.time.DateTime;
+
 public class TaskManager {
 
 	StoredList<Task> todo, done;
@@ -56,11 +58,19 @@ public class TaskManager {
 	}
 	
 	public void closeArchive() {
+		for (Task t : done) {
+			projectManager.decrementProjects(false, t.getProjects());
+			contextManager.decrementContexts(false, t.getContexts());
+		}
 		done.close();
 	}
 
 	public void reload() {
 		try {
+			for (Task t : todo) {
+				projectManager.decrementProjects(true, t.getProjects());
+				contextManager.decrementContexts(true, t.getContexts());
+			}
 			todo.setFile(getTodoFile(), false);
 		} catch (IOException e) {}
 	}	
@@ -96,11 +106,13 @@ public class TaskManager {
 		
 		List<Task> dones = todo.filter(task -> !task.getState().equals(Task.State.TODO));
 		
-		for (Task t : dones)
-			for (Project p : t.getProjects()) {
-				projectManager.decrementProject(p, true);
-				projectManager.incrementProject(p, false);
-			}
+		for (Task t : dones) {
+			projectManager.decrementProjects(true, t.getProjects());
+			projectManager.incrementProjects(false, t.getProjects());
+			contextManager.decrementContexts(true, t.getContexts());
+			contextManager.incrementContexts(false, t.getContexts());
+			
+		}
 		
 		done.addAll(dones);
 		todo.removeAll(dones);
@@ -117,10 +129,11 @@ public class TaskManager {
 		done.remove(task);
 		todo.add(task);
 		
-		for (Project p : task.getProjects()) {
-			projectManager.decrementProject(p, false);
-			projectManager.incrementProject(p, true);
-		}
+		projectManager.decrementProjects(false, task.getProjects());
+		projectManager.incrementProjects(true, task.getProjects());
+		
+		contextManager.decrementContexts(true, task.getContexts());
+		contextManager.incrementContexts(false, task.getContexts());
 	}
 	
 	public ProjectManager getProjectManager() {
@@ -254,13 +267,19 @@ public class TaskManager {
 		if (matcher.find()) {
 			if (matcher.group(1).length() > 0) {
 				HashMap<String, Integer> defaults = new HashMap<String, Integer>();
-				defaults.put("m", 0);
+				if (!matcher.group(1).contains("h")) // If user wants due as a hour delta, 
+					defaults.put("m", 0); 			// keep the current minute information
+				defaults.put("s", 0);
+				defaults.put("ms", 0);
 				
-				DueDate dueDate = new DueDate();
-				dueDate.setHasTime(matcher.group(1).contains("@"));
-				dueDate.setDateTime(DateUtils.parseMultiFormat(matcher.group(1), defaults));
+				DateTime date = DateUtils.parseMultiFormat(matcher.group(1), defaults);
+				if (date != null) {
+					DueDate dueDate = new DueDate();
+					dueDate.setHasTime(matcher.group(1).contains("@") || matcher.group(1).contains("h"));
+					dueDate.setDateTime(date);
 				
-				t.setDueDate(dueDate);
+					t.setDueDate(dueDate);
+				}
 			}
 			s = s.replace(matcher.group(), "");
 		}

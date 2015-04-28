@@ -80,8 +80,6 @@ public class Main extends Application {
 				e.printStackTrace();
 			}
 		});
-		
-		System.out.println(manager.getDoneList().size());
 	}
 	
 	private void startUpdater(NotificationPane pane) {

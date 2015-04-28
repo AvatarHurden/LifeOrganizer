@@ -31,7 +31,7 @@ public class DueDate {
 	}
 	
 	public void setDateTime(DateTime dateTime) {
-		this.dateTime = hasTime.getValue() ? dateTime : dateTime.secondOfDay().setCopy(0);
+		this.dateTime = hasTime.getValue() ? dateTime : dateTime.millisOfDay().setCopy(0);
 	}
 	
 	public DateTime getDateTime() {

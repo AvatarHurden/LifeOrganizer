@@ -163,13 +163,13 @@ public class SingleTaskViewController {
 		projectsView.setList(task.ProjectsProperty());
 		projectsView.setSuggestions(manager.getProjectManager().getActiveProjects());
 		projectsView.setCreationPolicy(s -> manager.getProjectManager().createProject(s, true));
-		projectsView.setDeletionPolicy(proj -> manager.getProjectManager().decrementProject(proj, true));
+		projectsView.setDeletionPolicy(proj -> manager.getProjectManager().decrementProjects(true, proj));
 		projectsView.clearTextField();
 		
 		contextsView.setList(task.ContextsProperty());
 		contextsView.setSuggestions(manager.getContextManager().getActiveContexts());
 		contextsView.setCreationPolicy(s -> manager.getContextManager().createContext(s, true));
-		contextsView.setDeletionPolicy(proj -> manager.getContextManager().decrementContext(proj, true));
+		contextsView.setDeletionPolicy(cont -> manager.getContextManager().decrementContexts(true, cont));
 		contextsView.clearTextField();
 		
 		if (this.task != null)

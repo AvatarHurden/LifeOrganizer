@@ -199,8 +199,6 @@ public class TaskOverviewController {
 	
 	@FXML
 	private void click() {
-		if (textField.getText().trim().length() == 0)
-			return;
 		Task t = manager.addTask(textField.getText(), true);
 		table.sort();
 		textField.setText("");
@@ -218,7 +216,7 @@ public class TaskOverviewController {
 	}
 	
 	@FXML
-	private void refresh() {
+	private void reload() {
 		manager.reload();
 	}
 	
@@ -316,6 +314,9 @@ public class TaskOverviewController {
 				break;
 			case S:
 				save();
+				break;
+			case R:
+				reload();
 			default:
 				break;
 			}

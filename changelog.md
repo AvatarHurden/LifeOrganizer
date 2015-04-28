@@ -1,9 +1,16 @@
 # [Version 0.3]
 
 - **Additions**
-	- Added tooltips to the buttons.
+	- Using Quick-Add, users can now bundle multiple relative time shifts, to allow for greater
+	flexibility. 
+	- Tasks can now be cloned.
 
+- **Changes**
+	- Restored ability to create empty tasks.
 
+- **Bug fixes**
+	- On startup, actually asks user where to save the file folder.
+	
 # [Version 0.2](https://github.com/AvatarHurden/LifeOrganizer/releases/download/0.2/LifeOrganizer-0.2.exe)
 
 **Do not download this version using the autoupdater. You must download the installer from the website**

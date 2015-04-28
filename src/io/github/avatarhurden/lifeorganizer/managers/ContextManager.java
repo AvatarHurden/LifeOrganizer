@@ -1,6 +1,9 @@
 package io.github.avatarhurden.lifeorganizer.managers;
 
 import io.github.avatarhurden.lifeorganizer.objects.Context;
+
+import java.util.List;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -12,14 +15,30 @@ public class ContextManager {
 		contexts = FXCollections.observableArrayList();
 	}
 
-	public void incrementContext(Context c, boolean isActive) {
-		c.incrementCount(isActive);
+	public void incrementContexts(boolean isActive, Context... c) {
+		for (Context context : c)
+			context.incrementCount(isActive);
+	}
+
+	public void incrementContexts(boolean isActive, List<Context> c) {
+		for (Context context : c)
+			context.incrementCount(isActive);
 	}
 	
-	public void decrementContext(Context c, boolean isActive) {
-		c.decrementCount(isActive);
-		if (!c.isActive() && c.getInactiveTasks() == 0)
-			contexts.remove(c);
+	public void decrementContexts(boolean isActive, Context... c) {
+		for (Context context : c) {
+			context.decrementCount(isActive);
+			if (!context.isActive() && context.getInactiveTasks() == 0)
+				contexts.remove(context);
+		}
+	}
+	
+	public void decrementContexts(boolean isActive, List<Context> c) {
+		for (Context context : c) {
+			context.decrementCount(isActive);
+			if (!context.isActive() && context.getInactiveTasks() == 0)
+				contexts.remove(context);
+		}
 	}
 	
 	public Context createContext(String name, boolean isActive) {
