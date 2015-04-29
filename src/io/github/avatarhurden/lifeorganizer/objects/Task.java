@@ -1,9 +1,15 @@
 package io.github.avatarhurden.lifeorganizer.objects;
 
+import io.github.avatarhurden.lifeorganizer.managers.TaskManager;
 import io.github.avatarhurden.lifeorganizer.tools.DateUtils;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.UUID;
 
 import javafx.beans.Observable;
 import javafx.beans.property.Property;
@@ -13,12 +19,18 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import org.joda.time.DateTime;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>{
+public class Task extends SimpleObjectProperty<Task>{
 
 	public enum State {
 		TODO, DONE, FAILED;
 	}
+	
+	private final String uuid;
+	private boolean isArchived;
 	
 	private State state;
 	private String name;
@@ -48,68 +60,141 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 	private Property<ObservableList<Context>> contextsProperty;
 	private Property<DateTime> editDateProperty;
 	
-	public Task() {
-		StateProperty().setValue(State.TODO);
+	private TaskManager manager;
+	private File file;
+	
+	public static Task createNew(TaskManager manager) {
+		JSONObject json = new JSONObject();
+		
+		String uuid = UUID.randomUUID().toString().replace("-", "");
+		json.put("uuid", uuid);
+		File file = new File(manager.getFolder().toFile(), uuid + ".txt");
+		
+		return new Task(manager, json, file);
+	}
+	
+	public static Task loadFromPath(TaskManager manager, File file) throws IOException {
+		BufferedReader reader = new BufferedReader(new FileReader(file));
+		StringBuffer buffer = new StringBuffer();
+		int read;
+		while ((read = reader.read()) != -1)
+			buffer.append(read);
+		reader.close();
+		
+		return new Task(manager, new JSONObject(buffer.toString()), file);
+	}
+	
+	public Task(TaskManager manager, JSONObject json, File file) {
+		this.manager = manager;
+		this.file = file;
+		uuid = json.getString("uuid");
 		
 		projects = FXCollections.observableArrayList(p -> new Observable[] {p.NameProperty()});
 		contexts = FXCollections.observableArrayList(p -> new Observable[] {p.NameProperty()});
+
+		StateProperty().setValue(State.TODO);
 		
 		CreationDateProperty().setValue(new DateTime());
 		setEditDateNow();
+		
+		loadJSON(json);
 	}
 	
-	public String encode() {
-	 	ArrayList<String> parts = new ArrayList<String>();
-	 	
-	 	// Adding state
-	 	switch (state) {
-		case TODO:
-			parts.add("[ ]");
-			break;
-		case DONE:
-			parts.add("[x]");
-			break;
-		case FAILED:
-			parts.add("[-]");	
+	private void loadJSON(JSONObject json) {
+	
+		if (json.has("archived"))
+			isArchived = json.getBoolean("archived");
+		
+		if (json.has("name"))
+			name = json.getString("name");
+		
+		switch (json.getString("state")) {
+		case "todo": state = State.TODO; break;
+		case "done": state = State.DONE; break;
+		case "failed": state = State.FAILED; break;
 		}
 		
-		if (completionDate != null)
-			parts.add("DONE=" + DateUtils.format(completionDate, "yyyy.MM.dd@HH:mm"));
+		if (json.has("creationDate"))
+			creationDate = DateUtils.parseDateTime(
+				json.getString("creationDate"), "yyyy.MM.dd@HH:mm");
+
+		if (json.has("editDate"))
+			editDate = DateUtils.parseDateTime(
+				json.getString("editDate"), "yyyy.MM.dd@HH:mm");
 		
-		// Adding priority
+		if (json.has("note"))
+			note = json.getString("note");
+		
+		if (json.has("completionDate"))
+			completionDate = DateUtils.parseDateTime(
+					json.getString("completionDate"), "yyyy.MM.dd@HH:mm");
+	
+		if (json.has("priority"))
+			priority = json.getString("priority").charAt(0);
+		
+		if (json.has("dueDate"))
+			dueDate = new DueDate(DateUtils.parseDateTime(
+					json.getString("dueDate"), "yyyy.MM.dd@HH:mm", "yyyy.MM.dd"), 
+					json.getString("dueDate").contains("@"));
+		
+		if (json.has("projects"))
+			for (int i = 0; i < json.getJSONArray("projects").length(); i++)
+				addProject(json.getJSONArray("projects").getString(i));
+		
+		if (json.has("contexts"))
+			for (int i = 0; i < json.getJSONArray("contexts").length(); i++)
+				addContext(json.getJSONArray("contexts").getString(i));
+	}
+	
+	private void save() {
+		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+			writer.write(toJSON().toString(4));
+			writer.close();
+		} catch (JSONException | IOException e) {}
+	}
+	
+	public JSONObject toJSON() {
+		JSONObject json = new JSONObject();
+		
+		json.put("uuid", uuid);
+		json.put("archived", isArchived);
+		json.put("name", name);
+		json.put("creationDate", DateUtils.format(creationDate, "yyyy.MM.dd@HH:mm"));
+		json.put("editDate", DateUtils.format(editDate, "yyyy.MM.dd@HH:mm"));
+		
+		switch (state) {
+		case TODO: json.put("state", "todo"); break;
+		case DONE: json.put("state", "done"); break;
+		case FAILED: json.put("state", "failed"); break;
+		}
+		
 		if (priority != null)
-			parts.add(String.format("(%c)", priority));
+			json.put("priority", priority);
 		
 		if (dueDate != null)
 			if (dueDate.getHasTime())
-				parts.add("DUE=" + DateUtils.format(dueDate.getDateTime(), "yyyy.MM.dd@HH:mm"));
+				json.put("dueDate", DateUtils.format(dueDate.getDateTime(), "yyyy.MM.dd@HH:mm"));
 			else
-				parts.add("DUE=" + DateUtils.format(dueDate.getDateTime(), "yyyy.MM.dd"));
-				
-		parts.add("MADE=" + DateUtils.format(creationDate, "yyyy.MM.dd@HH:mm"));
-		
-		parts.add("NAME=\"" + name.replace("\"", "\\\"") + "\"");
-		
-		if (!projects.isEmpty()) {
-			List<String> projNames = new ArrayList<String>();
-			for (Project proj : projects)
-				projNames.add(proj.getName());
-			parts.add("PROJS=" + String.join(",", projNames));
-		}
+				json.put("dueDate", DateUtils.format(dueDate.getDateTime(), "yyyy.MM.dd"));
 			
-		if (!contexts.isEmpty()) {
-			List<String> contNames = new ArrayList<String>();
-			for (Context proj : contexts)
-				contNames.add(proj.getName());
-			parts.add("CONTEXTS=" + String.join(",", contNames));
+		if (projects != null) {
+			JSONArray ar = new JSONArray();
+			for (Project p : projects)
+				ar.put(p.getName());
+			json.put("projects", ar);
+		}
+
+		if (contexts != null) {
+			JSONArray ar = new JSONArray();
+			for (Context c : contexts)
+				ar.put(c.getName());
+			json.put("contexts", ar);
 		}
 		
-		if (note != null && note != "")
-			parts.add("NOTE=\"" + note.replace("\n", "\\\\n").replace("\"", "\\\"") + "\"");
-			
-		parts.add("EDIT=" + DateUtils.format(editDate, "yyyy.MM.dd@HH:mm"));
-	
-		return String.join(" ", parts);
+		if (note != null)
+			json.put("note", note);
+		
+		return json;
 	}
 	
 	// Property methods
@@ -153,7 +238,10 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		if (editDateProperty == null) {
 			// Listen to editdate, since it is changed every time another value is changed
 			editDateProperty = new TaskObjectProperty<DateTime>("editDate").get();
-			editDateProperty.addListener((obs, oldValue, newValue) -> fireValueChangedEvent());
+			editDateProperty.addListener((obs, oldValue, newValue) -> { 
+				fireValueChangedEvent();
+				save();
+			});
 		}
 		return editDateProperty;
 	}
@@ -193,13 +281,21 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		}
 	}
 
-	@Override
-	public int compareTo(Task o) {
-		return encode().compareTo(o.encode());
-	}
-	
 	// Setters and Getters
 
+	public String getUUID() {
+		return uuid;
+	}
+	
+	public void setArchived(boolean isArchived) {
+		this.isArchived = isArchived;
+		setEditDateNow();
+	}
+	
+	public boolean isArchived() {
+		return isArchived;
+	}
+	
 	public void setState(State state) {
 		setEditDateIfDifferent(this.state, state);
 		
@@ -281,6 +377,11 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 				this.projects.add(p);
 		setEditDateNow();
 	}
+
+	public void addProject(String name) {
+		projects.add(manager.getProjectManager().createProject(name, !isArchived));
+		setEditDateNow();
+	}
 	
 	public ObservableList<Project> getProjects() {
 		return projects;
@@ -294,6 +395,11 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		for (Context p : contexts)
 			if (!this.contexts.contains(p))
 				this.contexts.add(p);
+		setEditDateNow();
+	}
+
+	public void addContext(String name) {
+		contexts.add(manager.getContextManager().createContext(name, !isArchived));
 		setEditDateNow();
 	}
 
