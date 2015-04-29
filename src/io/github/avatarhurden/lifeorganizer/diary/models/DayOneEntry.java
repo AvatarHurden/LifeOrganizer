@@ -1,31 +1,33 @@
 package io.github.avatarhurden.lifeorganizer.diary.models;
 
 import java.io.File;
-import java.io.IOException;
-import java.text.ParseException;
-import java.util.Map.Entry;
 
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.xml.sax.SAXException;
+import javafx.beans.property.SimpleObjectProperty;
 
 import com.dd.plist.NSDictionary;
-import com.dd.plist.NSObject;
-import com.dd.plist.PropertyListFormatException;
 import com.dd.plist.PropertyListParser;
 
-public class DayOneEntry {
+public class DayOneEntry extends SimpleObjectProperty<DayOneEntry> {
 
-	public DayOneEntry(File file) throws IOException, PropertyListFormatException, ParseException, ParserConfigurationException, SAXException {
-		
-		NSDictionary dic = (NSDictionary) PropertyListParser.parse(file);
-		
-		for (Entry<String, NSObject> obs : dic.entrySet())
-			if (obs.getValue() instanceof NSDictionary)
-				for (Entry<String, NSObject> obs2 : ((NSDictionary) obs.getValue()).entrySet())
-					System.out.println(obs2.getKey() + ": " +obs2.getValue().toString());
-			else
-				System.out.println(obs.getKey() + ": " +obs.getValue().toString());
+	private NSDictionary dictionary;
+	
+	private DayOneEntry(NSDictionary dictionary) {
+		this.dictionary = dictionary;
 	}
+	
+	public static DayOneEntry loadFromFile(File file) throws Exception {
+		return new DayOneEntry((NSDictionary) PropertyListParser.parse(file));
+	}
+	
+	public static DayOneEntry createNewEntry() {
+		NSDictionary dict = new NSDictionary();
+		
+		return new DayOneEntry(dict);
+	}
+	
+	public NSDictionary getDictionary() {
+		return dictionary;
+	}
+	
 	
 }
