@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import javafx.beans.Observable;
@@ -23,7 +25,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Task extends SimpleObjectProperty<Task>{
+public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>{
 
 	public enum State {
 		TODO, DONE, FAILED;
@@ -63,6 +65,8 @@ public class Task extends SimpleObjectProperty<Task>{
 	private TaskManager manager;
 	private File file;
 	
+	private boolean saveChanges = false;
+	
 	public static Task createNew(TaskManager manager) {
 		JSONObject json = new JSONObject();
 		
@@ -78,7 +82,7 @@ public class Task extends SimpleObjectProperty<Task>{
 		StringBuffer buffer = new StringBuffer();
 		int read;
 		while ((read = reader.read()) != -1)
-			buffer.append(read);
+			buffer.append((char) read);
 		reader.close();
 		
 		return new Task(manager, new JSONObject(buffer.toString()), file);
@@ -92,12 +96,14 @@ public class Task extends SimpleObjectProperty<Task>{
 		projects = FXCollections.observableArrayList(p -> new Observable[] {p.NameProperty()});
 		contexts = FXCollections.observableArrayList(p -> new Observable[] {p.NameProperty()});
 
-		StateProperty().setValue(State.TODO);
-		
-		CreationDateProperty().setValue(new DateTime());
+		state = State.TODO;
+		creationDate = new DateTime();
+
 		setEditDateNow();
-		
+
 		loadJSON(json);
+		
+		saveChanges = true;
 	}
 	
 	private void loadJSON(JSONObject json) {
@@ -108,16 +114,17 @@ public class Task extends SimpleObjectProperty<Task>{
 		if (json.has("name"))
 			name = json.getString("name");
 		
-		switch (json.getString("state")) {
-		case "todo": state = State.TODO; break;
-		case "done": state = State.DONE; break;
-		case "failed": state = State.FAILED; break;
-		}
+		if (json.has("state"))
+			switch (json.getString("state")) {
+			case "todo": state = State.TODO; break;
+			case "done": state = State.DONE; break;
+			case "failed": state = State.FAILED; break;
+			}
 		
 		if (json.has("creationDate"))
 			creationDate = DateUtils.parseDateTime(
 				json.getString("creationDate"), "yyyy.MM.dd@HH:mm");
-
+		
 		if (json.has("editDate"))
 			editDate = DateUtils.parseDateTime(
 				json.getString("editDate"), "yyyy.MM.dd@HH:mm");
@@ -147,10 +154,15 @@ public class Task extends SimpleObjectProperty<Task>{
 	}
 	
 	private void save() {
+		if (!saveChanges)
+			return;
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
 			writer.write(toJSON().toString(4));
 			writer.close();
-		} catch (JSONException | IOException e) {}
+			manager.setTaskModified(uuid);
+		} catch (JSONException | IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public JSONObject toJSON() {
@@ -321,10 +333,7 @@ public class Task extends SimpleObjectProperty<Task>{
 	}
 
 	public void setEditDateNow() {
-		if (editDateProperty != null)
-			editDateProperty.setValue(new DateTime());
-		else
-			setEditDate(new DateTime());
+		EditDateProperty().setValue(new DateTime());
 	}
 	
 	public DateTime getEditDate() {
@@ -424,5 +433,9 @@ public class Task extends SimpleObjectProperty<Task>{
 	public DueDate getDueDate() {
 		return dueDate;
 	}
-	
+
+	@Override
+	public int compareTo(Task o) {
+		return 0;
+	}
 }

@@ -3,10 +3,10 @@ package io.github.avatarhurden.lifeorganizer.main;
 import io.github.avatarhurden.lifeorganizer.managers.TaskManager;
 import io.github.avatarhurden.lifeorganizer.tools.Config;
 import io.github.avatarhurden.lifeorganizer.views.ConfigView.ConfigViewController;
+import io.github.avatarhurden.lifeorganizer.views.StartupView.StartupViewController;
 import io.github.avatarhurden.lifeorganizer.views.TaskOverview.TaskOverviewController;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -40,6 +40,7 @@ public class Main extends Application {
 
 	private TaskManager manager;
 	private static Stage primaryStage;
+	private static NotificationPane pane;
 	
 	public static void main(String[] args) {
 		launch(args);
@@ -52,14 +53,7 @@ public class Main extends Application {
 		if (Config.get().getProperty("default_folder") == null)
 			defineDataFolder();
 		
-		manager = new TaskManager();
-
-		TaskOverviewController controller = new TaskOverviewController();
-		controller.loadState();
-		controller.setTaskManager(manager);
-		controller.setConfigStage(getConfigStage());
-		
-		NotificationPane pane = new NotificationPane(controller.getView());
+		pane = new NotificationPane();
 		Scene scene = new Scene(pane);
 		
 		startUpdater(pane);
@@ -67,19 +61,35 @@ public class Main extends Application {
 		primaryStage.setTitle("LifeOrganizer");
 		primaryStage.setScene(scene);
 		primaryStage.show();
+
+		if (!TaskManager.isInitiliazed()) {
+			StartupViewController startup = new StartupViewController();
+			pane.setContent(startup.getView());
+			startup.setOnClose(() -> setTaskView());
+		} else
+			setTaskView();
 		
 		setPosition(primaryStage);
 		
 		primaryStage.setOnCloseRequest(event -> {
 			try {
 				savePosition(primaryStage);
-				controller.saveState();
-				Config.save();
-				manager.save();
+				manager.close();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		});
+	}
+	
+	private void setTaskView() {
+		manager = new TaskManager();
+		manager.loadAndWatch();
+		
+		TaskOverviewController controller = new TaskOverviewController();
+		controller.setTaskManager(manager);
+		controller.loadState();
+		controller.setConfigStage(getConfigStage());
+		pane.setContent(controller.getView());
 	}
 	
 	private void startUpdater(NotificationPane pane) {
@@ -146,14 +156,11 @@ public class Main extends Application {
 			exit();
 	}
 	
-	private Stage getConfigStage() throws IOException {
+	private Stage getConfigStage() {
 		ConfigViewController configView = new ConfigViewController();
-		
 		
 		Stage stage = new Stage();
 		stage.setScene(new Scene((Parent) configView.getView()));
-		
-		configView.addActionOnExit(() -> manager.reload());
 		
 		return stage;
 	}

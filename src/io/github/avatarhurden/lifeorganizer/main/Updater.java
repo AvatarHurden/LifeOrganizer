@@ -75,7 +75,6 @@ public class Updater implements FileDownloaderDelegate {
     		return;
 
 		Platform.runLater(() -> requestUserUpdate());
-        
     }
     
     private void requestUserUpdate() {

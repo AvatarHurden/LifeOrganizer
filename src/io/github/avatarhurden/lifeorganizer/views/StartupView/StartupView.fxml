@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<Accordion fx:id="accordion" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="560.0" prefWidth="816.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1">
+  <panes>
+    <TitledPane fx:id="creationPane" animated="false" text="Create ">
+      <content>
+        <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="0.0" minWidth="0.0" prefHeight="509.0" prefWidth="814.0">
+               <children>
+                  <Button layoutX="306.0" layoutY="177.0" mnemonicParsing="false" onAction="#newTasks" text="Start New Tasks">
+                     <font>
+                        <Font size="23.0" />
+                     </font>
+                  </Button>
+                  <Button layoutX="349.0" layoutY="242.0" mnemonicParsing="false" onAction="#importOld" text="Import Old Format" />
+               </children>
+            </AnchorPane>
+      </content>
+    </TitledPane>
+    <TitledPane fx:id="locationPane" animated="false" text="Select Folder Location">
+      <content>
+        <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="0.0" minWidth="0.0" prefHeight="507.0" prefWidth="834.0">
+               <children>
+                  <Label layoutX="239.0" layoutY="63.0" text="Where do you wish to save your files?">
+                     <font>
+                        <Font size="20.0" />
+                     </font>
+                  </Label>
+                  <Hyperlink layoutX="557.0" layoutY="292.0" onAction="#openLocationDialog" text="Select location" />
+                  <Separator layoutX="404.0" layoutY="139.0" orientation="VERTICAL" prefHeight="225.0" prefWidth="1.0" />
+                  <Button fx:id="dropboxButton" layoutX="87.0" layoutY="194.0" mnemonicParsing="false" onAction="#onlineSync">
+                     <graphic>
+                        <ImageView fitHeight="90.0" fitWidth="296.0" preserveRatio="true">
+                           <image>
+                              <Image url="dropbox2.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </Button>
+                  <Button layoutX="469.0" layoutY="193.0" maxHeight="-Infinity" mnemonicParsing="false" onAction="#localSync" prefHeight="0.0">
+                     <graphic>
+                        <ImageView fitHeight="90.0">
+                           <image>
+                              <Image url="folder4.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                  </Button>
+                  <Label fx:id="noOnlineLabel" layoutX="134.0" layoutY="295.0" text="Could not locate Dropbox folder." />
+                  <Hyperlink fx:id="noOnlineLink" layoutX="187.0" layoutY="312.0" onAction="#openDropboxDialog" text="Find it" />
+               </children>
+            </AnchorPane>
+      </content>
+    </TitledPane>
+  </panes>
+</Accordion>

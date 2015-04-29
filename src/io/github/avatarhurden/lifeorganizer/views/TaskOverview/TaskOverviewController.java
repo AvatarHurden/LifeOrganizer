@@ -30,6 +30,7 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
+import javafx.scene.control.TableColumn.SortType;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
@@ -53,7 +54,7 @@ public class TaskOverviewController {
 	@FXML
 	private TextField textField;
 	@FXML 
-	private Button archiveButton, restoreButton, configButton, saveButton, reloadButton;
+	private Button archiveButton, restoreButton, configButton;
 	@FXML
 	private Button addButton;
 	@FXML
@@ -77,7 +78,9 @@ public class TaskOverviewController {
 		
 		try {
 			loader.load();
-		} catch (IOException e) {}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public Node getView() {
@@ -98,10 +101,7 @@ public class TaskOverviewController {
 		
 		archiveButton.setTooltip(new Tooltip("Archive completed tasks"));
 		restoreButton.setTooltip(new Tooltip("Restore selected task from archive"));
-		saveButton.setTooltip(new Tooltip("Save tasks"));
-		reloadButton.setTooltip(new Tooltip("Reload tasks from file"));
 		configButton.setTooltip(new Tooltip("Open settings screen"));
-		
 		
 		table = new CustomizableTableView<Task>();
 		table.getStylesheets().add("/io/github/avatarhurden/lifeorganizer/views/style.css");
@@ -127,6 +127,8 @@ public class TaskOverviewController {
 		table.<String>addColumn("Note", new NoteTableColumn());
 		
 		table.<DateTime>addColumn("Last Edit", new DateTimeTableColumn(t -> t.EditDateProperty()));
+		table.getColumns().get(2).setSortType(SortType.ASCENDING);
+		System.out.println(table.getColumns().get(2).getSortType());
 		
 		tablePane.getChildren().clear();
 		tablePane.getChildren().add(table);
@@ -160,12 +162,7 @@ public class TaskOverviewController {
 					
 					MenuItem delete = new MenuItem("Delete");
 					delete.setOnAction(event -> table.getItems().remove(table.getSelectionModel().getSelectedItem()));
-					MenuItem clone = new MenuItem("Clone");
-					clone.setOnAction(event -> {
-						String encoding = table.getSelectionModel().getSelectedItem().encode();
-						table.getItems().add(manager.decode(encoding, true));
-					});
-					setContextMenu(new ContextMenu(delete, clone));
+					setContextMenu(new ContextMenu(delete));
 					
 //					if (t.getDueDate() != null && t.getDueDate().isAfterNow())
 //						getStyleClass().add("table-row-highlight");
@@ -183,11 +180,6 @@ public class TaskOverviewController {
 
 	public void setTaskManager(TaskManager manager) {
 		this.manager = manager;
-		
-		manager.getTodoList().savedProperty().addListener((obs, oldValue, newValue) -> {
-			statusBar.setText(newValue ? "Saved" : "Not Saved");
-		});
-		statusBar.setText(manager.getTodoList().isSaved() ? "Saved" : "Not Saved");
 		
 		showTodo();
 		table.getSelectionModel().select(0);
@@ -207,28 +199,16 @@ public class TaskOverviewController {
 	
 	@FXML
 	private void archive() {
-		manager.archiveTasks();
+		manager.archive();
 	}
 	
-	@FXML
-	private void restore() {
-		manager.restore(table.getSelectionModel().getSelectedItem());
-	}
-	
-	@FXML
-	private void reload() {
-		manager.reload();
-	}
-	
-	@FXML
-	private void save() {
-		manager.save();
-	}
+//	@FXML
+//	private void restore() {
+//		manager.restore(table.getSelectionModel().getSelectedItem());
+//	}
 	
 	@FXML
 	private void showTodo() {
-		manager.closeArchive();
-		
 		List<String> sorts = table.getColumnSortOrder();
 		table.setItems(manager.getTodoList());
 		table.setColumnSortOrder(sorts);
@@ -243,10 +223,8 @@ public class TaskOverviewController {
 	
 	@FXML
 	private void showDone() {
-		manager.loadArchive();
-		
 		List<String> sorts = table.getColumnSortOrder();
-		table.setItems(manager.getDoneList());
+		table.setItems(manager.getArchivedList());
 		table.setColumnSortOrder(sorts);
 		
 		textField.setDisable(true);
@@ -312,11 +290,6 @@ public class TaskOverviewController {
 			case A:
 				archive();
 				break;
-			case S:
-				save();
-				break;
-			case R:
-				reload();
 			default:
 				break;
 			}

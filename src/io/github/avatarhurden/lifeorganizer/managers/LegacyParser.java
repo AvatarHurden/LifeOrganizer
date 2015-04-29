@@ -15,9 +15,8 @@ import java.util.regex.Pattern;
 
 public class LegacyParser {
 
-	public static void Parse(TaskManager manager) throws FileNotFoundException {
-		if (Config.get().getProperty("default_folder") == null)
-			return;
+	public static void convert() throws FileNotFoundException {
+		TaskManager manager = new TaskManager();
 		
 		File todo = getTodoFile();
 		File done = getDoneFile();
@@ -30,7 +29,9 @@ public class LegacyParser {
 					break;
 				Task task = decode(manager, line, true);
 				task.setArchived(false);
-			} catch (Exception e ) {}
+			} catch (Exception e ) {
+				e.printStackTrace();
+			}
 		}
 		try {
 			reader.close();
@@ -53,7 +54,6 @@ public class LegacyParser {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
 	}
 	
 

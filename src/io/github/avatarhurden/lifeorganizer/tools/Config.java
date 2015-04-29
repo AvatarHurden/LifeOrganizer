@@ -2,7 +2,6 @@ package io.github.avatarhurden.lifeorganizer.tools;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,9 +30,7 @@ public class Config {
 		try {
 			prop.load(new FileInputStream(configFile));
 		} catch (IOException e) {
-			try {
-				saveConfig();
-			} catch (IOException e1) {}
+			saveConfig();
 		}
 	}
 	
@@ -47,9 +44,7 @@ public class Config {
 	}
 	
 	public static void save() {
-		try {
-			config.saveConfig();
-		} catch (IOException e) {}
+		config.saveConfig();
 	}
 
 	public void restore(Config source) {
@@ -59,6 +54,7 @@ public class Config {
 	
 	public void setProperty(String name, String value) {
 		prop.setProperty(name, value);
+		saveConfig();
 	}
 
 	public String getProperty(String name) {
@@ -99,10 +95,12 @@ public class Config {
 	
 	public void setListProperty(String name, String... values) {
 		prop.setProperty(name, String.join(",", values));
+		saveConfig();
 	}
 	
 	public void setListProperty(String name, List<String> values) {
 		prop.setProperty(name, String.join(",", values));
+		saveConfig();
 	}
 	
 	public <S> void setListProperty(String name, List<S> values, Callback<S, String> encoder) {
@@ -169,8 +167,10 @@ public class Config {
 		return objects;
 	}
 	
-	public void saveConfig() throws FileNotFoundException, IOException {
-		prop.store(new FileOutputStream(configFile), "LifeOrganizer Properties");
+	public void saveConfig() {
+		try {
+			prop.store(new FileOutputStream(configFile), "LifeOrganizer Properties");
+		} catch (IOException e) {}
 	}
 	
 	//	public void setDataFolder(String path) {
