@@ -43,7 +43,8 @@ public class DateUtils {
 	 * <p><code>@HH:mm</code>
 	 * 
 	 * <p>After the string is parsed, the parts of the format that were not provided by the string are filled in with the values
-	 * provided by the <code>defaults</code> map.
+	 * provided by the <code>defaults</code> map. The caller should make sure that the values are valid, since any errors caused 
+	 * by invalid values are rethrown.
 	 * <p>When this is done, the remaining parts are filled with the current date and time. This allows the string <b>3</b> to be
 	 * interpreted as the day 3 of the current month and year.
 	 * 
@@ -75,11 +76,11 @@ public class DateUtils {
 		
 		List<Consumer<MutableDateTime>> deltas = new ArrayList<Consumer<MutableDateTime>>();
 		if (string.startsWith("tom")) { // If string starts with "tod" or "tom", sets the day accordingly
-			deltas.add(date -> date.setDayOfMonth(DateTime.now().getDayOfMonth() + 1));
+			deltas.add(date -> date.addDays(1));
 			accepted = true;
 			string = string.replace("tom", "");
 		} else if (string.startsWith("tod")) {
-			deltas.add(date -> date.setDayOfMonth(DateTime.now().getDayOfMonth()));
+			deltas.add(date -> date.addDays(0));
 			accepted = true;
 			string = string.replace("tod", "");
 		} else {

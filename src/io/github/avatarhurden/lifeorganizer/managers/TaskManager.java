@@ -35,9 +35,12 @@ import javafx.collections.ObservableMap;
 import org.joda.time.DateTime;
 
 public class TaskManager {
-
 	private Path taskFolder, archiveFolder;
+	
+	private static final long READ_DELAY = 300;
+	
 	private Thread fileWatcher;
+	private HashMap<String, WatchEvent.Kind<?>> filesToRead;
 	
 	private ObservableMap<String, Task> taskMap;
 	private ObservableList<Task> taskList;
@@ -85,6 +88,7 @@ public class TaskManager {
 			e.printStackTrace();
 		}
 		
+		filesToRead = new HashMap<String, WatchEvent.Kind<?>>();
 		listenToFolder();
 	}
 	
@@ -225,7 +229,7 @@ public class TaskManager {
 	
 	private void readFolder() throws IOException {
 		DirectoryStream<Path> stream = Files.newDirectoryStream(taskFolder, 
-				path -> path.getFileName().toString().endsWith(".txt"));
+				path -> !Pattern.matches("^[0-9abcdefABCDEF]{32}\\.txt", path.getFileName().toString()));
 		for (Path file: stream) {
 		  	String id = file.getFileName().toString().replace(".txt", "");
 		   	taskMap.put(id, Task.loadFromPath(this, file.toFile()));
@@ -258,39 +262,28 @@ public class TaskManager {
 				for (WatchEvent<?> event : key.pollEvents()) {
 					WatchEvent.Kind<?> kind = event.kind();
 		        
-					System.out.println(taskFolder.resolve((Path) event.context()).toAbsolutePath() + " " + kind);
-					
 					if (kind == StandardWatchEventKinds.OVERFLOW) continue;
 		        
 					Path file = taskFolder.resolve((Path) event.context());
 		        
-					if (!file.getFileName().toString().endsWith(".txt"))
+					// Only registers for matching filenames
+					if (!Pattern.matches("^[0-9abcdefABCDEF]{32}\\.txt", file.getFileName().toString())) 
 						continue;
-
-					System.out.println(file.getFileName().toString() + " " + kind);
 					
 					String id = file.getFileName().toString().replace(".txt", "");
 					if (ignoredTasks.contains(id))
 						continue;
-
-					System.out.println(file.getFileName().toString() + " accepted");
 					
-					Platform.runLater(() -> {
-					if (kind == StandardWatchEventKinds.ENTRY_CREATE)
+					if (!filesToRead.containsKey(id))
+					new Thread(() -> {
 						try {
-							taskMap.put(id, Task.loadFromPath(this, file.toFile()));
-						} catch (Exception e) {	
-							e.printStackTrace();
-						}
-					else if (kind == StandardWatchEventKinds.ENTRY_DELETE)
-						taskMap.remove(id);
-					else if (kind == StandardWatchEventKinds.ENTRY_MODIFY)
-						try {
-							taskMap.get(id).readFile();
-						} catch (Exception e) {
-							e.printStackTrace();
-						}
-					});
+							Thread.sleep(READ_DELAY);
+						} catch (Exception e1) {}
+						readFile(id, file);
+						filesToRead.remove(id);
+					}).start();
+
+					filesToRead.put(id, kind);
 				}
 			
 				key.reset();
@@ -298,5 +291,26 @@ public class TaskManager {
 		});
 		
 		fileWatcher.start();
+	}
+	
+	private void readFile(String id, Path file) {
+		WatchEvent.Kind<?> latestKind = filesToRead.get(id);
+		
+		Platform.runLater(() -> {
+			if (latestKind == StandardWatchEventKinds.ENTRY_CREATE)
+				try {
+					taskMap.put(id, Task.loadFromPath(this, file.toFile()));
+				} catch (Exception e) {	
+					e.printStackTrace();
+				}
+			else if (latestKind == StandardWatchEventKinds.ENTRY_DELETE)
+				taskMap.remove(id);
+			else if (latestKind == StandardWatchEventKinds.ENTRY_MODIFY)
+				try {
+					taskMap.get(id).readFile();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+		});
 	}
 }
