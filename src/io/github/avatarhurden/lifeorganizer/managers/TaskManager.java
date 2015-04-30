@@ -5,12 +5,14 @@ import io.github.avatarhurden.lifeorganizer.objects.Task;
 import io.github.avatarhurden.lifeorganizer.tools.Config;
 import io.github.avatarhurden.lifeorganizer.tools.DateUtils;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
@@ -34,7 +36,7 @@ import org.joda.time.DateTime;
 
 public class TaskManager {
 
-	private Path taskFolder;
+	private Path taskFolder, archiveFolder;
 	private Thread fileWatcher;
 	
 	private ObservableMap<String, Task> taskMap;
@@ -50,9 +52,14 @@ public class TaskManager {
 	}
 	
 	public TaskManager() {
-		taskFolder = Paths.get(Config.get().getProperty("task_folder"));
+		Path rootFolder = Paths.get(Config.get().getProperty("task_folder"));
+		taskFolder = rootFolder.resolve("active");
+		archiveFolder = rootFolder.resolve("archive");
+		
 		if (!taskFolder.toFile().exists())
 			taskFolder.toFile().mkdirs();
+		if (!archiveFolder.toFile().exists())
+			archiveFolder.toFile().mkdirs();
 			
 		taskMap = FXCollections.<String, Task>observableHashMap();
 		taskList = FXCollections.observableArrayList();
@@ -93,15 +100,30 @@ public class TaskManager {
 	public void archive() {
 		for (Task t : taskList)
 			if (t.getState() != Task.State.TODO && !t.isArchived())
-				t.setArchived(true);
+				moveToArchive(t);
+	}
+	
+	public void moveToArchive(Task t) {
+		t.setArchived(true);
+		File f = t.getFile();
+		try {
+			Files.move(t.getFile().toPath(), 
+					archiveFolder.resolve(t.getUUID() + ".txt"), 
+					StandardCopyOption.REPLACE_EXISTING);
+			t.setFile(archiveFolder.resolve(t.getUUID() + ".txt").toFile());
+			t.save();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		System.out.println(f.exists());
 	}
 	
 	public ObservableList<Task> getTodoList() {
 		return taskList.filtered(t -> !t.isArchived()).sorted();
 	}
 	
-	public ObservableList<Task> getArchivedList() {
-		return taskList.filtered(t -> t.isArchived()).sorted();
+	public ObservableList<Task> getTasks() {
+		return taskList;
 	}
 		
 	public ProjectManager getProjectManager() {
@@ -126,6 +148,12 @@ public class TaskManager {
 		return t;
 	}
 	
+	public void deleteTask(Task task) {
+		System.out.println(task.getName());
+		taskMap.remove(task.getUUID());
+		task.delete();
+	}
+	
 	private Task parseString(String s, boolean active) {
 		Task t = Task.createNew(this);
 		
@@ -141,7 +169,7 @@ public class TaskManager {
 		}
 		
 		if (matcher.find(0)) {
-			t.setPriority(matcher.group(1).charAt(0));
+			t.setPriorityValue(matcher.group(1).charAt(0));
 			s = s.replace(matcher.group(), "");
 		}
 		
@@ -162,7 +190,7 @@ public class TaskManager {
 					dueDate.setHasTime(matcher.group(1).contains("@") || matcher.group(1).contains("h"));
 					dueDate.setDateTime(date);
 				
-					t.setDueDate(dueDate);
+					t.setDueDateValue(dueDate);
 				}
 			}
 			s = s.replace(matcher.group(), "");
@@ -172,7 +200,7 @@ public class TaskManager {
 		pattern = Pattern.compile("note=\"(.+)\" ");
 		matcher = pattern.matcher(s);
 		if (matcher.find()) {
-			t.setNote(matcher.group(1));
+			t.setNoteValue(matcher.group(1));
 			s = s.replace(matcher.group(), "");
 		}
 		
@@ -190,13 +218,14 @@ public class TaskManager {
 		words = words.stream().filter(word -> !projects.contains(word) && !contexts.contains(word)).collect(Collectors.toList());
 		s = String.join(" ", words);
 		
-		t.setName(s.trim());
+		t.setNameValue(s.trim());
 		
 		return t;
 	}
 	
 	private void readFolder() throws IOException {
-		DirectoryStream<Path> stream = Files.newDirectoryStream(taskFolder, path -> path.getFileName().toString().endsWith(".txt"));
+		DirectoryStream<Path> stream = Files.newDirectoryStream(taskFolder, 
+				path -> path.getFileName().toString().endsWith(".txt"));
 		for (Path file: stream) {
 		  	String id = file.getFileName().toString().replace(".txt", "");
 		   	taskMap.put(id, Task.loadFromPath(this, file.toFile()));
@@ -238,11 +267,14 @@ public class TaskManager {
 					if (!file.getFileName().toString().endsWith(".txt"))
 						continue;
 
+					System.out.println(file.getFileName().toString() + " " + kind);
+					
 					String id = file.getFileName().toString().replace(".txt", "");
-					System.out.println(ignoredTasks);
 					if (ignoredTasks.contains(id))
 						continue;
-		    	
+
+					System.out.println(file.getFileName().toString() + " accepted");
+					
 					Platform.runLater(() -> {
 					if (kind == StandardWatchEventKinds.ENTRY_CREATE)
 						try {
@@ -254,7 +286,7 @@ public class TaskManager {
 						taskMap.remove(id);
 					else if (kind == StandardWatchEventKinds.ENTRY_MODIFY)
 						try {
-							taskMap.get(id).readFile(file.toFile());
+							taskMap.get(id).readFile();
 						} catch (Exception e) {
 							e.printStackTrace();
 						}

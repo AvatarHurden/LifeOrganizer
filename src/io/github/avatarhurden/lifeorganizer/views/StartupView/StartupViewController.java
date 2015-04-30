@@ -45,7 +45,9 @@ public class StartupViewController {
 		
 		try {
 			loader.load();
-		} catch (IOException e) {}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		
 		localLocation = new File(System.getProperty("user.home"), 
 				"Documents" + File.separator + "LifeOrganizer" + File.separator + "tasks");

@@ -48,6 +48,11 @@ public class ProjectManager {
 		}
 	}
 	
+	public void moveProjects(boolean toActive, List<Project> p) {
+		decrementProjects(!toActive, p);
+		incrementProjects(toActive, p);
+	}
+	
 	public Project createProject(String name, boolean isActive) {
 		Project p = getProject(name);
 		if (p == null)

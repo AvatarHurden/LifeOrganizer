@@ -159,7 +159,7 @@ public class TaskOverviewController {
 					}
 					
 					MenuItem delete = new MenuItem("Delete");
-					delete.setOnAction(event -> table.getItems().remove(table.getSelectionModel().getSelectedItem()));
+					delete.setOnAction(event -> manager.deleteTask(t));
 					setContextMenu(new ContextMenu(delete));
 					
 //					if (t.getDueDate() != null && t.getDueDate().isAfterNow())
@@ -168,6 +168,11 @@ public class TaskOverviewController {
 //						getStyleClass().remove("table-row-highlight");
 				}
 			};
+		});
+		
+		table.setOnKeyPressed(event -> {
+			if (event.getCode().equals(KeyCode.DELETE))
+				manager.deleteTask(table.getSelectionModel().getSelectedItem());
 		});
 		
 		taskViewController = new SingleTaskViewController();
@@ -227,7 +232,7 @@ public class TaskOverviewController {
 	@FXML
 	private void showDone() {
 		List<String> sorts = table.getColumnSortOrder();
-		table.setItems(manager.getArchivedList());
+//		table.setItems(manager.getArchivedList());
 		table.setColumnSortOrder(sorts);
 		
 		textField.setDisable(true);

@@ -46,7 +46,7 @@ public class LegacyParser {
 				if (line == null)
 					break;
 				Task task = decode(manager, line, false);
-				task.setArchived(true);
+				manager.moveToArchive(task);
 			} catch (Exception e ) {}
 		}
 		try {
@@ -54,6 +54,7 @@ public class LegacyParser {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		
 	}
 	
 
@@ -86,32 +87,32 @@ public class LegacyParser {
 		
 		switch (stateM.group().charAt(1)) {
 		case 'x':
-			t.setState(Task.State.DONE);
+			t.setStateValue(Task.State.DONE);
 			break;
 		case ' ':
-			t.setState(Task.State.TODO);
+			t.setStateValue(Task.State.TODO);
 			break;
 		case '-':
-			t.setState(Task.State.FAILED);
+			t.setStateValue(Task.State.FAILED);
 		}
 		
 		// Defining completion date
 		Pattern doneP = Pattern.compile("DONE=(\\S*) ");
 		Matcher doneM = doneP.matcher(s);	
 		if (doneM.find())
-			t.setCompletionDate(DateUtils.parseDateTime(doneM.group(1), "yyyy.MM.dd@HH:mm"));
+			t.setCompletionDateValue(DateUtils.parseDateTime(doneM.group(1), "yyyy.MM.dd@HH:mm"));
 
 		// Defining priority
 		Pattern priP = Pattern.compile("\\(([A-Z])\\) ");
 		Matcher priM = priP.matcher(s);
 		if (priM.find())
-			t.setPriority(priM.group(1).charAt(0));
+			t.setPriorityValue(priM.group(1).charAt(0));
 		
 		// Defining due date
 		Pattern dueP = Pattern.compile("DUE=(\\S*) ");
 		Matcher dueM = dueP.matcher(s);	
 		if (dueM.find())
-			t.setDueDate(new DueDate(DateUtils.parseDateTime(
+			t.setDueDateValue(new DueDate(DateUtils.parseDateTime(
 					dueM.group(1), "yyyy.MM.dd@HH:mm", "yyyy.MM.dd"), dueM.group(1).contains("@")));
 		
 		// Defining projects
@@ -132,26 +133,26 @@ public class LegacyParser {
 		Pattern madeP = Pattern.compile("MADE=(\\S*) ");
 		Matcher madeM = madeP.matcher(s);	
 		madeM.find();
-		t.setCreationDate(DateUtils.parseDateTime(madeM.group(1), "yyyy.MM.dd@HH:mm"));
+		t.setCreationDateValue(DateUtils.parseDateTime(madeM.group(1), "yyyy.MM.dd@HH:mm"));
 		
 		// Defining name
 		// Accepts things between unescaped quotes (NAME="Read \"this book\" now")
 		Pattern nameP = Pattern.compile("NAME=\"([^\"\\\\]*(?:\\\\.[^\"\\\\]*)*)\"");
 		Matcher nameM = nameP.matcher(s);
 		nameM.find();
-		t.setName(nameM.group(1).replace("\\\"", "\""));
+		t.setNameValue(nameM.group(1).replace("\\\"", "\""));
 		
 		// Defining note
 		Pattern noteP = Pattern.compile("NOTE=\"([^\"\\\\]*(?:\\\\.[^\"\\\\]*)*)\"");
 		Matcher noteM = noteP.matcher(s);
 		if (noteM.find())
-			t.setNote(noteM.group(1).replace("\\\\n", "\n").replace("\\\"", "\""));
+			t.setNoteValue(noteM.group(1).replace("\\\\n", "\n").replace("\\\"", "\""));
 				
 		// Defining edtDate
 		Pattern editP = Pattern.compile("EDIT=(\\S*)[\n]?$");
 		Matcher editM = editP.matcher(s);	
 		editM.find();
-		t.setEditDate(DateUtils.parseDateTime(editM.group(1), "yyyy.MM.dd@HH:mm"));
+		t.setEditDateValue(DateUtils.parseDateTime(editM.group(1), "yyyy.MM.dd@HH:mm"));
 
 		return t;
 	}

@@ -16,6 +16,7 @@ import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.adapter.JavaBeanObjectPropertyBuilder;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 import org.joda.time.DateTime;
@@ -25,6 +26,8 @@ import org.json.JSONObject;
 
 public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>{
 
+	public static final long SAVE_INTERVAL = 5000;
+	
 	public enum State {
 		TODO, DONE, FAILED;
 	}
@@ -99,7 +102,14 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		uuid = json.getString("uuid");
 		
 		projects = FXCollections.observableArrayList(p -> new Observable[] {p.NameProperty()});
+		projects.addListener((ListChangeListener.Change<? extends Project> event) ->
+			ProjectsProperty().setValue(projects)
+		);
+		
 		contexts = FXCollections.observableArrayList(p -> new Observable[] {p.NameProperty()});
+		contexts.addListener((ListChangeListener.Change<? extends Context> event) -> 
+			ContextsProperty().setValue(contexts)
+		);
 
 		state = State.TODO;
 		creationDate = new DateTime();
@@ -109,7 +119,15 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		loadJSON(json);
 	}
 	
-	public void readFile(File f) throws IOException {
+	public void setFile(File f) {
+		this.file = f;
+	}
+	
+	public File getFile() {
+		return file;
+	}
+	
+	public void readFile() throws IOException {
 		if (!file.canRead())
 			return;
 		BufferedReader reader = new BufferedReader(new FileReader(file));
@@ -118,52 +136,47 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		while ((line = reader.readLine()) != null)
 			buffer.append(line);
 		reader.close();
-		
-		saveChanges = false;
-		System.out.println("start");
-		System.out.println(buffer.toString());
-		System.out.println("end");
+
+		System.out.println("read file");
 		
 		if (!buffer.toString().trim().equals(""))
 			loadJSON(new JSONObject(buffer.toString()));
 	}
 	
 	private void loadJSON(JSONObject json) {
+		saveChanges = false;
+		
 		if (json.has("archived"))
-			isArchived = json.getBoolean("archived");
+			setArchived(json.getBoolean("archived"));
 		
 		if (json.has("name"))
-			name = json.getString("name");
+			setNameValue(json.getString("name"));
 		
 		if (json.has("state"))
 			switch (json.getString("state")) {
-			case "todo": state = State.TODO; break;
-			case "done": state = State.DONE; break;
-			case "failed": state = State.FAILED; break;
+			case "todo": setStateValue(State.TODO); break;
+			case "done": setStateValue(State.DONE); break;
+			case "failed": setStateValue(State.FAILED); break;
 			}
 		
 		if (json.has("creationDate"))
-			creationDate = DateUtils.parseDateTime(
-				json.getString("creationDate"), "yyyy.MM.dd@HH:mm");
-		
-		if (json.has("editDate"))
-			editDate = DateUtils.parseDateTime(
-				json.getString("editDate"), "yyyy.MM.dd@HH:mm");
+			setCreationDateValue(DateUtils.parseDateTime(
+				json.getString("creationDate"), "yyyy.MM.dd@HH:mm"));
 		
 		if (json.has("note"))
-			note = json.getString("note");
+			setNoteValue(json.getString("note"));
 		
 		if (json.has("completionDate"))
-			completionDate = DateUtils.parseDateTime(
-					json.getString("completionDate"), "yyyy.MM.dd@HH:mm");
+			setCompletionDateValue(DateUtils.parseDateTime(
+					json.getString("completionDate"), "yyyy.MM.dd@HH:mm"));
 	
 		if (json.has("priority"))
-			priority = json.getString("priority").charAt(0);
+			setPriorityValue(json.getString("priority").charAt(0));
 		
 		if (json.has("dueDate"))
-			dueDate = new DueDate(DateUtils.parseDateTime(
+			setDueDateValue(new DueDate(DateUtils.parseDateTime(
 					json.getString("dueDate"), "yyyy.MM.dd@HH:mm", "yyyy.MM.dd"), 
-					json.getString("dueDate").contains("@"));
+					json.getString("dueDate").contains("@")));
 		
 		projects.clear();
 		if (json.has("projects"))
@@ -175,6 +188,10 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 			for (int i = 0; i < json.getJSONArray("contexts").length(); i++)
 				addContext(json.getJSONArray("contexts").getString(i));
 		
+		if (json.has("editDate"))
+			setEditDateValue(DateUtils.parseDateTime(
+				json.getString("editDate"), "yyyy.MM.dd@HH:mm"));
+		
 		saveChanges = true;
 	}
 	
@@ -182,16 +199,39 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		if (!saveChanges)
 			return;
 
+		ignoreForEdit(() -> {
+			try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+				writer.write(toJSON().toString(4));
+				writer.close();
+			} catch (JSONException | IOException e) {
+				e.printStackTrace();
+			}
+		});
+		
+		System.out.println("saving");		
+	}
+	
+	public void delete() {
+		ignoreForEdit(() -> {
+			file.delete();
+			manager.getProjectManager().decrementProjects(!isArchived, projects);
+			manager.getContextManager().decrementContexts(!isArchived, contexts);
+		});
+	}
+	
+	private void ignoreForEdit(Runnable action) {
 		manager.ignoreTask(uuid);
 		
-		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-			writer.write(toJSON().toString(4));
-			writer.close();
-		} catch (JSONException | IOException e) {
-			e.printStackTrace();
-		}
+		action.run();
 		
-		manager.removeIgnore(uuid);
+		new Thread(() -> {
+			try {
+				Thread.sleep(100);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			manager.removeIgnore(uuid);
+		}).run();
 	}
 	
 	public JSONObject toJSON() {
@@ -284,7 +324,7 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 				if (scheduledSave == null && saveChanges) {
 					scheduledSave = new Thread(() -> {
 						try {
-							Thread.sleep(3000);
+							Thread.sleep(SAVE_INTERVAL);
 							save();
 							scheduledSave = null;
 						} catch (Exception e) {}
@@ -326,6 +366,7 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 			try {
 				return propbuilder.build();
 			} catch (NoSuchMethodException e) {
+				e.printStackTrace();
 				return null;
 			}
 		}
@@ -338,12 +379,22 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 	}
 	
 	public void setArchived(boolean isArchived) {
+		boolean old = this.isArchived;
 		this.isArchived = isArchived;
-		setEditDateNow();
+		
+		if (this.isArchived != old) {
+			manager.getProjectManager().moveProjects(!this.isArchived, projects);
+			manager.getContextManager().moveContexts(!this.isArchived, contexts);
+		}
+		setEditDateIfDifferent(this.isArchived, old);
 	}
 	
 	public boolean isArchived() {
 		return isArchived;
+	}
+	
+	public void setStateValue(State state) {
+		StateProperty().setValue(state);
 	}
 	
 	public void setState(State state) {
@@ -362,16 +413,20 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		return state;
 	}
 
+	public void setEditDateValue(DateTime editDate) {
+		EditDateProperty().setValue(editDate);
+	}
+	
+	public void setEditDate(DateTime editDate) {
+		this.editDate = editDate;
+	}
+
 	private void setEditDateIfDifferent(Object currentValue, Object newValue) {
 		if (currentValue == null || !currentValue.equals(newValue))
 			setEditDateNow();
 	}
 
-	public void setEditDate(DateTime editDate) {
-		this.editDate = editDate;
-	}
-
-	public void setEditDateNow() {
+	private void setEditDateNow() {
 		EditDateProperty().setValue(new DateTime());
 	}
 	
@@ -379,6 +434,10 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		return editDate;
 	}
 
+	public void setNameValue(String name) {
+		NameProperty().setValue(name);
+	}
+	
 	public void setName(String name) {
 		String old = this.name;
 		this.name = name;
@@ -389,6 +448,10 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		return name;
 	}
 
+	public void setPriorityValue(Character priority) {
+		PriorityProperty().setValue(priority);
+	}
+	
 	public void setPriority(Character priority) {
 		Character old = this.priority;
 		if (priority == null)
@@ -402,6 +465,10 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		return priority;
 	}
 	
+	public void setCompletionDateValue(DateTime completionDate) {
+		CompletionDateProperty().setValue(completionDate);
+	}
+	
 	public void setCompletionDate(DateTime completionDate) {
 		this.completionDate = completionDate;
 	}
@@ -410,6 +477,10 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		return completionDate;
 	}
 
+	public void setCreationDateValue(DateTime creationDate) {
+		CreationDateProperty().setValue(creationDate);
+	}
+	
 	public void setCreationDate(DateTime creationDate) {
 		this.creationDate = creationDate;
 	}
@@ -428,8 +499,22 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		setEditDateNow();
 	}
 
-	public void addProject(String name) {
-		projects.add(manager.getProjectManager().createProject(name, !isArchived));
+	public Project addProject(String name) {
+		Project p = manager.getProjectManager().getProject(name);
+		
+		if (projects.contains(p))
+			return null;
+		
+		p = manager.getProjectManager().createProject(name, !isArchived);
+		
+		projects.add(p);
+		setEditDateNow();
+		return p;
+	}
+
+	public void removeProject(Project p) {
+		manager.getProjectManager().decrementProjects(!isArchived, p);
+		projects.remove(p);
 		setEditDateNow();
 	}
 	
@@ -457,6 +542,10 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		return contexts;
 	}
 	
+	public void setNoteValue(String note) {
+		NoteProperty().setValue(note);
+	}
+	
 	public void setNote(String note) {
 		String old = this.note;
 		this.note = note;
@@ -465,6 +554,10 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 	
 	public String getNote() {
 		return note;
+	}
+	
+	public void setDueDateValue(DueDate dueDate) {
+		DueDateProperty().setValue(dueDate);
 	}
 	
 	public void setDueDate(DueDate dueDate) {

@@ -14,7 +14,6 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.SortType;
 import javafx.scene.control.TableView;
-import javafx.scene.input.KeyCode;
 import javafx.util.Callback;
 
 public class CustomizableTableView<T> extends TableView<T> {
@@ -26,11 +25,6 @@ public class CustomizableTableView<T> extends TableView<T> {
 		columnList = new HashMap<String, TableColumn<T, ?>>();
 		menu = new ContextMenu();
 		setTableMenuButtonVisible(true);
-		
-		setOnKeyPressed(event -> {
-			if (event.getCode().equals(KeyCode.DELETE))
-				getItems().remove(getSelectionModel().getSelectedItem());
-		});
 	}
 	
 	public <S> void addColumn(String name) {

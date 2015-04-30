@@ -160,13 +160,19 @@ public class SingleTaskViewController {
 		task.EditDateProperty().addListener(editDateListener);
 		lastEditLabel.setText(new PrettyTime(Locale.US).format(task.getEditDate().toDate()));
 		
-		projectsView.setList(task.ProjectsProperty());
+		for (Project p : manager.getProjectManager().getProjects())
+			System.out.println(p.getName() + " " + p.getActiveTasks() + " " + p.getInactiveTasks());
+
+		for (Context p : manager.getContextManager().getContexts())
+			System.out.println(p.getName() + " " + p.getActiveTasks() + " " + p.getInactiveTasks());
+		
+		projectsView.setList(task.getProjects());
 		projectsView.setSuggestions(manager.getProjectManager().getActiveProjects());
-		projectsView.setCreationPolicy(s -> manager.getProjectManager().createProject(s, true));
-		projectsView.setDeletionPolicy(proj -> manager.getProjectManager().decrementProjects(true, proj));
+		projectsView.setCreationPolicy(s -> task.addProject(s));
+		projectsView.setDeletionPolicy(proj -> task.removeProject(proj));
 		projectsView.clearTextField();
 		
-		contextsView.setList(task.ContextsProperty());
+		contextsView.setList(task.getContexts());
 		contextsView.setSuggestions(manager.getContextManager().getActiveContexts());
 		contextsView.setCreationPolicy(s -> manager.getContextManager().createContext(s, true));
 		contextsView.setDeletionPolicy(cont -> manager.getContextManager().decrementContexts(true, cont));

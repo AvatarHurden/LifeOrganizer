@@ -41,6 +41,11 @@ public class ContextManager {
 		}
 	}
 	
+	public void moveContexts(boolean toActive, List<Context> c) {
+		decrementContexts(!toActive, c);
+		incrementContexts(toActive, c);
+	}
+	
 	public Context createContext(String name, boolean isActive) {
 		Context context = getContext(name);
 		if (context == null)
