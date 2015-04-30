@@ -22,6 +22,7 @@ import java.util.List;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -30,7 +31,6 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
-import javafx.scene.control.TableColumn.SortType;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
@@ -127,8 +127,6 @@ public class TaskOverviewController {
 		table.<String>addColumn("Note", new NoteTableColumn());
 		
 		table.<DateTime>addColumn("Last Edit", new DateTimeTableColumn(t -> t.EditDateProperty()));
-		table.getColumns().get(2).setSortType(SortType.ASCENDING);
-		System.out.println(table.getColumns().get(2).getSortType());
 		
 		tablePane.getChildren().clear();
 		tablePane.getChildren().add(table);
@@ -200,6 +198,7 @@ public class TaskOverviewController {
 	@FXML
 	private void archive() {
 		manager.archive();
+		showTodo();
 	}
 	
 //	@FXML
@@ -210,7 +209,11 @@ public class TaskOverviewController {
 	@FXML
 	private void showTodo() {
 		List<String> sorts = table.getColumnSortOrder();
-		table.setItems(manager.getTodoList());
+		
+		SortedList<Task> list = (SortedList<Task>) manager.getTodoList();
+		list.comparatorProperty().bind(table.comparatorProperty());
+		table.setItems(list);
+		
 		table.setColumnSortOrder(sorts);
 	
 		textField.setDisable(false);

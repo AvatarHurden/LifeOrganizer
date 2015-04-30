@@ -42,6 +42,8 @@ public class Main extends Application {
 	private static Stage primaryStage;
 	private static NotificationPane pane;
 	
+	TaskOverviewController controller;
+	
 	public static void main(String[] args) {
 		launch(args);
 	}
@@ -74,6 +76,7 @@ public class Main extends Application {
 		primaryStage.setOnCloseRequest(event -> {
 			try {
 				savePosition(primaryStage);
+				controller.saveState();
 				manager.close();
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -84,10 +87,10 @@ public class Main extends Application {
 	private void setTaskView() {
 		manager = new TaskManager();
 		manager.loadAndWatch();
-		
-		TaskOverviewController controller = new TaskOverviewController();
-		controller.setTaskManager(manager);
+
+		controller = new TaskOverviewController();
 		controller.loadState();
+		controller.setTaskManager(manager);
 		controller.setConfigStage(getConfigStage());
 		pane.setContent(controller.getView());
 	}

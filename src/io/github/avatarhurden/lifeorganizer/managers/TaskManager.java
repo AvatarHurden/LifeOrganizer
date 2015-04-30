@@ -15,14 +15,16 @@ import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
@@ -38,7 +40,7 @@ public class TaskManager {
 	private ObservableMap<String, Task> taskMap;
 	private ObservableList<Task> taskList;
 	
-	private List<String> modifiedTasks;
+	private Set<String> modifiedTasks;
 	
 	ProjectManager projectManager;
 	ContextManager contextManager;
@@ -54,14 +56,16 @@ public class TaskManager {
 			
 		taskMap = FXCollections.<String, Task>observableHashMap();
 		taskList = FXCollections.observableArrayList();
-		modifiedTasks = new ArrayList<String>();
+		modifiedTasks = new HashSet<String>();
 		
-		taskMap.addListener((MapChangeListener.Change<? extends String, ? extends Task> change) -> {
-			if (change.wasAdded())
-				taskList.add(change.getValueAdded());
-			if (change.wasRemoved())
-				taskList.remove(change.getValueRemoved());
-		});
+		taskMap.addListener((MapChangeListener.Change<? extends String, ? extends Task> change) -> 
+			Platform.runLater(() -> {
+				if (change.wasAdded())
+					taskList.add(change.getValueAdded());
+				if (change.wasRemoved())
+					taskList.remove(change.getValueRemoved());
+			})
+		);
 		
 		projectManager = new ProjectManager();
 		contextManager = new ContextManager();
@@ -88,16 +92,16 @@ public class TaskManager {
 	
 	public void archive() {
 		for (Task t : taskList)
-			if (t.getState() != Task.State.TODO)
+			if (t.getState() != Task.State.TODO && !t.isArchived())
 				t.setArchived(true);
 	}
 	
 	public ObservableList<Task> getTodoList() {
-		return taskList.filtered(t -> !t.isArchived());
+		return taskList.filtered(t -> !t.isArchived()).sorted();
 	}
 	
 	public ObservableList<Task> getArchivedList() {
-		return taskList.filtered(t -> t.isArchived());
+		return taskList.filtered(t -> t.isArchived()).sorted();
 	}
 		
 	public ProjectManager getProjectManager() {
@@ -110,6 +114,14 @@ public class TaskManager {
 	
 	public void setTaskModified(String uuid) {
 		modifiedTasks.add(uuid);
+		System.out.println(uuid);
+		new Thread(() -> {
+			try {
+				Thread.sleep(1000);
+				modifiedTasks.remove(uuid);
+			} catch (Exception e) {} 
+		}).start();
+		System.out.println(taskMap.get(uuid).toJSON());
 	}
 
 	public Task addTask(String input, boolean active) {
@@ -221,6 +233,8 @@ public class TaskManager {
 				for (WatchEvent<?> event : key.pollEvents()) {
 					WatchEvent.Kind<?> kind = event.kind();
 		        
+					System.out.println(taskFolder.resolve((Path) event.context()).toAbsolutePath() + " " + kind);
+					
 					if (kind == StandardWatchEventKinds.OVERFLOW) continue;
 		        
 					Path file = taskFolder.resolve((Path) event.context());
@@ -229,17 +243,26 @@ public class TaskManager {
 						continue;
 
 					String id = file.getFileName().toString().replace(".txt", "");
-					if (modifiedTasks.contains(id)) {
-						modifiedTasks.remove(id);
+					System.out.println(modifiedTasks);
+					if (modifiedTasks.contains(id))
 						continue;
-					}
 		    	
-					if (kind == StandardWatchEventKinds.ENTRY_CREATE || kind == StandardWatchEventKinds.ENTRY_MODIFY)
+					Platform.runLater(() -> {
+					if (kind == StandardWatchEventKinds.ENTRY_CREATE)
 						try {
 							taskMap.put(id, Task.loadFromPath(this, file.toFile()));
-						} catch (Exception e) {	e.printStackTrace(); }
+						} catch (Exception e) {	
+							e.printStackTrace();
+						}
 					else if (kind == StandardWatchEventKinds.ENTRY_DELETE)
 						taskMap.remove(id);
+					else if (kind == StandardWatchEventKinds.ENTRY_MODIFY)
+						try {
+							taskMap.get(id).readFile(file.toFile());
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					});
 				}
 			
 				key.reset();

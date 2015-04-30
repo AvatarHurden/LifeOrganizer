@@ -130,6 +130,7 @@ public class CustomizableTableView<T> extends TableView<T> {
 		List<String> list = new ArrayList<String>();
 		for (TableColumn col : getSortOrder())
 			list.add(col.getText()+"/"+col.getSortType());
+		System.out.println(list);
 		return list;
 	}
 
@@ -140,7 +141,8 @@ public class CustomizableTableView<T> extends TableView<T> {
 				continue;
 			TableColumn col = columnList.get(s.split("/")[0]);
 			col.setSortType(SortType.valueOf(s.split("/")[1]));
-			getSortOrder().add(col);
+			if (!getSortOrder().contains(col))
+				getSortOrder().add(col);
 		}
 	}
 	

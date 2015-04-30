@@ -9,8 +9,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 import javafx.beans.Observable;
@@ -65,6 +63,9 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 	private TaskManager manager;
 	private File file;
 	
+	private final int changesToSave = 20;
+	private int noteChanges = 0;
+	
 	private boolean saveChanges = false;
 	
 	public static Task createNew(TaskManager manager) {
@@ -84,7 +85,12 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		while ((read = reader.read()) != -1)
 			buffer.append((char) read);
 		reader.close();
-		
+		try {
+			new JSONObject(buffer.toString());
+		} catch (JSONException e) {
+			System.out.println("eerror");
+			System.out.println(buffer.toString());
+		}
 		return new Task(manager, new JSONObject(buffer.toString()), file);
 	}
 	
@@ -102,12 +108,28 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		setEditDateNow();
 
 		loadJSON(json);
+	}
+	
+	public void readFile(File f) throws IOException {
+		if (!file.canRead())
+			return;
+		BufferedReader reader = new BufferedReader(new FileReader(file));
+		StringBuffer buffer = new StringBuffer();
+		String line;
+		while ((line = reader.readLine()) != null)
+			buffer.append(line);
+		reader.close();
 		
-		saveChanges = true;
+		saveChanges = false;
+		System.out.println("start");
+		System.out.println(buffer.toString());
+		System.out.println("end");
+		
+		if (!buffer.toString().trim().equals(""))
+			loadJSON(new JSONObject(buffer.toString()));
 	}
 	
 	private void loadJSON(JSONObject json) {
-	
 		if (json.has("archived"))
 			isArchived = json.getBoolean("archived");
 		
@@ -151,18 +173,23 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		if (json.has("contexts"))
 			for (int i = 0; i < json.getJSONArray("contexts").length(); i++)
 				addContext(json.getJSONArray("contexts").getString(i));
+		
+		saveChanges = true;
 	}
 	
-	private void save() {
+	public void save() {
 		if (!saveChanges)
 			return;
+		
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+			manager.setTaskModified(uuid);
 			writer.write(toJSON().toString(4));
 			writer.close();
-			manager.setTaskModified(uuid);
 		} catch (JSONException | IOException e) {
 			e.printStackTrace();
 		}
+		
+		noteChanges = 0;
 	}
 	
 	public JSONObject toJSON() {
@@ -309,14 +336,15 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 	}
 	
 	public void setState(State state) {
-		setEditDateIfDifferent(this.state, state);
+		State old = this.state;
 		
 		this.state = state;
-		
 		if (state != State.TODO)
 			CompletionDateProperty().setValue(getEditDate());
 		else
 			CompletionDateProperty().setValue(null);
+		
+		setEditDateIfDifferent(this.state, old);
 	}
 
 	public State getState() {
@@ -341,8 +369,9 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 	}
 
 	public void setName(String name) {
-		setEditDateIfDifferent(this.name, name);
+		String old = this.name;
 		this.name = name;
+		setEditDateIfDifferent(this.name, old);
 	}
 
 	public String getName() {
@@ -350,11 +379,12 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 	}
 
 	public void setPriority(Character priority) {
-		setEditDateIfDifferent(this.priority, priority);
+		Character old = this.priority;
 		if (priority == null)
 			this.priority = null;
 		else
 			this.priority = Character.toUpperCase(priority);
+		setEditDateIfDifferent(this.priority, old);
 	}
 	
 	public Character getPriority() {
@@ -417,8 +447,12 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 	}
 	
 	public void setNote(String note) {
-		setEditDateIfDifferent(this.note, note);
+		String old = this.note;
 		this.note = note;
+		setEditDateIfDifferent(this.note, old);
+		noteChanges++;
+		if (noteChanges >= changesToSave)
+			save();
 	}
 	
 	public String getNote() {
@@ -426,8 +460,9 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 	}
 	
 	public void setDueDate(DueDate dueDate) {
-		setEditDateIfDifferent(this.dueDate, dueDate);
+		DueDate old = this.dueDate;
 		this.dueDate = dueDate;
+		setEditDateIfDifferent(this.dueDate, old);
 	}
 	
 	public DueDate getDueDate() {
