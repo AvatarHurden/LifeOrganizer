@@ -63,8 +63,7 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 	private TaskManager manager;
 	private File file;
 	
-	private final int changesToSave = 20;
-	private int noteChanges = 0;
+	private Thread scheduledSave = null;
 	
 	private boolean saveChanges = false;
 	
@@ -166,10 +165,12 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 					json.getString("dueDate"), "yyyy.MM.dd@HH:mm", "yyyy.MM.dd"), 
 					json.getString("dueDate").contains("@"));
 		
+		projects.clear();
 		if (json.has("projects"))
 			for (int i = 0; i < json.getJSONArray("projects").length(); i++)
 				addProject(json.getJSONArray("projects").getString(i));
 		
+		contexts.clear();
 		if (json.has("contexts"))
 			for (int i = 0; i < json.getJSONArray("contexts").length(); i++)
 				addContext(json.getJSONArray("contexts").getString(i));
@@ -180,16 +181,17 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 	public void save() {
 		if (!saveChanges)
 			return;
+
+		manager.ignoreTask(uuid);
 		
 		try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-			manager.setTaskModified(uuid);
 			writer.write(toJSON().toString(4));
 			writer.close();
 		} catch (JSONException | IOException e) {
 			e.printStackTrace();
 		}
 		
-		noteChanges = 0;
+		manager.removeIgnore(uuid);
 	}
 	
 	public JSONObject toJSON() {
@@ -279,7 +281,16 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 			editDateProperty = new TaskObjectProperty<DateTime>("editDate").get();
 			editDateProperty.addListener((obs, oldValue, newValue) -> { 
 				fireValueChangedEvent();
-				save();
+				if (scheduledSave == null && saveChanges) {
+					scheduledSave = new Thread(() -> {
+						try {
+							Thread.sleep(3000);
+							save();
+							scheduledSave = null;
+						} catch (Exception e) {}
+					});
+					scheduledSave.start();
+				}
 			});
 		}
 		return editDateProperty;
@@ -450,9 +461,6 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		String old = this.note;
 		this.note = note;
 		setEditDateIfDifferent(this.note, old);
-		noteChanges++;
-		if (noteChanges >= changesToSave)
-			save();
 	}
 	
 	public String getNote() {

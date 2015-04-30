@@ -40,7 +40,7 @@ public class TaskManager {
 	private ObservableMap<String, Task> taskMap;
 	private ObservableList<Task> taskList;
 	
-	private Set<String> modifiedTasks;
+	private Set<String> ignoredTasks;
 	
 	ProjectManager projectManager;
 	ContextManager contextManager;
@@ -56,7 +56,7 @@ public class TaskManager {
 			
 		taskMap = FXCollections.<String, Task>observableHashMap();
 		taskList = FXCollections.observableArrayList();
-		modifiedTasks = new HashSet<String>();
+		ignoredTasks = new HashSet<String>();
 		
 		taskMap.addListener((MapChangeListener.Change<? extends String, ? extends Task> change) -> 
 			Platform.runLater(() -> {
@@ -112,16 +112,12 @@ public class TaskManager {
 		return contextManager;
 	}
 	
-	public void setTaskModified(String uuid) {
-		modifiedTasks.add(uuid);
-		System.out.println(uuid);
-		new Thread(() -> {
-			try {
-				Thread.sleep(1000);
-				modifiedTasks.remove(uuid);
-			} catch (Exception e) {} 
-		}).start();
-		System.out.println(taskMap.get(uuid).toJSON());
+	public void ignoreTask(String uuid) {
+		ignoredTasks.add(uuid);
+	}
+	
+	public void removeIgnore(String uuid) {
+		ignoredTasks.remove(uuid);
 	}
 
 	public Task addTask(String input, boolean active) {
@@ -243,8 +239,8 @@ public class TaskManager {
 						continue;
 
 					String id = file.getFileName().toString().replace(".txt", "");
-					System.out.println(modifiedTasks);
-					if (modifiedTasks.contains(id))
+					System.out.println(ignoredTasks);
+					if (ignoredTasks.contains(id))
 						continue;
 		    	
 					Platform.runLater(() -> {
