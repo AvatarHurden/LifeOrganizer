@@ -1,0 +1,12 @@
+
+#dropboxButton {
+	-fx-graphic: url('dropbox.png');
+}
+
+#localButton {
+	-fx-graphic: url('yellowfolder.png');
+}
+
+.emptypane {
+	-fx-background-color: #d7d5de;
+}

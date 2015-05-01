@@ -1,4 +1,4 @@
-package io.github.avatarhurden.lifeorganizer.views.StartupView;
+package io.github.avatarhurden.lifeorganizer.controllers;
 
 import io.github.avatarhurden.lifeorganizer.managers.LegacyParser;
 import io.github.avatarhurden.lifeorganizer.tools.Config;
@@ -40,7 +40,7 @@ public class StartupViewController {
 	
 	public StartupViewController() {
 		loader = new FXMLLoader(
-				getClass().getResource("/io/github/avatarhurden/lifeorganizer/views/StartupView/StartupView.fxml"));
+				getClass().getResource("/fxml/StartupView.fxml"));
 		loader.setController(this);
 		
 		try {

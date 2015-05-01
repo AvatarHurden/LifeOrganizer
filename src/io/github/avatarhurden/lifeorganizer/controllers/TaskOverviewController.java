@@ -1,20 +1,19 @@
-package io.github.avatarhurden.lifeorganizer.views.TaskOverview;
+package io.github.avatarhurden.lifeorganizer.controllers;
 
+import io.github.avatarhurden.lifeorganizer.controllers.tableColumns.ContextsTableColumn;
+import io.github.avatarhurden.lifeorganizer.controllers.tableColumns.CustomizableTableView;
+import io.github.avatarhurden.lifeorganizer.controllers.tableColumns.DateTimeTableColumn;
+import io.github.avatarhurden.lifeorganizer.controllers.tableColumns.DueDateTableColumn;
+import io.github.avatarhurden.lifeorganizer.controllers.tableColumns.NoteTableColumn;
+import io.github.avatarhurden.lifeorganizer.controllers.tableColumns.PriorityTableColumn;
+import io.github.avatarhurden.lifeorganizer.controllers.tableColumns.ProjectsTableColumn;
+import io.github.avatarhurden.lifeorganizer.controllers.tableColumns.StateTableColumn;
 import io.github.avatarhurden.lifeorganizer.managers.TaskManager;
 import io.github.avatarhurden.lifeorganizer.objects.Context;
 import io.github.avatarhurden.lifeorganizer.objects.DueDate;
 import io.github.avatarhurden.lifeorganizer.objects.Project;
 import io.github.avatarhurden.lifeorganizer.objects.Task;
 import io.github.avatarhurden.lifeorganizer.tools.Config;
-import io.github.avatarhurden.lifeorganizer.views.SingleTaskView.SingleTaskViewController;
-import io.github.avatarhurden.lifeorganizer.views.TableView.ContextsTableColumn;
-import io.github.avatarhurden.lifeorganizer.views.TableView.CustomizableTableView;
-import io.github.avatarhurden.lifeorganizer.views.TableView.DateTimeTableColumn;
-import io.github.avatarhurden.lifeorganizer.views.TableView.DueDateTableColumn;
-import io.github.avatarhurden.lifeorganizer.views.TableView.NoteTableColumn;
-import io.github.avatarhurden.lifeorganizer.views.TableView.PriorityTableColumn;
-import io.github.avatarhurden.lifeorganizer.views.TableView.ProjectsTableColumn;
-import io.github.avatarhurden.lifeorganizer.views.TableView.StateTableColumn;
 
 import java.io.IOException;
 import java.util.List;
@@ -73,7 +72,7 @@ public class TaskOverviewController {
 	
 	public TaskOverviewController() {
 		loader = new FXMLLoader(
-				getClass().getResource("/io/github/avatarhurden/lifeorganizer/views/TaskOverview/TaskOverview.fxml"));
+				getClass().getResource("/fxml/TaskOverview.fxml"));
 		loader.setController(this);
 		
 		try {
@@ -104,7 +103,7 @@ public class TaskOverviewController {
 		configButton.setTooltip(new Tooltip("Open settings screen"));
 		
 		table = new CustomizableTableView<Task>();
-		table.getStylesheets().add("/io/github/avatarhurden/lifeorganizer/views/style.css");
+		table.getStylesheets().add("/style/objectListView.css");
 		
 		table.<Task.State>addColumn("State", new StateTableColumn());
 		

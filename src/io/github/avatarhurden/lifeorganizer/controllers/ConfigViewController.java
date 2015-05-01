@@ -1,4 +1,4 @@
-package io.github.avatarhurden.lifeorganizer.views.ConfigView;
+package io.github.avatarhurden.lifeorganizer.controllers;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,7 +29,7 @@ public class ConfigViewController {
 	
 	public ConfigViewController() {
 		loader = new FXMLLoader(
-				getClass().getResource("/io/github/avatarhurden/lifeorganizer/views/ConfigView/ConfigView.fxml"));
+				getClass().getResource("/fxml/ConfigView.fxml"));
 		loader.setController(this);
 		
 		try {

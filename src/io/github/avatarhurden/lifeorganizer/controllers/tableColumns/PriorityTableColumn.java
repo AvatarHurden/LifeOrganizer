@@ -1,4 +1,4 @@
-package io.github.avatarhurden.lifeorganizer.views.TableView;
+package io.github.avatarhurden.lifeorganizer.controllers.tableColumns;
 
 import io.github.avatarhurden.lifeorganizer.objects.Task;
 import javafx.geometry.Pos;

@@ -1,6 +1,6 @@
-package io.github.avatarhurden.lifeorganizer.views.TableView;
+package io.github.avatarhurden.lifeorganizer.controllers.tableColumns;
 
-import io.github.avatarhurden.lifeorganizer.objects.Context;
+import io.github.avatarhurden.lifeorganizer.objects.Project;
 import io.github.avatarhurden.lifeorganizer.objects.Task;
 
 import java.util.ArrayList;
@@ -10,9 +10,9 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 
-public class ContextsTableColumn extends TableColumn<Task, ObservableList<Context>>{
+public class ProjectsTableColumn extends TableColumn<Task, ObservableList<Project>>{
 	
-	public ContextsTableColumn() {
+	public ProjectsTableColumn() {
 		super();
 		
 		setCellFactory();
@@ -39,21 +39,21 @@ public class ContextsTableColumn extends TableColumn<Task, ObservableList<Contex
 	}
 	
 	private void setCellValueFactory() {
-		setCellValueFactory(col -> col.getValue().ContextsProperty());
+		setCellValueFactory(col -> col.getValue().ProjectsProperty());
 	}
 	
 	private void setCellFactory() {
 		setCellFactory(value -> 
-			new TableCell<Task, ObservableList<Context>>() {
-			protected void updateItem(ObservableList<Context> contexts, boolean empty) {
-				super.updateItem(contexts, empty);
+			new TableCell<Task, ObservableList<Project>>() {
+			protected void updateItem(ObservableList<Project> projects, boolean empty) {
+				super.updateItem(projects, empty);
 
-				if (contexts == null || empty) {
+				if (projects == null || empty) {
 					setText(null);
 					setStyle("");
 				} else {
 					List<String> strings = new ArrayList<String>();
-					for (Context p : contexts)
+					for (Project p : projects)
 						strings.add(p.getName());
 		            	
 					setText(String.join(", ", strings));

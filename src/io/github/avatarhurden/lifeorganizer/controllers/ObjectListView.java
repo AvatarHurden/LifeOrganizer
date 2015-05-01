@@ -1,4 +1,4 @@
-package io.github.avatarhurden.lifeorganizer.views;
+package io.github.avatarhurden.lifeorganizer.controllers;
 
 import java.util.function.Consumer;
 
@@ -32,7 +32,7 @@ public class ObjectListView<T> extends HBox {
 	
 	public ObjectListView(StringPropertyGetter<T> property) {
 		this.property = property;
-		getStylesheets().add("/io/github/avatarhurden/lifeorganizer/views/style.css");
+		getStylesheets().add("/style/objectListView.css");
 	
 		initialize();
 	}

@@ -1,4 +1,4 @@
-package io.github.avatarhurden.lifeorganizer.views.DueDateView;
+package io.github.avatarhurden.lifeorganizer.controllers;
 
 import io.github.avatarhurden.lifeorganizer.objects.DueDate;
 
@@ -46,7 +46,7 @@ public class DueDateViewController {
 	
 	public DueDateViewController() {
 		loader = new FXMLLoader(
-				getClass().getResource("/io/github/avatarhurden/lifeorganizer/views/DueDateView/DueDateView.fxml"));
+				getClass().getResource("/fxml/DueDateView.fxml"));
 		loader.setController(this);
 		
 		try {
@@ -138,7 +138,7 @@ public class DueDateViewController {
 			timeLabel.setText(timeLabel.getText().substring(0, 2) + String.format(":%02d", newValue.intValue())));
 		
 		Region clearButton = new Region();
-		clearButton.getStylesheets().add("/io/github/avatarhurden/lifeorganizer/views/style.css");
+		clearButton.getStylesheets().add("/style/objectListView.css");
         clearButton.getStyleClass().addAll("graphic");
         
         StackPane clearButtonPane = new StackPane(clearButton);

@@ -1,10 +1,10 @@
 package io.github.avatarhurden.lifeorganizer.main;
 
+import io.github.avatarhurden.lifeorganizer.controllers.ConfigViewController;
+import io.github.avatarhurden.lifeorganizer.controllers.StartupViewController;
+import io.github.avatarhurden.lifeorganizer.controllers.TaskOverviewController;
 import io.github.avatarhurden.lifeorganizer.managers.TaskManager;
 import io.github.avatarhurden.lifeorganizer.tools.Config;
-import io.github.avatarhurden.lifeorganizer.views.ConfigView.ConfigViewController;
-import io.github.avatarhurden.lifeorganizer.views.StartupView.StartupViewController;
-import io.github.avatarhurden.lifeorganizer.views.TaskOverview.TaskOverviewController;
 
 import java.io.File;
 import java.util.ArrayList;

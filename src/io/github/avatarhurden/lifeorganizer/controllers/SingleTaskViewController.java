@@ -1,11 +1,9 @@
-package io.github.avatarhurden.lifeorganizer.views.SingleTaskView;
+package io.github.avatarhurden.lifeorganizer.controllers;
 
 import io.github.avatarhurden.lifeorganizer.managers.TaskManager;
 import io.github.avatarhurden.lifeorganizer.objects.Context;
 import io.github.avatarhurden.lifeorganizer.objects.Project;
 import io.github.avatarhurden.lifeorganizer.objects.Task;
-import io.github.avatarhurden.lifeorganizer.views.ObjectListView;
-import io.github.avatarhurden.lifeorganizer.views.DueDateView.DueDateViewController;
 
 import java.io.IOException;
 import java.util.Locale;
@@ -65,7 +63,7 @@ public class SingleTaskViewController {
 	
 	public SingleTaskViewController() {
 		loader = new FXMLLoader(
-				getClass().getResource("/io/github/avatarhurden/lifeorganizer/views/SingleTaskView/SingleTaskView.fxml"));
+				getClass().getResource("/fxml/SingleTaskView.fxml"));
 		loader.setController(this);
 		
 		try {
