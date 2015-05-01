@@ -229,7 +229,7 @@ public class TaskManager {
 	
 	private void readFolder() throws IOException {
 		DirectoryStream<Path> stream = Files.newDirectoryStream(taskFolder, 
-				path -> !Pattern.matches("^[0-9abcdefABCDEF]{32}\\.txt", path.getFileName().toString()));
+				path -> Pattern.matches("^[0-9abcdefABCDEF]{32}\\.txt", path.getFileName().toString()));
 		for (Path file: stream) {
 		  	String id = file.getFileName().toString().replace(".txt", "");
 		   	taskMap.put(id, Task.loadFromPath(this, file.toFile()));
