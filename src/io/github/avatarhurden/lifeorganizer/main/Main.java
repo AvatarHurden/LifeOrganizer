@@ -1,6 +1,7 @@
 package io.github.avatarhurden.lifeorganizer.main;
 
-import io.github.avatarhurden.lifeorganizer.diary.views.MarkdownEditor;
+import io.github.avatarhurden.lifeorganizer.diary.managers.EntryManager;
+import io.github.avatarhurden.lifeorganizer.diary.views.DiaryOverviewController;
 import io.github.avatarhurden.lifeorganizer.managers.TaskManager;
 import io.github.avatarhurden.lifeorganizer.tools.Config;
 import io.github.avatarhurden.lifeorganizer.views.ConfigView.ConfigViewController;
@@ -21,7 +22,6 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -40,6 +40,7 @@ public class Main extends Application {
 	private static final String changelogURL = "https://raw.githubusercontent.com/AvatarHurden/LifeOrganizer/master/changelog";
 
 	private TaskManager manager;
+	private EntryManager entryManager;
 	private static Stage primaryStage;
 	
 	public static void main(String[] args) {
@@ -54,18 +55,18 @@ public class Main extends Application {
 			defineDataFolder();
 		
 		manager = new TaskManager();
+		entryManager = new EntryManager();
+		entryManager.loadAndWatch();
 		
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/github/avatarhurden/lifeorganizer/views/TaskOverview/TaskOverview.fxml"));
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/github/avatarhurden/lifeorganizer/diary/views/DiaryOverview.fxml"));
 
-		NotificationPane pane = new NotificationPane(new MarkdownEditor().getView());
+		NotificationPane pane = new NotificationPane(loader.load());
 		Scene scene = new Scene(pane);
 		
 //		startUpdater(pane);
 //		
-//		TaskOverviewController controller = loader.<TaskOverviewController>getController();
-//		controller.setTaskManager(manager);
-//		controller.setConfigStage(getConfigStage());
-//		controller.loadState();
+		DiaryOverviewController controller = loader.<DiaryOverviewController>getController();
+		controller.setDiaryManager(entryManager);
 //		
 		primaryStage.setTitle("LifeOrganizer");
 		primaryStage.setScene(scene);

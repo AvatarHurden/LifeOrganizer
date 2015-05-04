@@ -24,7 +24,7 @@ import netscape.javascript.JSObject;
 import org.tautua.markdownpapers.Markdown;
 import org.tautua.markdownpapers.parser.ParseException;
 
-public class MarkdownEditor {
+public class MarkdownEditor extends AnchorPane {
 
 	@FXML
 	private TextArea text;
@@ -33,17 +33,14 @@ public class MarkdownEditor {
 	
 	private VBox viewer, editor;
 
-	private AnchorPane pane;
-	
 	public MarkdownEditor() {
 
 		setEditPane();
 		setViewerPane();
 		
-		text.setText("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce sit amet nunc vel dui accumsan tincidunt. Cras non nisi nibh. Integer erat erat, fringilla at fringilla ac, suscipit eu lorem. Aenean a scelerisque velit. Nam a sapien eget metus bibendum mattis. Duis sodales dignissim feugiat. Pellentesque aliquam tellus a pharetra cursus. Sed accumsan elementum nisi et rhoncus. Praesent id ornare elit.\n\nAliquam purus metus, fermentum at tellus ac, gravida accumsan enim. Vestibulum nec justo et tortor rhoncus rutrum consectetur non ipsum. Etiam eu aliquet nisl. Sed sit amet luctus leo. Proin eget justo luctus, commodo neque sed, efficitur libero. Vestibulum feugiat gravida accumsan. Proin id auctor urna. Curabitur imperdiet malesuada lectus, vitae venenatis libero consectetur non. Pellentesque vestibulum aliquam odio, nec suscipit elit accumsan vel. Mauris rutrum odio felis, sed semper odio sagittis et. In tempor rutrum tempus. Curabitur magna lacus, rutrum ac eros eu, tempor aliquam augue.\n\nCum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Sed aliquet dapibus nulla, placerat posuere dolor. Maecenas id eleifend metus. Duis tincidunt dictum est in vehicula. Mauris nec rutrum risus. Cras luctus vestibulum dolor. Vivamus ut consequat ligula. Donec sed aliquet magna, non vestibulum sapien. Nam at fermentum arcu. Vivamus eu tortor sed odio aliquam placerat. Cras mattis eget felis ac laoreet.\n\nMorbi a ultrices diam. In sodales maximus pharetra. Fusce molestie euismod orci, eget viverra eros iaculis non. Praesent in consequat lectus, vitae maximus mauris. Integer nisi ipsum, scelerisque id magna id, tincidunt consequat nibh. Sed vehicula vitae nibh ac condimentum. Morbi placerat dui tellus, vitae pharetra dui scelerisque ac. Aliquam eget semper ligula. Suspendisse semper tellus eget nisl sollicitudin mollis. Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n\nDuis mauris risus, ullamcorper et porttitor sit amet, consectetur a libero. Quisque justo nulla, facilisis non rhoncus et, ultrices at risus. Nam interdum elit non augue auctor varius. Integer a neque consectetur, cursus elit eget, faucibus orci. Integer aliquet nisi et nisi mattis tristique. Nunc in libero vitae mi hendrerit varius ac sit amet nisi. Integer non felis id nulla tempus varius at aliquet justo. Sed non vulputate dui. Donec interdum faucibus ipsum, non pharetra risus iaculis in. Curabitur in est scelerisque, eleifend tortor vel, lacinia risus. Nulla et pellentesque odio, eget ornare felis.");
+//		text.setText("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce sit amet nunc vel dui accumsan tincidunt. Cras non nisi nibh. Integer erat erat, fringilla at fringilla ac, suscipit eu lorem. Aenean a scelerisque velit. Nam a sapien eget metus bibendum mattis. Duis sodales dignissim feugiat. Pellentesque aliquam tellus a pharetra cursus. Sed accumsan elementum nisi et rhoncus. Praesent id ornare elit.\n\nAliquam purus metus, fermentum at tellus ac, gravida accumsan enim. Vestibulum nec justo et tortor rhoncus rutrum consectetur non ipsum. Etiam eu aliquet nisl. Sed sit amet luctus leo. Proin eget justo luctus, commodo neque sed, efficitur libero. Vestibulum feugiat gravida accumsan. Proin id auctor urna. Curabitur imperdiet malesuada lectus, vitae venenatis libero consectetur non. Pellentesque vestibulum aliquam odio, nec suscipit elit accumsan vel. Mauris rutrum odio felis, sed semper odio sagittis et. In tempor rutrum tempus. Curabitur magna lacus, rutrum ac eros eu, tempor aliquam augue.\n\nCum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Sed aliquet dapibus nulla, placerat posuere dolor. Maecenas id eleifend metus. Duis tincidunt dictum est in vehicula. Mauris nec rutrum risus. Cras luctus vestibulum dolor. Vivamus ut consequat ligula. Donec sed aliquet magna, non vestibulum sapien. Nam at fermentum arcu. Vivamus eu tortor sed odio aliquam placerat. Cras mattis eget felis ac laoreet.\n\nMorbi a ultrices diam. In sodales maximus pharetra. Fusce molestie euismod orci, eget viverra eros iaculis non. Praesent in consequat lectus, vitae maximus mauris. Integer nisi ipsum, scelerisque id magna id, tincidunt consequat nibh. Sed vehicula vitae nibh ac condimentum. Morbi placerat dui tellus, vitae pharetra dui scelerisque ac. Aliquam eget semper ligula. Suspendisse semper tellus eget nisl sollicitudin mollis. Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n\nDuis mauris risus, ullamcorper et porttitor sit amet, consectetur a libero. Quisque justo nulla, facilisis non rhoncus et, ultrices at risus. Nam interdum elit non augue auctor varius. Integer a neque consectetur, cursus elit eget, faucibus orci. Integer aliquet nisi et nisi mattis tristique. Nunc in libero vitae mi hendrerit varius ac sit amet nisi. Integer non felis id nulla tempus varius at aliquet justo. Sed non vulputate dui. Donec interdum faucibus ipsum, non pharetra risus iaculis in. Curabitur in est scelerisque, eleifend tortor vel, lacinia risus. Nulla et pellentesque odio, eget ornare felis.");
 
-		pane = new AnchorPane();
-		pane.getChildren().setAll(viewer);
+		getChildren().setAll(viewer);
 		
 		AnchorPane.setTopAnchor(editor, 0d);
 		AnchorPane.setBottomAnchor(editor, 0d);
@@ -55,16 +52,13 @@ public class MarkdownEditor {
 		AnchorPane.setRightAnchor(viewer, 0d);
 	}
 	
-	public AnchorPane getView() {
-		return pane;
-	}
-	
-	public Property<String> getTextProperty() {
+	public Property<String> textProperty() {
 		return text.textProperty();
 	}
 	
 	public void setText(String value) {
 		text.setText(value);
+		updateViewer();
 	}
 	
 	public String getText() {
@@ -76,18 +70,22 @@ public class MarkdownEditor {
 		
 		text = new TextArea();
 		text.setOnKeyPressed(event -> {
-			if (event.getCode() == KeyCode.ENTER && event.isControlDown())
-				pane.getChildren().setAll(viewer);
+			if (event.getCode() == KeyCode.ENTER && event.isControlDown()) {
+				updateViewer();
+				getChildren().setAll(viewer);
+			}
 		});
 		text.setWrapText(true);
-		text.textProperty().addListener(event -> updateViewer());
 		
 		FlowPane buttons = getEditButtons();
 		
 		ButtonBar bar = new ButtonBar();
 		
 		Button done = new Button("Done");
-		done.setOnAction(event -> pane.getChildren().setAll(viewer));	
+		done.setOnAction(event -> {
+			updateViewer();
+			getChildren().setAll(viewer);
+		});	
 		bar.getButtons().add(done);
 		
 		text.prefHeightProperty().bind(editor.heightProperty().subtract(buttons.heightProperty()).subtract(bar.heightProperty()));
@@ -135,14 +133,14 @@ public class MarkdownEditor {
 		webView = new WebView();
 		webView.setOnMouseClicked(event -> {
 			if (event.getClickCount() == 2)
-				pane.getChildren().setAll(editor);
+				getChildren().setAll(editor);
 		});
 		
 		ButtonBar buttonBar = new ButtonBar();
 		
 		Button edit = new Button("Edit");
 		edit.setOnAction(event -> {
-			pane.getChildren().setAll(editor);
+			getChildren().setAll(editor);
 		});
 		buttonBar.getButtons().add(edit);
 
@@ -150,7 +148,6 @@ public class MarkdownEditor {
 		viewer = new VBox(webView, buttonBar);
 	}
 	
-	@FXML
 	private void updateViewer() {
         try {
             StringWriter writer = new StringWriter();
@@ -200,11 +197,15 @@ public class MarkdownEditor {
 	private void addBold() {
 		if (!text.getSelectedText().equals("")) {
 			int caret = text.getCaretPosition();
-			System.out.println("text = \"" + text.getText(caret, caret + 1) + "\"");
 			while (text.getText(caret-1, caret).matches("[ \\n\\t]"))
 				caret--;
 			text.insertText(text.getAnchor(), "**");
-			text.insertText(caret + 2, "**");
+			if (caret == text.getText().length())
+				text.insertText(caret, "**");
+			else if (caret + 1 == text.getText().length())
+				text.insertText(caret + 1, "**");
+			else
+				text.insertText(caret + 2, "**");
 		} else {
 			text.insertText(text.getCaretPosition() , "****");
 			text.positionCaret(text.getCaretPosition() - 2);
