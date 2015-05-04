@@ -1,9 +1,9 @@
 package io.github.avatarhurden.lifeorganizer.main;
 
+import io.github.avatarhurden.lifeorganizer.diary.views.MarkdownEditor;
 import io.github.avatarhurden.lifeorganizer.managers.TaskManager;
 import io.github.avatarhurden.lifeorganizer.tools.Config;
 import io.github.avatarhurden.lifeorganizer.views.ConfigView.ConfigViewController;
-import io.github.avatarhurden.lifeorganizer.views.TaskOverview.TaskOverviewController;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,6 +21,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -56,32 +57,32 @@ public class Main extends Application {
 		
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/github/avatarhurden/lifeorganizer/views/TaskOverview/TaskOverview.fxml"));
 
-		NotificationPane pane = new NotificationPane(loader.load());
+		NotificationPane pane = new NotificationPane(new MarkdownEditor().getView());
 		Scene scene = new Scene(pane);
 		
-		startUpdater(pane);
-		
-		TaskOverviewController controller = loader.<TaskOverviewController>getController();
-		controller.setTaskManager(manager);
-		controller.setConfigStage(getConfigStage());
-		controller.loadState();
-		
+//		startUpdater(pane);
+//		
+//		TaskOverviewController controller = loader.<TaskOverviewController>getController();
+//		controller.setTaskManager(manager);
+//		controller.setConfigStage(getConfigStage());
+//		controller.loadState();
+//		
 		primaryStage.setTitle("LifeOrganizer");
 		primaryStage.setScene(scene);
 		primaryStage.show();
-		
-		setPosition(primaryStage);
-		
-		primaryStage.setOnCloseRequest(event -> {
-			try {
-				savePosition(primaryStage);
-				controller.saveState();
-				Config.save();
-				manager.save();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		});
+//		
+//		setPosition(primaryStage);
+//		
+//		primaryStage.setOnCloseRequest(event -> {
+//			try {
+//				savePosition(primaryStage);
+//				controller.saveState();
+//				Config.save();
+//				manager.save();
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//		});
 		
 	}
 	
