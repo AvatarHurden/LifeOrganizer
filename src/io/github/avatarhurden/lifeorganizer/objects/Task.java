@@ -14,7 +14,7 @@ import java.util.UUID;
 import javafx.beans.Observable;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.adapter.JavaBeanObjectPropertyBuilder;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -24,7 +24,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>{
+public class Task {
 
 	public static final long SAVE_INTERVAL = 5000;
 	
@@ -35,33 +35,23 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 	private final String uuid;
 	private boolean isArchived;
 	
-	private State state;
-	private String name;
-	
-	private Character priority;
-	
-	private ObservableList<Project> projects;
-	private ObservableList<Context> contexts;
-	
-	private String note;
-	
-	private DueDate dueDate;
-	
-	private DateTime creationDate;
-	private DateTime editDate;
-	private DateTime completionDate;
-	
-	// ObjectProperties
 	private Property<State> stateProperty;
 	private Property<String> nameProperty;
 	private Property<Character> priorityProperty;
+	
 	private Property<DueDate> dueDateProperty;
+	
 	private Property<DateTime> creationDateProperty;
 	private Property<DateTime> completionDateProperty;
+	private Property<DateTime> editDateProperty;
+	
 	private Property<String> noteProperty;
+
+	private ObservableList<Project> projects;
+	private ObservableList<Context> contexts;
+	
 	private Property<ObservableList<Project>> projectsProperty;
 	private Property<ObservableList<Context>> contextsProperty;
-	private Property<DateTime> editDateProperty;
 	
 	private TaskManager manager;
 	private File file;
@@ -90,7 +80,6 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		try {
 			new JSONObject(buffer.toString());
 		} catch (JSONException e) {
-			System.out.println("eerror");
 			System.out.println(buffer.toString());
 		}
 		return new Task(manager, new JSONObject(buffer.toString()), file);
@@ -102,17 +91,45 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		uuid = json.getString("uuid");
 		
 		projects = FXCollections.observableArrayList(p -> new Observable[] {p.NameProperty()});
-		projects.addListener((ListChangeListener.Change<? extends Project> event) ->
-			ProjectsProperty().setValue(projects)
-		);
+		
+		projectsProperty = new SimpleObjectProperty<ObservableList<Project>>(projects);
+		projects.addListener((ListChangeListener.Change<? extends Project> event) -> {
+			projectsProperty.setValue(null);
+			projectsProperty.setValue(projects);
+		});
 		
 		contexts = FXCollections.observableArrayList(p -> new Observable[] {p.NameProperty()});
-		contexts.addListener((ListChangeListener.Change<? extends Context> event) -> 
-			ContextsProperty().setValue(contexts)
-		);
-
-		state = State.TODO;
-		creationDate = new DateTime();
+		
+		contextsProperty = new SimpleObjectProperty<ObservableList<Context>>(contexts);
+		contexts.addListener((ListChangeListener.Change<? extends Context> event) -> {
+			contextsProperty.setValue(null);
+			contextsProperty.setValue(contexts);
+		});
+		
+		nameProperty = new SimpleStringProperty();
+		stateProperty = new SimpleObjectProperty<Task.State>(State.TODO);
+		priorityProperty = new SimpleObjectProperty<Character>();
+		
+		dueDateProperty = new SimpleObjectProperty<DueDate>();
+		
+		creationDateProperty = new SimpleObjectProperty<DateTime>(new DateTime());
+		editDateProperty = new SimpleObjectProperty<DateTime>(new DateTime());
+		completionDateProperty = new SimpleObjectProperty<DateTime>();
+		
+		noteProperty = new SimpleStringProperty();
+		
+		editDateProperty.addListener((obs, oldValue, newValue) -> {
+			if (scheduledSave == null && saveChanges) {
+				scheduledSave = new Thread(() -> {
+					try {
+						Thread.sleep(SAVE_INTERVAL);
+						save();
+						scheduledSave = null;
+					} catch (Exception e) {}
+				});
+				scheduledSave.start();
+			}
+		});
 
 		setEditDateNow();
 
@@ -137,8 +154,6 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 			buffer.append(line);
 		reader.close();
 
-		System.out.println("read file");
-		
 		if (!buffer.toString().trim().equals(""))
 			loadJSON(new JSONObject(buffer.toString()));
 	}
@@ -150,31 +165,31 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 			setArchived(json.getBoolean("archived"));
 		
 		if (json.has("name"))
-			setNameValue(json.getString("name"));
+			nameProperty.setValue(json.getString("name"));
 		
 		if (json.has("state"))
 			switch (json.getString("state")) {
-			case "todo": setStateValue(State.TODO); break;
-			case "done": setStateValue(State.DONE); break;
-			case "failed": setStateValue(State.FAILED); break;
+			case "todo": stateProperty.setValue(State.TODO); break;
+			case "done": stateProperty.setValue(State.DONE); break;
+			case "failed": stateProperty.setValue(State.FAILED); break;
 			}
 		
 		if (json.has("creationDate"))
-			setCreationDateValue(DateUtils.parseDateTime(
+			creationDateProperty.setValue(DateUtils.parseDateTime(
 				json.getString("creationDate"), "yyyy.MM.dd@HH:mm"));
 		
 		if (json.has("note"))
-			setNoteValue(json.getString("note"));
+			noteProperty.setValue(json.getString("note"));
 		
 		if (json.has("completionDate"))
-			setCompletionDateValue(DateUtils.parseDateTime(
+			completionDateProperty.setValue(DateUtils.parseDateTime(
 					json.getString("completionDate"), "yyyy.MM.dd@HH:mm"));
 	
 		if (json.has("priority"))
-			setPriorityValue(json.getString("priority").charAt(0));
+			priorityProperty.setValue(json.getString("priority").charAt(0));
 		
 		if (json.has("dueDate"))
-			setDueDateValue(new DueDate(DateUtils.parseDateTime(
+			dueDateProperty.setValue(new DueDate(DateUtils.parseDateTime(
 					json.getString("dueDate"), "yyyy.MM.dd@HH:mm", "yyyy.MM.dd"), 
 					json.getString("dueDate").contains("@")));
 		
@@ -189,7 +204,7 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 				addContext(json.getJSONArray("contexts").getString(i));
 		
 		if (json.has("editDate"))
-			setEditDateValue(DateUtils.parseDateTime(
+			editDateProperty.setValue(DateUtils.parseDateTime(
 				json.getString("editDate"), "yyyy.MM.dd@HH:mm"));
 		
 		saveChanges = true;
@@ -206,9 +221,7 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 			} catch (JSONException | IOException e) {
 				e.printStackTrace();
 			}
-		});
-		
-		System.out.println("saving");		
+		});	
 	}
 	
 	public void delete() {
@@ -239,24 +252,24 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		
 		json.put("uuid", uuid);
 		json.put("archived", isArchived);
-		json.put("name", name);
-		json.put("creationDate", DateUtils.format(creationDate, "yyyy.MM.dd@HH:mm"));
-		json.put("editDate", DateUtils.format(editDate, "yyyy.MM.dd@HH:mm"));
+		json.put("name", nameProperty.getValue());
+		json.put("creationDate", DateUtils.format(creationDateProperty.getValue(), "yyyy.MM.dd@HH:mm"));
+		json.put("editDate", DateUtils.format(editDateProperty.getValue(), "yyyy.MM.dd@HH:mm"));
 		
-		switch (state) {
+		switch (stateProperty.getValue()) {
 		case TODO: json.put("state", "todo"); break;
 		case DONE: json.put("state", "done"); break;
 		case FAILED: json.put("state", "failed"); break;
 		}
 		
-		if (priority != null)
-			json.put("priority", priority);
+		if (priorityProperty.getValue() != null)
+			json.put("priority", priorityProperty.getValue());
 		
-		if (dueDate != null)
-			if (dueDate.getHasTime())
-				json.put("dueDate", DateUtils.format(dueDate.getDateTime(), "yyyy.MM.dd@HH:mm"));
+		if (dueDateProperty.getValue() != null)
+			if (dueDateProperty.getValue().getHasTime())
+				json.put("dueDate", DateUtils.format(dueDateProperty.getValue().getDateTime(), "yyyy.MM.dd@HH:mm"));
 			else
-				json.put("dueDate", DateUtils.format(dueDate.getDateTime(), "yyyy.MM.dd"));
+				json.put("dueDate", DateUtils.format(dueDateProperty.getValue().getDateTime(), "yyyy.MM.dd"));
 			
 		if (projects != null) {
 			JSONArray ar = new JSONArray();
@@ -272,108 +285,13 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 			json.put("contexts", ar);
 		}
 		
-		if (note != null)
-			json.put("note", note);
+		if (noteProperty.getValue() != null)
+			json.put("note", noteProperty.getValue());
 		
 		return json;
 	}
 	
-	// Property methods
-	public Property<State> StateProperty() {
-		if (stateProperty == null) 
-			stateProperty = new TaskObjectProperty<State>("state").get();
-		return stateProperty;
-	}
-
-	public Property<String> NameProperty() {
-		if (nameProperty == null)
-			nameProperty = new TaskObjectProperty<String>("name").get();
-		return nameProperty;
-	}
-	
-	public Property<Character> PriorityProperty() {
-		if (priorityProperty == null)
-			priorityProperty = new TaskObjectProperty<Character>("priority").get();
-		return priorityProperty;
-	}
-	
-	public Property<DueDate> DueDateProperty() {
-		if (dueDateProperty == null)
-			dueDateProperty = new TaskObjectProperty<DueDate>("dueDate").get();
-		return dueDateProperty;
-	}
-	
-	public Property<DateTime> CreationDateProperty() {
-		if (creationDateProperty == null)
-			creationDateProperty = new TaskObjectProperty<DateTime>("creationDate").get();
-		return creationDateProperty;
-	}
-	
-	public Property<DateTime> CompletionDateProperty() {
-		if (completionDateProperty == null)
-			completionDateProperty = new TaskObjectProperty<DateTime>("completionDate").get();
-		return completionDateProperty;
-	}
-	
-	public Property<DateTime> EditDateProperty() {
-		if (editDateProperty == null) {
-			// Listen to editdate, since it is changed every time another value is changed
-			editDateProperty = new TaskObjectProperty<DateTime>("editDate").get();
-			editDateProperty.addListener((obs, oldValue, newValue) -> { 
-				fireValueChangedEvent();
-				if (scheduledSave == null && saveChanges) {
-					scheduledSave = new Thread(() -> {
-						try {
-							Thread.sleep(SAVE_INTERVAL);
-							save();
-							scheduledSave = null;
-						} catch (Exception e) {}
-					});
-					scheduledSave.start();
-				}
-			});
-		}
-		return editDateProperty;
-	}
-	
-	public Property<String> NoteProperty() {
-		if (noteProperty == null)
-			noteProperty = new TaskObjectProperty<String>("note").get();
-		return noteProperty;
-	}
-	
-	public Property<ObservableList<Project>> ProjectsProperty() {
-		if (projectsProperty == null)
-			projectsProperty = new TaskObjectProperty<ObservableList<Project>>("projects").get();
-		return projectsProperty;
-	}
-	
-	public Property<ObservableList<Context>> ContextsProperty() {
-		if (contextsProperty == null) 
-			contextsProperty = new TaskObjectProperty<ObservableList<Context>>("contexts").get();
-		return contextsProperty;
-	}
-	
-	private class TaskObjectProperty<T> {
-		private JavaBeanObjectPropertyBuilder<T> propbuilder;
-		
-		private TaskObjectProperty(String name) {
-			propbuilder = new JavaBeanObjectPropertyBuilder<T>();
-			propbuilder.name(name).bean(Task.this);
-		}
-		
-		private Property<T> get() {
-			try {
-				return propbuilder.build();
-			} catch (NoSuchMethodException e) {
-				e.printStackTrace();
-				return null;
-			}
-		}
-	}
-
 	// Setters and Getters
-
 	public String getUUID() {
 		return uuid;
 	}
@@ -386,119 +304,78 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 			manager.getProjectManager().moveProjects(!this.isArchived, projects);
 			manager.getContextManager().moveContexts(!this.isArchived, contexts);
 		}
-		setEditDateIfDifferent(this.isArchived, old);
+		setEditDateNow();
 	}
 	
 	public boolean isArchived() {
 		return isArchived;
 	}
 	
-	public void setStateValue(State state) {
-		StateProperty().setValue(state);
-	}
-	
 	public void setState(State state) {
-		State old = this.state;
-		
-		this.state = state;
-		if (state != State.TODO)
-			CompletionDateProperty().setValue(getEditDate());
-		else
-			CompletionDateProperty().setValue(null);
-		
-		setEditDateIfDifferent(this.state, old);
-	}
-
-	public State getState() {
-		return state;
-	}
-
-	public void setEditDateValue(DateTime editDate) {
-		EditDateProperty().setValue(editDate);
-	}
-	
-	public void setEditDate(DateTime editDate) {
-		this.editDate = editDate;
-	}
-
-	private void setEditDateIfDifferent(Object currentValue, Object newValue) {
-		if (currentValue == null || !currentValue.equals(newValue))
-			setEditDateNow();
-	}
-
-	private void setEditDateNow() {
-		EditDateProperty().setValue(new DateTime());
-	}
-	
-	public DateTime getEditDate() {
-		return editDate;
-	}
-
-	public void setNameValue(String name) {
-		NameProperty().setValue(name);
-	}
-	
-	public void setName(String name) {
-		String old = this.name;
-		this.name = name;
-		setEditDateIfDifferent(this.name, old);
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void setPriorityValue(Character priority) {
-		PriorityProperty().setValue(priority);
-	}
-	
-	public void setPriority(Character priority) {
-		Character old = this.priority;
-		if (priority == null)
-			this.priority = null;
-		else
-			this.priority = Character.toUpperCase(priority);
-		setEditDateIfDifferent(this.priority, old);
-	}
-	
-	public Character getPriority() {
-		return priority;
-	}
-	
-	public void setCompletionDateValue(DateTime completionDate) {
-		CompletionDateProperty().setValue(completionDate);
-	}
-	
-	public void setCompletionDate(DateTime completionDate) {
-		this.completionDate = completionDate;
-	}
-
-	public DateTime getCompletionDate() {
-		return completionDate;
-	}
-
-	public void setCreationDateValue(DateTime creationDate) {
-		CreationDateProperty().setValue(creationDate);
-	}
-	
-	public void setCreationDate(DateTime creationDate) {
-		this.creationDate = creationDate;
-	}
-
-	public DateTime getCreationDate() {
-		return creationDate;
-	}
-
-	public void setProjects(ObservableList<Project> projects) {
-		for (Project p : this.projects)
-			if (!projects.contains(p))
-				this.projects.remove(p);
-		for (Project p : projects)
-			if (!this.projects.contains(p))
-				this.projects.add(p);
+		stateProperty.setValue(state);
 		setEditDateNow();
 	}
 
+	public State getState() {
+		return stateProperty.getValue();
+	}
+
+	public Property<State> stateProperty() {
+		return stateProperty;
+	}
+	
+	public void setName(String name) {
+		nameProperty.setValue(name);
+		setEditDateNow();
+	}
+
+	public String getName() {
+		return nameProperty.getValue();
+	}
+
+	public Property<String> nameProperty() {
+		return nameProperty;
+	}
+	
+	public void setPriority(Character priority) {
+		priorityProperty.setValue(priority);
+		setEditDateNow();
+	}
+	
+	public Character getPriority() {
+		return priorityProperty.getValue();
+	}
+
+	public Property<Character> priorityProperty() {
+		return priorityProperty;
+	}
+	
+	public void setCompletionDate(DateTime completionDate) {
+		completionDateProperty.setValue(completionDate);
+		setEditDateNow();
+	}
+	
+	public DateTime getCompletionDate() {
+		return completionDateProperty.getValue();
+	}
+	
+	public Property<DateTime> completionDateProperty() {
+		return completionDateProperty;
+	}
+
+	public void setCreationDate(DateTime creationDate) {
+		creationDateProperty.setValue(creationDate);
+		setEditDateNow();
+	}
+	
+	public DateTime getCreationDate() {
+		return creationDateProperty.getValue();
+	}
+
+	public Property<DateTime> creationDateProperty() {
+		return completionDateProperty;
+	}
+	
 	public Project addProject(String name) {
 		Project p = manager.getProjectManager().getProject(name);
 		
@@ -522,56 +399,76 @@ public class Task extends SimpleObjectProperty<Task> implements Comparable<Task>
 		return projects;
 	}
 
-	public void setContexts(ObservableList<Context> contexts) {
-		// This manual way must be done in order to allow for changes to be fired on the property
-		for (Context p : this.contexts)
-			if (!contexts.contains(p))
-				this.contexts.remove(p);
-		for (Context p : contexts)
-			if (!this.contexts.contains(p))
-				this.contexts.add(p);
-		setEditDateNow();
+	public Property<ObservableList<Project>> projectsProperty() {
+		return projectsProperty;
 	}
 
-	public void addContext(String name) {
-		contexts.add(manager.getContextManager().createContext(name, !isArchived));
+	public Context addContext(String name) {
+		Context c = manager.getContextManager().getContext(name);
+	
+		if (contexts.contains(c))
+			return null;
+	
+		c = manager.getContextManager().createContext(name, !isArchived);
+		
+		contexts.add(c);
 		setEditDateNow();
+		return c;
 	}
 
+	public void removeContext(Context c) {
+		manager.getContextManager().decrementContexts(!isArchived, c);
+		contexts.remove(c);
+		setEditDateNow();
+	}
+	
 	public ObservableList<Context> getContexts() {
 		return contexts;
 	}
 	
-	public void setNoteValue(String note) {
-		NoteProperty().setValue(note);
+	public Property<ObservableList<Context>> contextsProperty() {
+		return contextsProperty;
 	}
 	
 	public void setNote(String note) {
-		String old = this.note;
-		this.note = note;
-		setEditDateIfDifferent(this.note, old);
+		noteProperty.setValue(note);
+		setEditDateNow();
 	}
 	
 	public String getNote() {
-		return note;
+		return noteProperty.getValue();
 	}
-	
-	public void setDueDateValue(DueDate dueDate) {
-		DueDateProperty().setValue(dueDate);
+
+	public Property<String> noteProperty() {
+		return noteProperty;
 	}
 	
 	public void setDueDate(DueDate dueDate) {
-		DueDate old = this.dueDate;
-		this.dueDate = dueDate;
-		setEditDateIfDifferent(this.dueDate, old);
+		dueDateProperty.setValue(dueDate);
+		setEditDateNow();
 	}
 	
 	public DueDate getDueDate() {
-		return dueDate;
+		return dueDateProperty.getValue();
 	}
 
-	@Override
-	public int compareTo(Task o) {
-		return 0;
+	public Property<DueDate> dueDateProperty() {
+		return dueDateProperty;
+	}
+
+	public void setEditDate(DateTime editDate) {
+		editDateProperty.setValue(editDate);
+	}
+	
+	private void setEditDateNow() {
+		editDateProperty.setValue(new DateTime());
+	}
+	
+	public DateTime getEditDate() {
+		return editDateProperty.getValue();
+	}
+	
+	public Property<DateTime> editDateProperty() {
+		return editDateProperty;
 	}
 }

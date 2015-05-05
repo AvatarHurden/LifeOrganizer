@@ -12,7 +12,7 @@ public class DueDateTableColumn extends TableColumn<Task, DueDate>{
 		super();
 		
 		setCellFactory();
-		setCellValueFactory(col -> col.getValue().DueDateProperty());
+		setCellValueFactory(col -> col.getValue().dueDateProperty());
 		setComparator();
 	}
 	

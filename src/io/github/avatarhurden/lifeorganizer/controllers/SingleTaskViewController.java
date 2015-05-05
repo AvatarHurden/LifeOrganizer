@@ -141,28 +141,26 @@ public class SingleTaskViewController {
 		
 		dueDateController = new DueDateViewController();
 		dueDatePane.getChildren().add(dueDateController.getView());
+		
+		getView().setVisible(false);
 	}
 
 	public void setTask(Task task, TaskManager manager) {
-		priorityBox.setUserData(task.PriorityProperty());
+		getView().setVisible(task != null);
+		
+		priorityBox.setUserData(task.priorityProperty());
 		priorityBox.setValue(task.getPriority());
 		
-		dueDateController.setTimeProperty(task.DueDateProperty());
+		dueDateController.setTimeProperty(task.dueDateProperty());
 		
 		if (this.task != null)
-			noteArea.textProperty().unbindBidirectional(this.task.NoteProperty());
-		noteArea.textProperty().bindBidirectional(task.NoteProperty());
+			noteArea.textProperty().unbindBidirectional(this.task.noteProperty());
+		noteArea.textProperty().bindBidirectional(task.noteProperty());
 		
 		if (this.task != null)
-			this.task.EditDateProperty().removeListener(editDateListener);
-		task.EditDateProperty().addListener(editDateListener);
+			this.task.editDateProperty().removeListener(editDateListener);
+		task.editDateProperty().addListener(editDateListener);
 		lastEditLabel.setText(new PrettyTime(Locale.US).format(task.getEditDate().toDate()));
-		
-		for (Project p : manager.getProjectManager().getProjects())
-			System.out.println(p.getName() + " " + p.getActiveTasks() + " " + p.getInactiveTasks());
-
-		for (Context p : manager.getContextManager().getContexts())
-			System.out.println(p.getName() + " " + p.getActiveTasks() + " " + p.getInactiveTasks());
 		
 		projectsView.setList(task.getProjects());
 		projectsView.setSuggestions(manager.getProjectManager().getActiveProjects());
@@ -177,13 +175,13 @@ public class SingleTaskViewController {
 		contextsView.clearTextField();
 		
 		if (this.task != null)
-			nameTextField.textProperty().unbindBidirectional(this.task.NameProperty());
-		nameTextField.textProperty().bindBidirectional(task.NameProperty());
+			nameTextField.textProperty().unbindBidirectional(this.task.nameProperty());
+		nameTextField.textProperty().bindBidirectional(task.nameProperty());
 		
 		if (this.task != null)
-			this.task.StateProperty().removeListener(stateListener);
-		task.StateProperty().addListener(stateListener);
-		stateButtons.setUserData(task.StateProperty());
+			this.task.stateProperty().removeListener(stateListener);
+		task.stateProperty().addListener(stateListener);
+		stateButtons.setUserData(task.stateProperty());
 		
 		switch (task.getState()) {
 		case TODO:	

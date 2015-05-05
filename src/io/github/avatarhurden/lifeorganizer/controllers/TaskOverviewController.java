@@ -108,16 +108,16 @@ public class TaskOverviewController {
 		table.<Task.State>addColumn("State", new StateTableColumn());
 		
 		table.<DateTime>addColumn("Completion Date", 
-				new DateTimeTableColumn(t -> t.CompletionDateProperty()));
+				new DateTimeTableColumn(t -> t.completionDateProperty()));
 		
 		table.<Character>addColumn("Priority", new PriorityTableColumn());
 		
 		table.<DueDate>addColumn("Due Date", new DueDateTableColumn());
 		
 		table.<DateTime>addColumn("Creation Date", 
-				new DateTimeTableColumn(t -> t.CreationDateProperty()));
+				new DateTimeTableColumn(t -> t.creationDateProperty()));
 		
-		table.<String>addColumn("Name", t -> t.NameProperty());
+		table.<String>addColumn("Name", t -> t.nameProperty());
 		
 		table.<ObservableList<Context>>addColumn("Contexts", new ContextsTableColumn());
 		
@@ -125,7 +125,7 @@ public class TaskOverviewController {
 		
 		table.<String>addColumn("Note", new NoteTableColumn());
 		
-		table.<DateTime>addColumn("Last Edit", new DateTimeTableColumn(t -> t.EditDateProperty()));
+		table.<DateTime>addColumn("Last Edit", new DateTimeTableColumn(t -> t.editDateProperty()));
 		
 		tablePane.getChildren().clear();
 		tablePane.getChildren().add(table);
@@ -283,13 +283,13 @@ public class TaskOverviewController {
 		if (event.isControlDown())
 			switch (event.getCode()) {
 			case D:
-				table.getSelectionModel().getSelectedItem().StateProperty().setValue(Task.State.DONE);
+				table.getSelectionModel().getSelectedItem().setState(Task.State.DONE);
 				break;
 			case F:
-				table.getSelectionModel().getSelectedItem().StateProperty().setValue(Task.State.FAILED);
+				table.getSelectionModel().getSelectedItem().setState(Task.State.FAILED);
 				break;
 			case T:
-				table.getSelectionModel().getSelectedItem().StateProperty().setValue(Task.State.TODO);
+				table.getSelectionModel().getSelectedItem().setState(Task.State.TODO);
 				break;
 			case N:
 				textField.requestFocus();

@@ -29,7 +29,7 @@ public class PriorityTableColumn extends TableColumn<Task, Character>{
 	}
 	
 	private void setCellValueFactory() {
-		setCellValueFactory(col -> col.getValue().PriorityProperty());
+		setCellValueFactory(col -> col.getValue().priorityProperty());
 	}
 	
 	private void setCellFactory() {

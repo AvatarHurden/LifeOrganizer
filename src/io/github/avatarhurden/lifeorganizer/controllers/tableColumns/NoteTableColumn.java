@@ -28,7 +28,7 @@ public class NoteTableColumn extends TableColumn<Task, String>{
 	}
 	
 	private void setCellValueFactory() {
-		setCellValueFactory(col -> col.getValue().NoteProperty());
+		setCellValueFactory(col -> col.getValue().noteProperty());
 	}
 	
 	private void setCellFactory() {

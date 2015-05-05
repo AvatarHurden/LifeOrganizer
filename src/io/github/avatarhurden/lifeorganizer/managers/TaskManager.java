@@ -5,7 +5,6 @@ import io.github.avatarhurden.lifeorganizer.objects.Task;
 import io.github.avatarhurden.lifeorganizer.tools.Config;
 import io.github.avatarhurden.lifeorganizer.tools.DateUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.FileSystems;
@@ -109,7 +108,6 @@ public class TaskManager {
 	
 	public void moveToArchive(Task t) {
 		t.setArchived(true);
-		File f = t.getFile();
 		try {
 			Files.move(t.getFile().toPath(), 
 					archiveFolder.resolve(t.getUUID() + ".txt"), 
@@ -119,7 +117,6 @@ public class TaskManager {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		System.out.println(f.exists());
 	}
 	
 	public ObservableList<Task> getTodoList() {
@@ -153,7 +150,6 @@ public class TaskManager {
 	}
 	
 	public void deleteTask(Task task) {
-		System.out.println(task.getName());
 		taskMap.remove(task.getUUID());
 		task.delete();
 	}
@@ -173,7 +169,7 @@ public class TaskManager {
 		}
 		
 		if (matcher.find(0)) {
-			t.setPriorityValue(matcher.group(1).charAt(0));
+			t.setPriority(matcher.group(1).charAt(0));
 			s = s.replace(matcher.group(), "");
 		}
 		
@@ -194,7 +190,7 @@ public class TaskManager {
 					dueDate.setHasTime(matcher.group(1).contains("@") || matcher.group(1).contains("h"));
 					dueDate.setDateTime(date);
 				
-					t.setDueDateValue(dueDate);
+					t.setDueDate(dueDate);
 				}
 			}
 			s = s.replace(matcher.group(), "");
@@ -204,7 +200,7 @@ public class TaskManager {
 		pattern = Pattern.compile("note=\"(.+)\" ");
 		matcher = pattern.matcher(s);
 		if (matcher.find()) {
-			t.setNoteValue(matcher.group(1));
+			t.setNote(matcher.group(1));
 			s = s.replace(matcher.group(), "");
 		}
 		
@@ -222,7 +218,7 @@ public class TaskManager {
 		words = words.stream().filter(word -> !projects.contains(word) && !contexts.contains(word)).collect(Collectors.toList());
 		s = String.join(" ", words);
 		
-		t.setNameValue(s.trim());
+		t.setName(s.trim());
 		
 		return t;
 	}

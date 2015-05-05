@@ -35,7 +35,7 @@ public class StateTableColumn extends TableColumn<Task, State>{
 	}
 	
 	private void setCellValueFactory() {
-		setCellValueFactory(col -> col.getValue().StateProperty());
+		setCellValueFactory(col -> col.getValue().stateProperty());
 	}
 	
 	private void setCellFactory() {
@@ -84,10 +84,10 @@ public class StateTableColumn extends TableColumn<Task, State>{
 					
 					box.indeterminateProperty().addListener((obs, oldValue, newValue) -> {
 						if (newValue)
-							((Task) getTableRow().getItem()).StateProperty().setValue(State.FAILED);
+							((Task) getTableRow().getItem()).stateProperty().setValue(State.FAILED);
 					});
 					box.selectedProperty().addListener((obs, oldValue, newValue) ->
-						((Task) getTableRow().getItem()).StateProperty().setValue(newValue ? State.DONE : State.TODO));
+						((Task) getTableRow().getItem()).stateProperty().setValue(newValue ? State.DONE : State.TODO));
 					
 					setGraphic(box);
 					setAlignment(Pos.CENTER);

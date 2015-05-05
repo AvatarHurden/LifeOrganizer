@@ -39,7 +39,7 @@ public class ContextsTableColumn extends TableColumn<Task, ObservableList<Contex
 	}
 	
 	private void setCellValueFactory() {
-		setCellValueFactory(col -> col.getValue().ContextsProperty());
+		setCellValueFactory(col -> col.getValue().contextsProperty());
 	}
 	
 	private void setCellFactory() {

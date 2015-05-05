@@ -124,7 +124,6 @@ public class CustomizableTableView<T> extends TableView<T> {
 		List<String> list = new ArrayList<String>();
 		for (TableColumn col : getSortOrder())
 			list.add(col.getText()+"/"+col.getSortType());
-		System.out.println(list);
 		return list;
 	}
 

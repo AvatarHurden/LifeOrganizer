@@ -39,7 +39,7 @@ public class ProjectsTableColumn extends TableColumn<Task, ObservableList<Projec
 	}
 	
 	private void setCellValueFactory() {
-		setCellValueFactory(col -> col.getValue().ProjectsProperty());
+		setCellValueFactory(col -> col.getValue().projectsProperty());
 	}
 	
 	private void setCellFactory() {
