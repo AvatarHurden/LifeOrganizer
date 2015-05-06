@@ -18,6 +18,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.scene.control.Label;
 
 import org.joda.time.DateTime;
 import org.json.JSONArray;
@@ -26,18 +27,14 @@ import org.json.JSONObject;
 
 public class Task {
 
-	public static final long SAVE_INTERVAL = 5000;
-	
-	public enum State {
-		TODO, DONE, FAILED;
-	}
-	
 	private final String uuid;
-	private boolean isArchived;
 	
-	private Property<State> stateProperty;
 	private Property<String> nameProperty;
-	private Property<Character> priorityProperty;
+	private Property<String> noteProperty;
+	private Property<Status> statusProperty;
+	
+	private ObservableList<Task> parents;
+	private ObservableList<Task> children;
 	
 	private Property<DueDate> dueDateProperty;
 	
@@ -45,121 +42,42 @@ public class Task {
 	private Property<DateTime> completionDateProperty;
 	private Property<DateTime> editDateProperty;
 	
-	private Property<String> noteProperty;
-
-	private ObservableList<Project> projects;
 	private ObservableList<Context> contexts;
 	
-	private Property<ObservableList<Project>> projectsProperty;
-	private Property<ObservableList<Context>> contextsProperty;
-	
-	private TaskManager manager;
-	private File file;
-	
-	private Thread scheduledSave = null;
-	
-	private boolean saveChanges = false;
-	
-	public static Task createNew(TaskManager manager) {
+	public static Task createNew() {
 		JSONObject json = new JSONObject();
 		
 		String uuid = UUID.randomUUID().toString().replace("-", "");
 		json.put("uuid", uuid);
-		File file = new File(manager.getFolder().toFile(), uuid + ".txt");
 		
-		return new Task(manager, json, file);
+		return new Task(json);
 	}
 	
-	public static Task loadFromPath(TaskManager manager, File file) throws IOException {
-		BufferedReader reader = new BufferedReader(new FileReader(file));
-		StringBuffer buffer = new StringBuffer();
-		int read;
-		while ((read = reader.read()) != -1)
-			buffer.append((char) read);
-		reader.close();
-		try {
-			new JSONObject(buffer.toString());
-		} catch (JSONException e) {
-			System.out.println(buffer.toString());
-		}
-		return new Task(manager, new JSONObject(buffer.toString()), file);
+	public static Task loadFromJSON(JSONObject json) {
+		return new Task(json);
 	}
 	
-	public Task(TaskManager manager, JSONObject json, File file) {
-		this.manager = manager;
-		this.file = file;
+	public Task(JSONObject json) {
 		uuid = json.getString("uuid");
 		
-		projects = FXCollections.observableArrayList(p -> new Observable[] {p.NameProperty()});
-		
-		projectsProperty = new SimpleObjectProperty<ObservableList<Project>>(projects);
-		projects.addListener((ListChangeListener.Change<? extends Project> event) -> {
-			projectsProperty.setValue(null);
-			projectsProperty.setValue(projects);
-		});
-		
-		contexts = FXCollections.observableArrayList(p -> new Observable[] {p.NameProperty()});
-		
-		contextsProperty = new SimpleObjectProperty<ObservableList<Context>>(contexts);
-		contexts.addListener((ListChangeListener.Change<? extends Context> event) -> {
-			contextsProperty.setValue(null);
-			contextsProperty.setValue(contexts);
-		});
+		contexts = FXCollections.observableArrayList();
+		parents = FXCollections.observableArrayList();
+		children = FXCollections.observableArrayList();
 		
 		nameProperty = new SimpleStringProperty();
-		stateProperty = new SimpleObjectProperty<Task.State>(State.TODO);
-		priorityProperty = new SimpleObjectProperty<Character>();
+		statusProperty = new SimpleObjectProperty<Status>(Status.ACTIVE);
+		noteProperty = new SimpleStringProperty();
 		
 		dueDateProperty = new SimpleObjectProperty<DueDate>();
 		
 		creationDateProperty = new SimpleObjectProperty<DateTime>(new DateTime());
-		editDateProperty = new SimpleObjectProperty<DateTime>(new DateTime());
 		completionDateProperty = new SimpleObjectProperty<DateTime>();
+		editDateProperty = new SimpleObjectProperty<DateTime>(new DateTime());
 		
-		noteProperty = new SimpleStringProperty();
-		
-		editDateProperty.addListener((obs, oldValue, newValue) -> {
-			if (scheduledSave == null && saveChanges) {
-				scheduledSave = new Thread(() -> {
-					try {
-						Thread.sleep(SAVE_INTERVAL);
-						save();
-						scheduledSave = null;
-					} catch (Exception e) {}
-				});
-				scheduledSave.start();
-			}
-		});
-
-		setEditDateNow();
-
 		loadJSON(json);
 	}
 	
-	public void setFile(File f) {
-		this.file = f;
-	}
-	
-	public File getFile() {
-		return file;
-	}
-	
-	public void readFile() throws IOException {
-		if (!file.canRead())
-			return;
-		BufferedReader reader = new BufferedReader(new FileReader(file));
-		StringBuffer buffer = new StringBuffer();
-		String line;
-		while ((line = reader.readLine()) != null)
-			buffer.append(line);
-		reader.close();
-
-		if (!buffer.toString().trim().equals(""))
-			loadJSON(new JSONObject(buffer.toString()));
-	}
-	
 	private void loadJSON(JSONObject json) {
-		saveChanges = false;
 		
 		if (json.has("archived"))
 			setArchived(json.getBoolean("archived"));
@@ -168,11 +86,7 @@ public class Task {
 			nameProperty.setValue(json.getString("name"));
 		
 		if (json.has("state"))
-			switch (json.getString("state")) {
-			case "todo": stateProperty.setValue(State.TODO); break;
-			case "done": stateProperty.setValue(State.DONE); break;
-			case "failed": stateProperty.setValue(State.FAILED); break;
-			}
+			statusProperty.setValue(Status.valueOf(json.getString("state")));
 		
 		if (json.has("creationDate"))
 			creationDateProperty.setValue(DateUtils.parseDateTime(
@@ -185,29 +99,20 @@ public class Task {
 			completionDateProperty.setValue(DateUtils.parseDateTime(
 					json.getString("completionDate"), "yyyy.MM.dd@HH:mm"));
 	
-		if (json.has("priority"))
-			priorityProperty.setValue(json.getString("priority").charAt(0));
-		
 		if (json.has("dueDate"))
 			dueDateProperty.setValue(new DueDate(DateUtils.parseDateTime(
 					json.getString("dueDate"), "yyyy.MM.dd@HH:mm", "yyyy.MM.dd"), 
 					json.getString("dueDate").contains("@")));
 		
-		projects.clear();
-		if (json.has("projects"))
-			for (int i = 0; i < json.getJSONArray("projects").length(); i++)
-				addProject(json.getJSONArray("projects").getString(i));
-		
 		contexts.clear();
 		if (json.has("contexts"))
 			for (int i = 0; i < json.getJSONArray("contexts").length(); i++)
-				addContext(json.getJSONArray("contexts").getString(i));
+				contexts.add(TaskManager.getContext(json.getJSONArray("contexts").getString(i)));
 		
 		if (json.has("editDate"))
 			editDateProperty.setValue(DateUtils.parseDateTime(
 				json.getString("editDate"), "yyyy.MM.dd@HH:mm"));
 		
-		saveChanges = true;
 	}
 	
 	public void save() {
@@ -256,7 +161,7 @@ public class Task {
 		json.put("creationDate", DateUtils.format(creationDateProperty.getValue(), "yyyy.MM.dd@HH:mm"));
 		json.put("editDate", DateUtils.format(editDateProperty.getValue(), "yyyy.MM.dd@HH:mm"));
 		
-		switch (stateProperty.getValue()) {
+		switch (statusProperty.getValue()) {
 		case TODO: json.put("state", "todo"); break;
 		case DONE: json.put("state", "done"); break;
 		case FAILED: json.put("state", "failed"); break;
@@ -312,16 +217,16 @@ public class Task {
 	}
 	
 	public void setState(State state) {
-		stateProperty.setValue(state);
+		statusProperty.setValue(state);
 		setEditDateNow();
 	}
 
 	public State getState() {
-		return stateProperty.getValue();
+		return statusProperty.getValue();
 	}
 
 	public Property<State> stateProperty() {
-		return stateProperty;
+		return statusProperty;
 	}
 	
 	public void setName(String name) {

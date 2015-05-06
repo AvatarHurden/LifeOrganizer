@@ -1,5 +1,6 @@
 package io.github.avatarhurden.lifeorganizer.managers;
 
+import io.github.avatarhurden.lifeorganizer.objects.Context;
 import io.github.avatarhurden.lifeorganizer.objects.DueDate;
 import io.github.avatarhurden.lifeorganizer.objects.Task;
 import io.github.avatarhurden.lifeorganizer.tools.Config;
@@ -7,20 +8,16 @@ import io.github.avatarhurden.lifeorganizer.tools.DateUtils;
 
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -36,15 +33,10 @@ import org.joda.time.DateTime;
 public class TaskManager {
 	private Path taskFolder, archiveFolder;
 	
-	private static final long READ_DELAY = 300;
+	private static ObservableMap<String, Task> tasks;
+	private static ObservableMap<String, Context> contexts;
 	
-	private Thread fileWatcher;
-	private HashMap<String, WatchEvent.Kind<?>> filesToRead;
-	
-	private ObservableMap<String, Task> taskMap;
 	private ObservableList<Task> taskList;
-	
-	private Set<String> ignoredTasks;
 	
 	ProjectManager projectManager;
 	ContextManager contextManager;
@@ -230,63 +222,6 @@ public class TaskManager {
 		  	String id = file.getFileName().toString().replace(".txt", "");
 		   	taskMap.put(id, Task.loadFromPath(this, file.toFile()));
 		}
-	}
-	
-	private void listenToFolder() {
-		fileWatcher = new Thread(() -> {
-			
-			WatchService watcher = null;
-			try {
-				watcher = FileSystems.getDefault().newWatchService();
-				taskFolder.register(watcher, 
-						StandardWatchEventKinds.ENTRY_CREATE, 
-						StandardWatchEventKinds.ENTRY_DELETE, 
-						StandardWatchEventKinds.ENTRY_MODIFY);
-			} catch (Exception e1) {
-				e1.printStackTrace();
-			}
-			
-			if (watcher == null)
-				return;
-			
-			while (true) {
-				WatchKey key;
-				try {
-					key = watcher.take();
-				} catch (InterruptedException e) { return; }
-			
-				for (WatchEvent<?> event : key.pollEvents()) {
-					WatchEvent.Kind<?> kind = event.kind();
-		        
-					if (kind == StandardWatchEventKinds.OVERFLOW) continue;
-		        
-					Path file = taskFolder.resolve((Path) event.context());
-		        
-					// Only registers for matching filenames
-					if (!Pattern.matches("^[0-9abcdefABCDEF]{32}\\.txt", file.getFileName().toString())) 
-						continue;
-					
-					String id = file.getFileName().toString().replace(".txt", "");
-					if (ignoredTasks.contains(id))
-						continue;
-					
-					if (!filesToRead.containsKey(id))
-					new Thread(() -> {
-						try {
-							Thread.sleep(READ_DELAY);
-						} catch (Exception e1) {}
-						readFile(id, file);
-						filesToRead.remove(id);
-					}).start();
-
-					filesToRead.put(id, kind);
-				}
-			
-				key.reset();
-			}
-		});
-		
-		fileWatcher.start();
 	}
 	
 	private void readFile(String id, Path file) {
