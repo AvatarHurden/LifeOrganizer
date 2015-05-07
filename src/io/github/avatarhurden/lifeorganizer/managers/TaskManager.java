@@ -2,21 +2,20 @@ package io.github.avatarhurden.lifeorganizer.managers;
 
 import io.github.avatarhurden.lifeorganizer.objects.Context;
 import io.github.avatarhurden.lifeorganizer.objects.DueDate;
+import io.github.avatarhurden.lifeorganizer.objects.Status;
 import io.github.avatarhurden.lifeorganizer.objects.Task;
 import io.github.avatarhurden.lifeorganizer.tools.Config;
 import io.github.avatarhurden.lifeorganizer.tools.DateUtils;
+import io.github.avatarhurden.lifeorganizer.tools.DirectoryWatcher;
+import io.github.avatarhurden.lifeorganizer.tools.JSONFile;
 
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,91 +23,235 @@ import java.util.stream.Collectors;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.collections.MapChangeListener;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 
 import org.joda.time.DateTime;
+import org.json.JSONArray;
 
 public class TaskManager {
-	private Path taskFolder, archiveFolder;
 	
 	private static ObservableMap<String, Task> tasks;
 	private static ObservableMap<String, Context> contexts;
 	
-	private ObservableList<Task> taskList;
+	public static Task getTask(String uuid) {
+		return tasks.get(uuid);
+	}
+
+	public static Context getContext(String uuid) {
+		return contexts.get(uuid);
+	}
 	
-	ProjectManager projectManager;
-	ContextManager contextManager;
+	private static final String activeFile = "active.txt";
+	private static final String doneFile = "done.txt";
+	private static final String canceledFile = "canceled.txt";
+	
+	private Path folder, activePath, donePath, canceledPath;
+	
+	private ObservableList<String> savingTasks;
+	private ObservableList<String> active, done, canceled;
+	
+	private DirectoryWatcher watcher;
 	
 	public static boolean isInitiliazed() {
 		return Config.get().getProperty("task_folder") != null;
 	}
 	
 	public TaskManager() {
-		Path rootFolder = Paths.get(Config.get().getProperty("task_folder"));
-		taskFolder = rootFolder.resolve("active");
-		archiveFolder = rootFolder.resolve("archive");
+		Path folder = Paths.get(Config.get().getProperty("task_folder"));
+		activePath = folder.resolve(activeFile);
+		donePath = folder.resolve(doneFile);
+		canceledPath = folder.resolve(canceledFile);
 		
-		if (!taskFolder.toFile().exists())
-			taskFolder.toFile().mkdirs();
-		if (!archiveFolder.toFile().exists())
-			archiveFolder.toFile().mkdirs();
+		if (!folder.toFile().exists())
+			folder.toFile().mkdirs();
 			
-		taskMap = FXCollections.<String, Task>observableHashMap();
-		taskList = FXCollections.observableArrayList();
-		ignoredTasks = new HashSet<String>();
+		tasks = FXCollections.<String, Task>observableHashMap();
 		
-		taskMap.addListener((MapChangeListener.Change<? extends String, ? extends Task> change) -> 
-			Platform.runLater(() -> {
-				if (change.wasAdded())
-					taskList.add(change.getValueAdded());
-				if (change.wasRemoved())
-					taskList.remove(change.getValueRemoved());
-			})
-		);
-		
-		projectManager = new ProjectManager();
-		contextManager = new ContextManager();
+		readActive();
 	}
 	
-	public void loadAndWatch() {
+	public Path getPathForTask(String uuid) {
+		return folder.resolve(uuid+".task");
+	}
+	
+	private void readActive() {
+		JSONArray j = null;
 		try {
-			readFolder();
+			j = JSONFile.loadJSONArray(activePath.toFile());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		
-		filesToRead = new HashMap<String, WatchEvent.Kind<?>>();
+		for (int i = 0; i < j.length(); i++) {
+			String uuid = j.getString(i);
+			if (!tasks.containsKey(uuid))
+				try {
+					loadTask(uuid, true);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			active.add(uuid);
+		}
+	}
+	
+	private void readDone() {
+		JSONArray j = null;
+		try {
+			j = JSONFile.loadJSONArray(donePath.toFile());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		for (int i = 0; i < j.length(); i++) {
+			String uuid = j.getString(i);
+			if (!tasks.containsKey(uuid))
+				try {
+					loadTask(uuid, true);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			done.add(uuid);
+		}
+	}
+	
+	private void readCanceled() {
+		JSONArray j = null;
+		try {
+			j = JSONFile.loadJSONArray(canceledPath.toFile());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		for (int i = 0; i < j.length(); i++) {
+			String uuid = j.getString(i);
+			if (!tasks.containsKey(uuid))
+				try {
+					loadTask(uuid, true);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			canceled.add(uuid);
+		}
+	}
+	
+	/**
+	 * Loads the specified task from the file, adding it to the task map.
+	 * 
+	 * @param uuid - The UUID of the task to be loaded.
+	 * 
+	 * @param loadChildren
+	 * If the function should recurse down the children of the task
+	 * @throws IOException 
+	 */
+	private void loadTask(String uuid, boolean loadChildren) throws IOException {
+		Path p = getPathForTask(uuid);
+		Task t = Task.loadFromJSON(JSONFile.loadJSONObject(p.toFile()));
+		addTaskListeners(uuid);
+		
+		tasks.put(uuid, t);
+		if (loadChildren)
+			for (String child : t.getChildren())
+				loadTask(child, true);
+	}
+	
+	public Task createNewTask() {
+		Task t = Task.createNew();
+		tasks.put(t.getUUID(), t);
+		return t;
+	}
+	
+	private void addTaskListeners(String uuid) {
+		Task t = getTask(uuid);
+		
+		// Listener to save the task
+		t.editDateProperty().addListener((obs, oldValue, newValue) -> {
+			if (savingTasks.contains(t)) return;
+			
+			savingTasks.add(uuid);
+			new Thread(() -> {
+				
+				try {
+					Thread.sleep(3000);
+					Path p = getPathForTask(uuid);
+				
+					watcher.ignorePath(p);
+					JSONFile.saveJSONObject(t.toJSON(), p.toFile(), 4);
+
+					Thread.sleep(100);
+					savingTasks.remove(t);
+					watcher.watchPath(p);
+				} catch (InterruptedException e) {
+				}  catch (IOException exc) {
+					exc.printStackTrace();
+				 }
+				
+			}).start();
+		});
+		
+		// Listener to put the task in the correct category
+		t.stateProperty().addListener((obs, oldValue, newValue) -> {
+			if (t.hasParents()) // Only maintain top level tasks in lists
+				return;
+			
+			if (newValue == Status.ACTIVE)
+				active.add(uuid);
+			else
+				active.remove(uuid);
+			
+			if (newValue == Status.CANCELED)
+				canceled.add(uuid);
+			else
+				canceled.remove(uuid);
+			
+			if (newValue == Status.DONE)
+				done.add(uuid);
+			else
+				done.remove(uuid);
+		});
+		
+		t.getParents().addListener((ListChangeListener.Change<? extends String> event) -> {
+			if (event.getAddedSize() == event.getList().size()) // Had no parents, has now
+				switch (t.getState()) {
+				case ACTIVE:
+					active.remove(t.getUUID());
+					break;
+				case DONE:
+					done.remove(t.getUUID());
+					break;
+				case CANCELED:
+					canceled.remove(t.getUUID());
+					break;
+				}
+			else if (event.getList().size() == 0) // Has no parents now
+				switch (t.getState()) {
+				case ACTIVE:
+					if (!active.contains(t.getUUID()))
+						active.add(t.getUUID());
+					break;
+				case DONE:
+					if (!done.contains(t.getUUID()))
+						done.add(t.getUUID());
+					break;
+				case CANCELED:
+					if (!canceled.contains(t.getUUID()))
+						canceled.add(t.getUUID());
+					break;
+				}
+		});
+		
+	}
+	
+	public void loadAndWatch() {
 		listenToFolder();
 	}
 	
 	public void close() {
-		fileWatcher.interrupt();
-		fileWatcher = null;
+		watcher.stopWatching();
+		watcher = null;
 	}
 	
 	public Path getFolder() {
-		return taskFolder;
-	}
-	
-	public void archive() {
-		for (Task t : taskList)
-			if (t.getState() != Task.State.TODO && !t.isArchived())
-				moveToArchive(t);
-	}
-	
-	public void moveToArchive(Task t) {
-		t.setArchived(true);
-		try {
-			Files.move(t.getFile().toPath(), 
-					archiveFolder.resolve(t.getUUID() + ".txt"), 
-					StandardCopyOption.REPLACE_EXISTING);
-			t.setFile(archiveFolder.resolve(t.getUUID() + ".txt").toFile());
-			t.save();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		return folder;
 	}
 	
 	public ObservableList<Task> getTodoList() {
@@ -118,36 +261,20 @@ public class TaskManager {
 	public ObservableList<Task> getTasks() {
 		return taskList;
 	}
-		
-	public ProjectManager getProjectManager() {
-		return projectManager;
-	}
-
-	public ContextManager getContextManager() {
-		return contextManager;
-	}
 	
-	public void ignoreTask(String uuid) {
-		ignoredTasks.add(uuid);
-	}
-	
-	public void removeIgnore(String uuid) {
-		ignoredTasks.remove(uuid);
-	}
-
-	public Task addTask(String input, boolean active) {
+	public Task addTask(String input) {
 		Task t = parseString(input, active);
-		taskMap.put(t.getUUID(), t);
+		tasks.put(t.getUUID(), t);
 		return t;
 	}
 	
 	public void deleteTask(Task task) {
-		taskMap.remove(task.getUUID());
+		tasks.remove(task.getUUID());
 		task.delete();
 	}
 	
 	private Task parseString(String s, boolean active) {
-		Task t = Task.createNew(this);
+		Task t = Task.createNew();
 		
 		if (!s.endsWith(" "))
 			s = s + " "; //Adds whitespace to match pattern if at end
@@ -215,33 +342,34 @@ public class TaskManager {
 		return t;
 	}
 	
-	private void readFolder() throws IOException {
-		DirectoryStream<Path> stream = Files.newDirectoryStream(taskFolder, 
-				path -> Pattern.matches("^[0-9abcdefABCDEF]{32}\\.txt", path.getFileName().toString()));
-		for (Path file: stream) {
-		  	String id = file.getFileName().toString().replace(".txt", "");
-		   	taskMap.put(id, Task.loadFromPath(this, file.toFile()));
-		}
+	private void listenToFolder() {
+		watcher = new DirectoryWatcher(folder);
+		watcher.addFilter(path -> Pattern.matches("^[0-9abcdefABCDEF]{32}\\.txt", path.getFileName().toString()));
+		
+		watcher.addAction((path, kind) -> readFile(path, kind));
+		
+		new Thread(() -> {
+			try {
+				watcher.startWatching();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}).start();
 	}
 	
-	private void readFile(String id, Path file) {
-		WatchEvent.Kind<?> latestKind = filesToRead.get(id);
+	private void readFile(Path file, WatchEvent.Kind<?> latestKind) {
+		String id = file.getFileName().toString().replace(".task", "");
 		
 		Platform.runLater(() -> {
-			if (latestKind == StandardWatchEventKinds.ENTRY_CREATE)
+			if (latestKind == StandardWatchEventKinds.ENTRY_CREATE ||
+				latestKind == StandardWatchEventKinds.ENTRY_MODIFY)
 				try {
-					taskMap.put(id, Task.loadFromPath(this, file.toFile()));
+					loadTask(id, false);
 				} catch (Exception e) {	
 					e.printStackTrace();
 				}
 			else if (latestKind == StandardWatchEventKinds.ENTRY_DELETE)
-				taskMap.remove(id);
-			else if (latestKind == StandardWatchEventKinds.ENTRY_MODIFY)
-				try {
-					taskMap.get(id).readFile();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+				tasks.remove(id);
 		});
 	}
 }

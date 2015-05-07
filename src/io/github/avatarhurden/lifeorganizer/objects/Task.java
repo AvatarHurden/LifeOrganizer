@@ -33,8 +33,10 @@ public class Task {
 	private Property<String> noteProperty;
 	private Property<Status> statusProperty;
 	
-	private ObservableList<Task> parents;
-	private ObservableList<Task> children;
+	// List of the UUIDs of the parent and children. Not references to avoid duplication or not reloading,
+	// since the most recent version of a task is available on the TaskManager
+	private ObservableList<String> parents;
+	private ObservableList<String> children;
 	
 	private Property<DueDate> dueDateProperty;
 	
@@ -42,7 +44,7 @@ public class Task {
 	private Property<DateTime> completionDateProperty;
 	private Property<DateTime> editDateProperty;
 	
-	private ObservableList<Context> contexts;
+	private ObservableList<String> contexts;
 	
 	public static Task createNew() {
 		JSONObject json = new JSONObject();
@@ -78,10 +80,6 @@ public class Task {
 	}
 	
 	private void loadJSON(JSONObject json) {
-		
-		if (json.has("archived"))
-			setArchived(json.getBoolean("archived"));
-		
 		if (json.has("name"))
 			nameProperty.setValue(json.getString("name"));
 		
@@ -113,28 +111,6 @@ public class Task {
 			editDateProperty.setValue(DateUtils.parseDateTime(
 				json.getString("editDate"), "yyyy.MM.dd@HH:mm"));
 		
-	}
-	
-	public void save() {
-		if (!saveChanges)
-			return;
-
-		ignoreForEdit(() -> {
-			try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-				writer.write(toJSON().toString(4));
-				writer.close();
-			} catch (JSONException | IOException e) {
-				e.printStackTrace();
-			}
-		});	
-	}
-	
-	public void delete() {
-		ignoreForEdit(() -> {
-			file.delete();
-			manager.getProjectManager().decrementProjects(!isArchived, projects);
-			manager.getContextManager().decrementContexts(!isArchived, contexts);
-		});
 	}
 	
 	private void ignoreForEdit(Runnable action) {
@@ -197,6 +173,18 @@ public class Task {
 	}
 	
 	// Setters and Getters
+	public ObservableList<String> getChildren() {
+		return children;
+	}
+	
+	public boolean hasParents() {
+		return parents.size() > 0;
+	}
+	
+	public ObservableList<String> getParents() {
+		return parents;
+	}
+	
 	public String getUUID() {
 		return uuid;
 	}
@@ -221,11 +209,11 @@ public class Task {
 		setEditDateNow();
 	}
 
-	public State getState() {
+	public Status getState() {
 		return statusProperty.getValue();
 	}
 
-	public Property<State> stateProperty() {
+	public Property<Status> stateProperty() {
 		return statusProperty;
 	}
 	
