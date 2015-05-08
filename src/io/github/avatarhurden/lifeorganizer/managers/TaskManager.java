@@ -32,16 +32,14 @@ import org.json.JSONArray;
 
 public class TaskManager {
 	
-	private static ObservableMap<String, Task> tasks;
-	private static ObservableMap<String, Context> contexts;
+	private static final TaskManager instance = new TaskManager();
 	
-	public static Task getTask(String uuid) {
-		return tasks.get(uuid);
+	public static TaskManager get() {
+		return instance;
 	}
-
-	public static Context getContext(String uuid) {
-		return contexts.get(uuid);
-	}
+	
+	private  ObservableMap<String, Task> tasks;
+	private  ObservableMap<String, Context> contexts;
 	
 	private static final String activeFile = "active.txt";
 	private static final String doneFile = "done.txt";
@@ -59,21 +57,71 @@ public class TaskManager {
 	}
 	
 	public TaskManager() {
-		Path folder = Paths.get(Config.get().getProperty("task_folder"));
+		folder = Paths.get(Config.get().getProperty("task_folder"));
+		watcher = new DirectoryWatcher(folder);
+		
+		if (!folder.toFile().exists())
+			folder.toFile().mkdirs();
+		
 		activePath = folder.resolve(activeFile);
 		donePath = folder.resolve(doneFile);
 		canceledPath = folder.resolve(canceledFile);
 		
-		if (!folder.toFile().exists())
-			folder.toFile().mkdirs();
-			
+		try {
+			if (!activePath.toFile().exists())
+				JSONFile.saveJSONArray(new JSONArray(), activePath.toFile(), 4);
+			if (!donePath.toFile().exists())
+				JSONFile.saveJSONArray(new JSONArray(), donePath.toFile(), 4);
+			if (!canceledPath.toFile().exists())
+				JSONFile.saveJSONArray(new JSONArray(), canceledPath.toFile(), 4);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 		tasks = FXCollections.<String, Task>observableHashMap();
+		savingTasks = FXCollections.observableArrayList();
+		
+		active = FXCollections.observableArrayList();
+		done = FXCollections.observableArrayList();
+		canceled = FXCollections.observableArrayList();
 		
 		readActive();
+		for (String uuid : active)
+			try {
+				loadTask(uuid, true);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		
+		printHierarchy();
+	}
+
+	public Task getTask(String uuid) {
+		return tasks.get(uuid);
+	}
+
+	public Context getContext(String uuid) {
+		return contexts.get(uuid);
 	}
 	
 	public Path getPathForTask(String uuid) {
 		return folder.resolve(uuid+".task");
+	}
+	
+	public void printHierarchy() {
+		for (String id : active) 
+			if (!getTask(id).hasParents())
+				printTask(id, 0);
+	}
+	
+	private void printTask(String uuid, int indent) {
+		String s = "";
+		for (int i = 0; i < indent; i++)
+			s += "\t";
+		s += "- " + getTask(uuid).getName() + " " + getTask(uuid).getStatus() + " " + uuid;
+		System.out.println(s);
+		for (String children : getTask(uuid).getChildren())
+			printTask(children, indent+1);
 	}
 	
 	private void readActive() {
@@ -84,16 +132,14 @@ public class TaskManager {
 			e.printStackTrace();
 		}
 		
-		for (int i = 0; i < j.length(); i++) {
-			String uuid = j.getString(i);
-			if (!tasks.containsKey(uuid))
-				try {
-					loadTask(uuid, true);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			active.add(uuid);
-		}
+		for (int i = 0; i < j.length(); i++)
+			active.add(j.getString(i));
+		
+		active.addListener((ListChangeListener.Change<? extends String> event) -> {
+			try {
+				JSONFile.saveJSONArray(new JSONArray((String[]) active.toArray(new String[active.size()])), activePath.toFile(), 4);
+			} catch (IOException e) {}
+		});
 	}
 	
 	private void readDone() {
@@ -103,16 +149,12 @@ public class TaskManager {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		for (int i = 0; i < j.length(); i++) {
-			String uuid = j.getString(i);
-			if (!tasks.containsKey(uuid))
-				try {
-					loadTask(uuid, true);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			done.add(uuid);
-		}
+		
+		done.addListener((ListChangeListener.Change<? extends String> event) -> {
+			try {
+				JSONFile.saveJSONArray(new JSONArray(done), donePath.toFile(), 4);
+			} catch (IOException e) {}
+		});
 	}
 	
 	private void readCanceled() {
@@ -122,33 +164,32 @@ public class TaskManager {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		for (int i = 0; i < j.length(); i++) {
-			String uuid = j.getString(i);
-			if (!tasks.containsKey(uuid))
-				try {
-					loadTask(uuid, true);
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			canceled.add(uuid);
-		}
+		
+		canceled.addListener((ListChangeListener.Change<? extends String> event) -> {
+			try {
+				JSONFile.saveJSONArray(new JSONArray(canceled), canceledPath.toFile(), 4);
+			} catch (IOException e) {}
+		});
 	}
 	
 	/**
 	 * Loads the specified task from the file, adding it to the task map.
 	 * 
 	 * @param uuid - The UUID of the task to be loaded.
-	 * 
-	 * @param loadChildren
-	 * If the function should recurse down the children of the task
 	 * @throws IOException 
 	 */
 	private void loadTask(String uuid, boolean loadChildren) throws IOException {
 		Path p = getPathForTask(uuid);
-		Task t = Task.loadFromJSON(JSONFile.loadJSONObject(p.toFile()));
-		addTaskListeners(uuid);
+		Task t = getTask(uuid);
+		if (t != null)
+			t.loadJSON(JSONFile.loadJSONObject(p.toFile()));
+		else {
+			t = Task.loadFromJSON(JSONFile.loadJSONObject(p.toFile()));
+			tasks.put(uuid, t);
+			addTaskListeners(uuid);
 		
-		tasks.put(uuid, t);
+		}
+		
 		if (loadChildren)
 			for (String child : t.getChildren())
 				loadTask(child, true);
@@ -156,89 +197,81 @@ public class TaskManager {
 	
 	public Task createNewTask() {
 		Task t = Task.createNew();
+		
 		tasks.put(t.getUUID(), t);
+		active.add(t.getUUID());
+		addTaskListeners(t.getUUID());
+		
 		return t;
+	}
+	
+	public void deleteTask(String uuid) {
+		Task t = getTask(uuid);
+		
+		for (String parent : t.getParents()) // Removes references to the task
+			getTask(parent).removeChild(uuid);
+		for (String child : t.getChildren())
+			getTask(child).removeParent(uuid);
+		for (String context : t.getContexts())
+			getContext(context).removeTask(uuid);
+		
+		tasks.remove(uuid); // Removes from the list
+		
+		if (t.getStatus() == Status.ACTIVE)
+			active.remove(uuid);
+		else if (t.getStatus() == Status.CANCELED)
+			canceled.remove(uuid);
+		else if (t.getStatus() == Status.DONE)
+			done.remove(uuid);
+		
+		getPathForTask(uuid).toFile().delete(); // Deletes the file
 	}
 	
 	private void addTaskListeners(String uuid) {
 		Task t = getTask(uuid);
 		
 		// Listener to save the task
-		t.editDateProperty().addListener((obs, oldValue, newValue) -> {
-			if (savingTasks.contains(t)) return;
-			
-			savingTasks.add(uuid);
-			new Thread(() -> {
-				
-				try {
-					Thread.sleep(3000);
-					Path p = getPathForTask(uuid);
-				
-					watcher.ignorePath(p);
-					JSONFile.saveJSONObject(t.toJSON(), p.toFile(), 4);
-
-					Thread.sleep(100);
-					savingTasks.remove(t);
-					watcher.watchPath(p);
-				} catch (InterruptedException e) {
-				}  catch (IOException exc) {
-					exc.printStackTrace();
-				 }
-				
-			}).start();
-		});
-		
+		t.editDateProperty().addListener((obs, oldValue, newValue) -> saveTask(uuid));
+	
 		// Listener to put the task in the correct category
-		t.stateProperty().addListener((obs, oldValue, newValue) -> {
-			if (t.hasParents()) // Only maintain top level tasks in lists
-				return;
-			
+		t.statusProperty().addListener((obs, oldValue, newValue) -> {
 			if (newValue == Status.ACTIVE)
 				active.add(uuid);
-			else
-				active.remove(uuid);
-			
-			if (newValue == Status.CANCELED)
+			else if (newValue == Status.CANCELED)
 				canceled.add(uuid);
-			else
-				canceled.remove(uuid);
-			
-			if (newValue == Status.DONE)
+			else if (newValue == Status.DONE)
 				done.add(uuid);
-			else
+			
+			if (oldValue == Status.ACTIVE)
+				active.remove(uuid);
+			else if (oldValue == Status.CANCELED)
+				canceled.remove(uuid);
+			else if (oldValue == Status.DONE)
 				done.remove(uuid);
 		});
+	}
+	
+	public void saveTask(String uuid) {
+		if (savingTasks.contains(uuid)) return;
 		
-		t.getParents().addListener((ListChangeListener.Change<? extends String> event) -> {
-			if (event.getAddedSize() == event.getList().size()) // Had no parents, has now
-				switch (t.getState()) {
-				case ACTIVE:
-					active.remove(t.getUUID());
-					break;
-				case DONE:
-					done.remove(t.getUUID());
-					break;
-				case CANCELED:
-					canceled.remove(t.getUUID());
-					break;
-				}
-			else if (event.getList().size() == 0) // Has no parents now
-				switch (t.getState()) {
-				case ACTIVE:
-					if (!active.contains(t.getUUID()))
-						active.add(t.getUUID());
-					break;
-				case DONE:
-					if (!done.contains(t.getUUID()))
-						done.add(t.getUUID());
-					break;
-				case CANCELED:
-					if (!canceled.contains(t.getUUID()))
-						canceled.add(t.getUUID());
-					break;
-				}
-		});
-		
+		savingTasks.add(uuid);
+		new Thread(() -> {
+			
+			try {
+				Thread.sleep(3000);
+				Path p = getPathForTask(uuid);
+			
+				watcher.ignorePath(p);
+				JSONFile.saveJSONObject(getTask(uuid).toJSON(), p.toFile(), 4);
+
+				Thread.sleep(100);
+				savingTasks.remove(uuid);
+				watcher.watchPath(p);
+			} catch (InterruptedException e) {
+			}  catch (IOException exc) {
+				exc.printStackTrace();
+			 }
+		}).start();
 	}
 	
 	public void loadAndWatch() {
@@ -254,47 +287,15 @@ public class TaskManager {
 		return folder;
 	}
 	
-	public ObservableList<Task> getTodoList() {
-		return taskList.filtered(t -> !t.isArchived()).sorted();
-	}
-	
-	public ObservableList<Task> getTasks() {
-		return taskList;
-	}
-	
-	public Task addTask(String input) {
-		Task t = parseString(input, active);
-		tasks.put(t.getUUID(), t);
-		return t;
-	}
-	
-	public void deleteTask(Task task) {
-		tasks.remove(task.getUUID());
-		task.delete();
-	}
-	
 	private Task parseString(String s, boolean active) {
 		Task t = Task.createNew();
 		
 		if (!s.endsWith(" "))
 			s = s + " "; //Adds whitespace to match pattern if at end
 		
-		// Parsing the priority
-		Pattern pattern = Pattern.compile("^\\(([A-Za-z])\\)");
-		Matcher matcher = pattern.matcher(s);
-		if (!matcher.find()) {
-			pattern = Pattern.compile("pri=([A-Za-z]) ");
-			matcher = pattern.matcher(s);
-		}
-		
-		if (matcher.find(0)) {
-			t.setPriority(matcher.group(1).charAt(0));
-			s = s.replace(matcher.group(), "");
-		}
-		
 		// Parsing the due date
-		pattern = Pattern.compile("due=(\\S*) ");
-		matcher = pattern.matcher(s);
+		Pattern pattern = Pattern.compile("due=(\\S*) ");
+		Matcher matcher = pattern.matcher(s);
 		if (matcher.find()) {
 			if (matcher.group(1).length() > 0) {
 				HashMap<String, Integer> defaults = new HashMap<String, Integer>();
@@ -328,11 +329,6 @@ public class TaskManager {
 		List<String> projects = words.stream().filter(word -> word.startsWith("+")).collect(Collectors.toList());
 		List<String> contexts = words.stream().filter(word -> word.startsWith("@")).collect(Collectors.toList());
 		
-		for (String proj : projects)
-			t.addProject(proj);
-		for (String cont : contexts)
-			t.addContext(cont);
-		
 		// Removes projects and contexts from the list of "normal" words
 		words = words.stream().filter(word -> !projects.contains(word) && !contexts.contains(word)).collect(Collectors.toList());
 		s = String.join(" ", words);
@@ -343,10 +339,10 @@ public class TaskManager {
 	}
 	
 	private void listenToFolder() {
-		watcher = new DirectoryWatcher(folder);
 		watcher.addFilter(path -> Pattern.matches("^[0-9abcdefABCDEF]{32}\\.txt", path.getFileName().toString()));
 		
 		watcher.addAction((path, kind) -> readFile(path, kind));
+		watcher.addAction((path, kind) -> printHierarchy());
 		
 		new Thread(() -> {
 			try {

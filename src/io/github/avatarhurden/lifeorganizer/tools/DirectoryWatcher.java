@@ -32,6 +32,9 @@ public class DirectoryWatcher {
 		
 		pathsToPerform = new HashMap<Path, WatchEvent.Kind<?>>();
 		pathsToIgnore = new ArrayList<Path>();
+		
+		filters = new ArrayList<Predicate<Path>>();
+		actions = new ArrayList<BiConsumer<Path, WatchEvent.Kind<?>>>();
 	}
 	
 	public void addAction(BiConsumer<Path, WatchEvent.Kind<?>> action) {

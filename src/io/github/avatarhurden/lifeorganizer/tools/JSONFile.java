@@ -43,4 +43,10 @@ public class JSONFile {
 		writer.close();
 	}
 	
+	public static void saveJSONArray(JSONArray array, File f, int indent) throws JSONException, IOException {
+		BufferedWriter writer = new BufferedWriter(new FileWriter(f));
+		writer.write(array.toString(indent));
+		writer.close();
+	}
+	
 }

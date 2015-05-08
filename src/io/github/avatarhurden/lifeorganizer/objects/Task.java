@@ -1,48 +1,38 @@
 package io.github.avatarhurden.lifeorganizer.objects;
 
-import io.github.avatarhurden.lifeorganizer.managers.TaskManager;
 import io.github.avatarhurden.lifeorganizer.tools.DateUtils;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.UUID;
 
-import javafx.beans.Observable;
 import javafx.beans.property.Property;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.scene.control.Label;
 
 import org.joda.time.DateTime;
-import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 public class Task {
 
 	private final String uuid;
 	
-	private Property<String> nameProperty;
-	private Property<String> noteProperty;
-	private Property<Status> statusProperty;
+	private Property<String> name;
+	private Property<String> note;
+	private Property<Status> status;
 	
 	// List of the UUIDs of the parent and children. Not references to avoid duplication or not reloading,
 	// since the most recent version of a task is available on the TaskManager
 	private ObservableList<String> parents;
 	private ObservableList<String> children;
+	private Property<Boolean> isProject;
 	
-	private Property<DueDate> dueDateProperty;
+	private Property<DueDate> dueDate;
 	
-	private Property<DateTime> creationDateProperty;
-	private Property<DateTime> completionDateProperty;
-	private Property<DateTime> editDateProperty;
+	private Property<DateTime> creationDate;
+	private Property<DateTime> completionDate;
+	private Property<DateTime> editDate;
 	
 	private ObservableList<String> contexts;
 	
@@ -61,120 +51,155 @@ public class Task {
 	
 	public Task(JSONObject json) {
 		uuid = json.getString("uuid");
+
+		name = new SimpleStringProperty();
+		status = new SimpleObjectProperty<Status>(Status.ACTIVE);
+		note = new SimpleStringProperty();
 		
-		contexts = FXCollections.observableArrayList();
 		parents = FXCollections.observableArrayList();
 		children = FXCollections.observableArrayList();
+		isProject = new SimpleBooleanProperty();
 		
-		nameProperty = new SimpleStringProperty();
-		statusProperty = new SimpleObjectProperty<Status>(Status.ACTIVE);
-		noteProperty = new SimpleStringProperty();
+		dueDate = new SimpleObjectProperty<DueDate>();
 		
-		dueDateProperty = new SimpleObjectProperty<DueDate>();
-		
-		creationDateProperty = new SimpleObjectProperty<DateTime>(new DateTime());
-		completionDateProperty = new SimpleObjectProperty<DateTime>();
-		editDateProperty = new SimpleObjectProperty<DateTime>(new DateTime());
+		creationDate = new SimpleObjectProperty<DateTime>(new DateTime());
+		completionDate = new SimpleObjectProperty<DateTime>();
+		editDate = new SimpleObjectProperty<DateTime>(new DateTime());
+
+		contexts = FXCollections.observableArrayList();
 		
 		loadJSON(json);
 	}
 	
-	private void loadJSON(JSONObject json) {
+	public void loadJSON(JSONObject json) {
+		
 		if (json.has("name"))
-			nameProperty.setValue(json.getString("name"));
+			name.setValue(json.getString("name"));
 		
-		if (json.has("state"))
-			statusProperty.setValue(Status.valueOf(json.getString("state")));
-		
-		if (json.has("creationDate"))
-			creationDateProperty.setValue(DateUtils.parseDateTime(
-				json.getString("creationDate"), "yyyy.MM.dd@HH:mm"));
-		
+		if (json.has("status"))
+			status.setValue(Status.valueOf(json.getString("status")));
+
 		if (json.has("note"))
-			noteProperty.setValue(json.getString("note"));
+			note.setValue(json.getString("note"));
 		
-		if (json.has("completionDate"))
-			completionDateProperty.setValue(DateUtils.parseDateTime(
-					json.getString("completionDate"), "yyyy.MM.dd@HH:mm"));
-	
+		parents.clear();
+		if (json.has("parents"))
+			for (int i = 0; i < json.getJSONArray("parents").length(); i++)
+				parents.add(json.getJSONArray("parents").getString(i));
+
+		children.clear();
+		if (json.has("children"))
+			for (int i = 0; i < json.getJSONArray("children").length(); i++)
+				children.add(json.getJSONArray("children").getString(i));
+
+		if (json.has("isProject"))
+			isProject.setValue(json.getBoolean("isProject"));
+		
 		if (json.has("dueDate"))
-			dueDateProperty.setValue(new DueDate(DateUtils.parseDateTime(
+			dueDate.setValue(new DueDate(DateUtils.parseDateTime(
 					json.getString("dueDate"), "yyyy.MM.dd@HH:mm", "yyyy.MM.dd"), 
 					json.getString("dueDate").contains("@")));
 		
+		if (json.has("creationDate"))
+			creationDate.setValue(DateUtils.parseDateTime(
+				json.getString("creationDate"), "yyyy.MM.dd@HH:mm"));
+		
+		if (json.has("completionDate"))
+			completionDate.setValue(DateUtils.parseDateTime(
+					json.getString("completionDate"), "yyyy.MM.dd@HH:mm"));
+
+		if (json.has("editDate"))
+			editDate.setValue(DateUtils.parseDateTime(
+				json.getString("editDate"), "yyyy.MM.dd@HH:mm"));
+
 		contexts.clear();
 		if (json.has("contexts"))
 			for (int i = 0; i < json.getJSONArray("contexts").length(); i++)
-				contexts.add(TaskManager.getContext(json.getJSONArray("contexts").getString(i)));
-		
-		if (json.has("editDate"))
-			editDateProperty.setValue(DateUtils.parseDateTime(
-				json.getString("editDate"), "yyyy.MM.dd@HH:mm"));
-		
-	}
-	
-	private void ignoreForEdit(Runnable action) {
-		manager.ignoreTask(uuid);
-		
-		action.run();
-		
-		new Thread(() -> {
-			try {
-				Thread.sleep(100);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-			manager.removeIgnore(uuid);
-		}).run();
+				contexts.add(json.getJSONArray("contexts").getString(i));
 	}
 	
 	public JSONObject toJSON() {
 		JSONObject json = new JSONObject();
 		
 		json.put("uuid", uuid);
-		json.put("archived", isArchived);
-		json.put("name", nameProperty.getValue());
-		json.put("creationDate", DateUtils.format(creationDateProperty.getValue(), "yyyy.MM.dd@HH:mm"));
-		json.put("editDate", DateUtils.format(editDateProperty.getValue(), "yyyy.MM.dd@HH:mm"));
 		
-		switch (statusProperty.getValue()) {
-		case TODO: json.put("state", "todo"); break;
-		case DONE: json.put("state", "done"); break;
-		case FAILED: json.put("state", "failed"); break;
-		}
+		json.put("name", name.getValue());
+		json.put("status", status.getValue());
+		json.put("note", note.getValue());
 		
-		if (priorityProperty.getValue() != null)
-			json.put("priority", priorityProperty.getValue());
+		json.put("creationDate", DateUtils.format(creationDate.getValue(), "yyyy.MM.dd@HH:mm"));
+		json.put("editDate", DateUtils.format(editDate.getValue(), "yyyy.MM.dd@HH:mm"));
+		if (completionDate.getValue() != null)
+			json.put("completionDate", DateUtils.format(completionDate.getValue(), "yyyy.MM.dd@HH:mm"));
 		
-		if (dueDateProperty.getValue() != null)
-			if (dueDateProperty.getValue().getHasTime())
-				json.put("dueDate", DateUtils.format(dueDateProperty.getValue().getDateTime(), "yyyy.MM.dd@HH:mm"));
+		json.put("parents", parents);
+		json.put("children", children);
+		json.put("isProject", isProject.getValue());
+		
+		if (dueDate.getValue() != null)
+			if (dueDate.getValue().getHasTime())
+				json.put("dueDate", DateUtils.format(dueDate.getValue().getDateTime(), "yyyy.MM.dd@HH:mm"));
 			else
-				json.put("dueDate", DateUtils.format(dueDateProperty.getValue().getDateTime(), "yyyy.MM.dd"));
+				json.put("dueDate", DateUtils.format(dueDate.getValue().getDateTime(), "yyyy.MM.dd"));
 			
-		if (projects != null) {
-			JSONArray ar = new JSONArray();
-			for (Project p : projects)
-				ar.put(p.getName());
-			json.put("projects", ar);
-		}
-
-		if (contexts != null) {
-			JSONArray ar = new JSONArray();
-			for (Context c : contexts)
-				ar.put(c.getName());
-			json.put("contexts", ar);
-		}
-		
-		if (noteProperty.getValue() != null)
-			json.put("note", noteProperty.getValue());
+		json.put("contexts", contexts);
 		
 		return json;
 	}
 	
 	// Setters and Getters
+	
+	public String getUUID() {
+		return uuid;
+	}
+	
+	public Property<String> nameProperty() {
+		return name;
+	}
+
+	public String getName() {
+		return name.getValue();
+	}
+
+	public void setName(String name) {
+		this.name.setValue(name);
+	}
+	
+	public Property<Status> statusProperty() {
+		return status;
+	}
+
+	public Status getStatus() {
+		return status.getValue();
+	}
+
+	public void setStatus(Status status) {
+		this.status.setValue(status);
+	}
+	
+	public Property<String> noteProperty() {
+		return note;
+	}
+
+	public String getNote() {
+		return note.getValue();
+	}
+
+	public void setNote(String note) {
+		this.note.setValue(note);
+	}
+	
 	public ObservableList<String> getChildren() {
 		return children;
+	}
+	
+	public void addChild(String uuid) {
+		if (!children.contains(uuid))
+			children.add(uuid);
+	}
+
+	public void removeChild(String uuid) {
+		children.remove(uuid);
 	}
 	
 	public boolean hasParents() {
@@ -184,184 +209,63 @@ public class Task {
 	public ObservableList<String> getParents() {
 		return parents;
 	}
-	
-	public String getUUID() {
-		return uuid;
-	}
-	
-	public void setArchived(boolean isArchived) {
-		boolean old = this.isArchived;
-		this.isArchived = isArchived;
-		
-		if (this.isArchived != old) {
-			manager.getProjectManager().moveProjects(!this.isArchived, projects);
-			manager.getContextManager().moveContexts(!this.isArchived, contexts);
-		}
-		setEditDateNow();
-	}
-	
-	public boolean isArchived() {
-		return isArchived;
-	}
-	
-	public void setState(State state) {
-		statusProperty.setValue(state);
-		setEditDateNow();
+
+	public void addParent(String uuid) {
+		if (!parents.contains(uuid))
+			parents.add(uuid);
 	}
 
-	public Status getState() {
-		return statusProperty.getValue();
+	public void removeParent(String uuid) {
+		parents.remove(uuid);
 	}
 
-	public Property<Status> stateProperty() {
-		return statusProperty;
-	}
-	
-	public void setName(String name) {
-		nameProperty.setValue(name);
-		setEditDateNow();
+	public Property<Boolean> isProjectProperty() {
+		return isProject;
 	}
 
-	public String getName() {
-		return nameProperty.getValue();
+	public Boolean getIsProject() {
+		return isProject.getValue();
 	}
 
-	public Property<String> nameProperty() {
-		return nameProperty;
+	public void setIsProject(Boolean isProject) {
+		this.isProject.setValue(isProject);
 	}
 	
-	public void setPriority(Character priority) {
-		priorityProperty.setValue(priority);
-		setEditDateNow();
-	}
-	
-	public Character getPriority() {
-		return priorityProperty.getValue();
-	}
-
-	public Property<Character> priorityProperty() {
-		return priorityProperty;
-	}
-	
-	public void setCompletionDate(DateTime completionDate) {
-		completionDateProperty.setValue(completionDate);
-		setEditDateNow();
-	}
-	
-	public DateTime getCompletionDate() {
-		return completionDateProperty.getValue();
-	}
-	
-	public Property<DateTime> completionDateProperty() {
-		return completionDateProperty;
-	}
-
-	public void setCreationDate(DateTime creationDate) {
-		creationDateProperty.setValue(creationDate);
-		setEditDateNow();
-	}
-	
-	public DateTime getCreationDate() {
-		return creationDateProperty.getValue();
-	}
-
-	public Property<DateTime> creationDateProperty() {
-		return completionDateProperty;
-	}
-	
-	public Project addProject(String name) {
-		Project p = manager.getProjectManager().getProject(name);
-		
-		if (projects.contains(p))
-			return null;
-		
-		p = manager.getProjectManager().createProject(name, !isArchived);
-		
-		projects.add(p);
-		setEditDateNow();
-		return p;
-	}
-
-	public void removeProject(Project p) {
-		manager.getProjectManager().decrementProjects(!isArchived, p);
-		projects.remove(p);
-		setEditDateNow();
-	}
-	
-	public ObservableList<Project> getProjects() {
-		return projects;
-	}
-
-	public Property<ObservableList<Project>> projectsProperty() {
-		return projectsProperty;
-	}
-
-	public Context addContext(String name) {
-		Context c = manager.getContextManager().getContext(name);
-	
-		if (contexts.contains(c))
-			return null;
-	
-		c = manager.getContextManager().createContext(name, !isArchived);
-		
-		contexts.add(c);
-		setEditDateNow();
-		return c;
-	}
-
-	public void removeContext(Context c) {
-		manager.getContextManager().decrementContexts(!isArchived, c);
-		contexts.remove(c);
-		setEditDateNow();
-	}
-	
-	public ObservableList<Context> getContexts() {
-		return contexts;
-	}
-	
-	public Property<ObservableList<Context>> contextsProperty() {
-		return contextsProperty;
-	}
-	
-	public void setNote(String note) {
-		noteProperty.setValue(note);
-		setEditDateNow();
-	}
-	
-	public String getNote() {
-		return noteProperty.getValue();
-	}
-
-	public Property<String> noteProperty() {
-		return noteProperty;
-	}
-	
-	public void setDueDate(DueDate dueDate) {
-		dueDateProperty.setValue(dueDate);
-		setEditDateNow();
-	}
-	
-	public DueDate getDueDate() {
-		return dueDateProperty.getValue();
-	}
-
 	public Property<DueDate> dueDateProperty() {
-		return dueDateProperty;
+		return dueDate;
+	}
+
+	public DueDate getDueDate() {
+		return dueDate.getValue();
+	}
+
+	public void setDueDate(DueDate dueDate) {
+		this.dueDate.setValue(dueDate);
+	}
+	
+	public Property<DateTime> creationDateProperty() {
+		return creationDate;
+	}
+
+	public DateTime getCreationDate() {
+		return creationDate.getValue();
+	}
+
+	public Property<DateTime> editDateProperty() {
+		return editDate;
+	}
+
+	public DateTime getEditDate() {
+		return editDate.getValue();
 	}
 
 	public void setEditDate(DateTime editDate) {
-		editDateProperty.setValue(editDate);
+		this.editDate.setValue(editDate);
 	}
 	
-	private void setEditDateNow() {
-		editDateProperty.setValue(new DateTime());
+	public ObservableList<String> getContexts() {
+		return contexts;
 	}
 	
-	public DateTime getEditDate() {
-		return editDateProperty.getValue();
-	}
-	
-	public Property<DateTime> editDateProperty() {
-		return editDateProperty;
-	}
+
 }

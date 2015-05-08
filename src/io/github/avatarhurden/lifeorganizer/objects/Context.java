@@ -1,23 +1,34 @@
 package io.github.avatarhurden.lifeorganizer.objects;
 
+
 import javafx.beans.property.Property;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 public class Context {
 
 	private Property<String> name;
-	private Property<Boolean> isActive;
-	private SimpleIntegerProperty activeTasks, inactiveTasks;
+	private Property<Status> status;
+
+	private Property<String> note;
+	
+	private Property<String> parent;
+	private ObservableList<String> children;
+	
+	private ObservableList<String> tasks;
 	
 	public Context() {
 		name = new SimpleStringProperty();
-		activeTasks = new SimpleIntegerProperty(0);
-		inactiveTasks = new SimpleIntegerProperty(0);
 
-		isActive = new SimpleBooleanProperty();
-		isActive.bind(activeTasks.greaterThan(0));
+		status = new SimpleObjectProperty<Status>();
+		note = new SimpleStringProperty();
+		
+		parent = new SimpleStringProperty();
+		children = FXCollections.observableArrayList();
+		tasks = FXCollections.observableArrayList();
+		
 	}
 	
 	public Context(String name) {
@@ -25,61 +36,75 @@ public class Context {
 		setName(name);
 	}
 
-	public void setName(String name) {
-		if (!name.startsWith("@"))
-			name = "@" + name;
-		this.name.setValue(name);;
+	public Property<String> nameProperty() {
+		return name;
 	}
-	
+
 	public String getName() {
 		return name.getValue();
 	}
-	
-	public Property<String> NameProperty() {
-		return name;
+
+	public void setName(String name) {
+		this.name.setValue(name);
 	}
 	
-	public boolean isActive() {
-		return isActive.getValue();
+	public Property<Status> statusProperty() {
+		return status;
+	}
+
+	public Status getStatus() {
+		return status.getValue();
+	}
+
+	public void setStatus(Status status) {
+		this.status.setValue(status);
 	}
 	
-	public Property<Boolean> activeProperty() {
-		return isActive;
+	public Property<String> noteProperty() {
+		return note;
+	}
+
+	public String getNote() {
+		return note.getValue();
+	}
+
+	public void setNote(String note) {
+		this.note.setValue(note);
 	}
 	
-	public int getActiveTasks() {
-		return activeTasks.intValue();
+	public Property<String> parentProperty() {
+		return parent;
+	}
+
+	public String getParent() {
+		return parent.getValue();
+	}
+
+	public void setParent(String parent) {
+		this.parent.setValue(parent);
+	}
+
+	public ObservableList<String> getChildren() {
+		return children;
 	}
 	
-	public int getInactiveTasks() {
-		return inactiveTasks.intValue();
+	public void addChild(String uuid) {
+		children.add(uuid);
 	}
 	
-	public void incrementCount(boolean active) {
-		if (active)
-			activeTasks.set(getActiveTasks() + 1);
-		else
-			inactiveTasks.set(getInactiveTasks() + 1);
+	public void removeChild(String uuid) {
+		children.remove(uuid);
 	}
 	
-	public void decrementCount(boolean active) {
-		if (active)
-			activeTasks.set(getActiveTasks() - 1);
-		else
-			inactiveTasks.set(getInactiveTasks() - 1);
-	}
-	public String toString() {
-		return name.getValue();
+	public ObservableList<String> getTasks() {
+		return children;
 	}
 	
-	public boolean equals(Object obj) {
-		if (!(obj instanceof Context))
-			return false;
-		else
-			return getName().equals(((Context) obj).getName());
+	public void addTask(String uuid) {
+		tasks.add(uuid);
 	}
 	
-	public int hashCode() {
-		return getName().hashCode();
+	public void removeTask(String uuid) {
+		tasks.remove(uuid);
 	}
 }
