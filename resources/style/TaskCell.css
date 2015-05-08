@@ -1,0 +1,9 @@
+
+.textfield {
+	-fx-background-color: transparent;
+}
+
+.textfield:hover {
+	-fx-border-color: gray;
+	-fx-border-width: 0 0 1 0;
+}

@@ -1,8 +1,5 @@
 package io.github.avatarhurden.lifeorganizer.main;
 
-import io.github.avatarhurden.lifeorganizer.controllers.ConfigViewController;
-import io.github.avatarhurden.lifeorganizer.controllers.StartupViewController;
-import io.github.avatarhurden.lifeorganizer.controllers.TaskOverviewController;
 import io.github.avatarhurden.lifeorganizer.managers.TaskManager;
 import io.github.avatarhurden.lifeorganizer.tools.Config;
 
@@ -12,6 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -42,7 +40,7 @@ public class Main extends Application {
 	private static Stage primaryStage;
 	private static NotificationPane pane;
 	
-	TaskOverviewController controller;
+//	TaskOverviewController controller;
 	
 	public static void main(String[] args) {
 		launch(args);
@@ -52,36 +50,41 @@ public class Main extends Application {
 	public void start(Stage primaryStage) throws Exception {
 		Main.primaryStage = primaryStage;
 		
-		if (Config.get().getProperty("default_folder") == null)
-			defineDataFolder();
+//		TaskManager.get().loadAndWatch();
 		
-		pane = new NotificationPane();
-		Scene scene = new Scene(pane);
 		
-		startUpdater(pane);
 		
+//		if (Config.get().getProperty("default_folder") == null)
+//			defineDataFolder();
+//		
+//		pane = new NotificationPane();
+		Scene scene = new Scene(new FXMLLoader(
+				getClass().getResource("/fxml/ViewSelector.fxml")).load());
+//		
+//		startUpdater(pane);
+//		
 		primaryStage.setTitle("LifeOrganizer");
 		primaryStage.setScene(scene);
 		primaryStage.show();
-
-		if (!TaskManager.isInitiliazed()) {
-			StartupViewController startup = new StartupViewController();
-			pane.setContent(startup.getView());
-			startup.setOnClose(() -> setTaskView());
-		} else
-			setTaskView();
-		
-		setPosition(primaryStage);
-		
-		primaryStage.setOnCloseRequest(event -> {
-			try {
-				savePosition(primaryStage);
-				controller.saveState();
-				manager.close();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		});
+//
+//		if (!TaskManager.isInitiliazed()) {
+//			StartupViewController startup = new StartupViewController();
+//			pane.setContent(startup.getView());
+//			startup.setOnClose(() -> setTaskView());
+//		} else
+//			setTaskView();
+//		
+//		setPosition(primaryStage);
+//		
+//		primaryStage.setOnCloseRequest(event -> {
+//			try {
+//				savePosition(primaryStage);
+//				controller.saveState();
+//				manager.close();
+//			} catch (Exception e) {
+//				e.printStackTrace();
+//			}
+//		});
 	}
 	
 	private void setTaskView() {

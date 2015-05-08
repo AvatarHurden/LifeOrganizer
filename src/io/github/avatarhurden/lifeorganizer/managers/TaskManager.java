@@ -86,6 +86,8 @@ public class TaskManager {
 		canceled = FXCollections.observableArrayList();
 		
 		readActive();
+		readDone();
+		readCanceled();
 		for (String uuid : active)
 			try {
 				loadTask(uuid, true);
@@ -149,6 +151,9 @@ public class TaskManager {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
+		for (int i = 0; i < j.length(); i++)
+			done.add(j.getString(i));
 		
 		done.addListener((ListChangeListener.Change<? extends String> event) -> {
 			try {
@@ -164,6 +169,9 @@ public class TaskManager {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
+		for (int i = 0; i < j.length(); i++)
+			canceled.add(j.getString(i));
 		
 		canceled.addListener((ListChangeListener.Change<? extends String> event) -> {
 			try {
@@ -225,6 +233,26 @@ public class TaskManager {
 			done.remove(uuid);
 		
 		getPathForTask(uuid).toFile().delete(); // Deletes the file
+	}
+	
+	public void addRelationship(String parent, String child) {
+		getTask(parent).addChild(child);
+		getTask(child).addParent(parent);
+	}
+	
+	public void removeRelationship(String parent, String child) {
+		getTask(parent).removeChild(child);
+		getTask(child).removeParent(parent);
+	}
+	
+	public void addContext(String task, String context) {
+		getTask(task).addContext(context);
+		getContext(context).addTask(task);
+	}
+	
+	public void removeContext(String task, String context) {
+		getTask(task).removeContext(context);
+		getContext(context).removeTask(task);
 	}
 	
 	private void addTaskListeners(String uuid) {

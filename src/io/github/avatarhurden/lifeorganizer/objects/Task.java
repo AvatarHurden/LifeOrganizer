@@ -262,7 +262,16 @@ public class Task {
 	public void setEditDate(DateTime editDate) {
 		this.editDate.setValue(editDate);
 	}
-	
+
+	public void addContext(String uuid) {
+		if (!contexts.contains(uuid))
+			contexts.add(uuid);
+	}
+
+	public void removeContext(String uuid) {
+		contexts.remove(uuid);
+	}
+
 	public ObservableList<String> getContexts() {
 		return contexts;
 	}
