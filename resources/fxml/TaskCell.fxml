@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane prefHeight="80.0" prefWidth="415.0" stylesheets="@../style/TaskCell.css" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <TextField layoutX="70.0" layoutY="15.0" styleClass="textfield" />
+      <TextField layoutX="108.0" layoutY="53.0" prefHeight="26.0" prefWidth="221.0" styleClass="textfield" />
+      <ComboBox layoutX="14.0" layoutY="16.0" prefHeight="25.0" prefWidth="41.0" promptText="aasdasd" styleClass="combo-box" />
+   </children>
+</AnchorPane>

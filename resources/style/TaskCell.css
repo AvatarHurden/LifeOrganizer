@@ -7,3 +7,22 @@
 	-fx-border-color: gray;
 	-fx-border-width: 0 0 1 0;
 }
+
+.list-cell:filled {
+	-fx-padding: 6 0 6 10;
+}
+
+.list-cell:filled:hover {
+    -fx-background-color: lavender;
+    -fx-text-fill: -fx-text-inner-color;
+}
+
+.statusButton {
+    -fx-border-width: 1;
+    -fx-border-color: lightgray;
+    -fx-background-color: transparent;
+}
+.statusButton:hover {
+    -fx-background-color: lavender;
+    -fx-text-fill: -fx-text-inner-color;
+}

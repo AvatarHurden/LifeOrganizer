@@ -1,20 +1,15 @@
 package io.github.avatarhurden.lifeorganizer.controllers;
 
-import java.io.IOException;
-
-import io.github.avatarhurden.lifeorganizer.controllers.ProjectCell;
 import io.github.avatarhurden.lifeorganizer.objects.Status;
 import io.github.avatarhurden.lifeorganizer.ui.StatusSelector;
 import javafx.beans.property.Property;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
-import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
@@ -27,7 +22,7 @@ public class ViewSelector {
 	private Tab inboxTab, soonTab, projectsTab, contextsTab;
 	@FXML
 	private TabPane tabs;
-	
+	Property<Status> stau;
 	@FXML
 	private void initialize() {
 		inboxTab.setGraphic(inboxTabGraphic());
@@ -49,14 +44,14 @@ public class ViewSelector {
 		tree.setCellFactory(tree2 -> new ProjectCell());
 		tree.setShowRoot(false);
 		
-		Property<Status> stau = new SimpleObjectProperty<Status>(Status.DONE);
+		stau = new SimpleObjectProperty<Status>(Status.CANCELED);
 		
-		StatusSelector t = new StatusSelector();
+		StatusSelector t = new StatusSelector(false);
 		t.statusProperty().bindBidirectional(stau);
-		inboxTab.setContent(t);
 		stau.addListener((obs, oldValue, newValue) -> {
-			System.out.println(newValue);
+			System.out.println("gu" + newValue);
 		});
+		inboxTab.setContent(t);
 		
 	}
 	
