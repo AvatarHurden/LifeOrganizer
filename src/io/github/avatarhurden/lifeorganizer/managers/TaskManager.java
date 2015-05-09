@@ -229,7 +229,7 @@ public class TaskManager {
 			active.remove(uuid);
 		else if (t.getStatus() == Status.CANCELED)
 			canceled.remove(uuid);
-		else if (t.getStatus() == Status.DONE)
+		else if (t.getStatus() == Status.COMPLETED)
 			done.remove(uuid);
 		
 		getPathForTask(uuid).toFile().delete(); // Deletes the file
@@ -267,14 +267,14 @@ public class TaskManager {
 				active.add(uuid);
 			else if (newValue == Status.CANCELED)
 				canceled.add(uuid);
-			else if (newValue == Status.DONE)
+			else if (newValue == Status.COMPLETED)
 				done.add(uuid);
 			
 			if (oldValue == Status.ACTIVE)
 				active.remove(uuid);
 			else if (oldValue == Status.CANCELED)
 				canceled.remove(uuid);
-			else if (oldValue == Status.DONE)
+			else if (oldValue == Status.COMPLETED)
 				done.remove(uuid);
 		});
 	}
