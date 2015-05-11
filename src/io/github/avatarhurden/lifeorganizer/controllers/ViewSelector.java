@@ -1,9 +1,10 @@
 package io.github.avatarhurden.lifeorganizer.controllers;
 
+import io.github.avatarhurden.lifeorganizer.managers.TaskManager;
 import io.github.avatarhurden.lifeorganizer.objects.Status;
-import io.github.avatarhurden.lifeorganizer.ui.StatusSelector;
+import io.github.avatarhurden.lifeorganizer.objects.Task;
 import javafx.beans.property.Property;
-import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -33,26 +34,42 @@ public class ViewSelector {
 		tabs.setTabMinHeight(106);
 		tabs.setTabMaxHeight(106);
 		
-		TreeItem<String> parentProject = new TreeItem<String>();
-		for (int i = 0; i < 10; i++)
-			parentProject.getChildren().add(new TreeItem<String>("Project " +i));
+		TreeView<Task> tree = new TreeView<Task>(getAllTasks());
 		
-		parentProject.getChildren().get(2).getChildren().add(new TreeItem<String>("Sub project 1"));
-		parentProject.getChildren().get(2).getChildren().add(new TreeItem<String>("Sub project 2"));
+		TaskManager.get().getActiveTasks().addListener((ListChangeListener.Change<? extends String> event) -> {
+			tree.setRoot(getAllTasks());
+		});
 		
-		TreeView<String> tree = new TreeView<String>(parentProject);
-		tree.setCellFactory(tree2 -> new ProjectCell());
+		tree.setCellFactory(tree2 -> new TaskCell());
 		tree.setShowRoot(false);
 		
-		stau = new SimpleObjectProperty<Status>(Status.CANCELED);
+		inboxTab.setContent(tree);
+	}
+	
+	private TreeItem<Task> getAllTasks() {
+		TreeItem<Task> root = new TreeItem<Task>();
 		
-		StatusSelector t = new StatusSelector(false);
-		t.statusProperty().bindBidirectional(stau);
-		stau.addListener((obs, oldValue, newValue) -> {
-			System.out.println("gu" + newValue);
-		});
-		inboxTab.setContent(t);
+		TaskManager manager = TaskManager.get();
+		for (String uuid : manager.getActiveTasks()) {
+			System.out.println(uuid + "task");
+			if (!manager.getTask(uuid).hasParents())
+				root.getChildren().add(getChildren(manager.getTask(uuid)));
+		}
 		
+		return root;
+		
+	}
+	
+	private TreeItem<Task> getChildren(Task task) {
+		TreeItem<Task> item = new TreeItem<Task>(task);
+		for (String child : task.getChildren())
+			item.getChildren().add(getChildren(TaskManager.get().getTask(child)));
+		return item;
+	}
+	
+	@FXML
+	private void createNewTask() {
+		TaskManager.get().createNewTask();
 	}
 	
 	private Node inboxTabGraphic() {

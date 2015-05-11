@@ -9,6 +9,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 import org.joda.time.DateTime;
@@ -53,20 +54,36 @@ public class Task {
 		uuid = json.getString("uuid");
 
 		name = new SimpleStringProperty();
+		name.addListener((obs, oldValue, newValue) -> setEditDateNow());
+		
 		status = new SimpleObjectProperty<Status>(Status.ACTIVE);
+		status.addListener((obs, oldValue, newValue) -> setEditDateNow());
+		
 		note = new SimpleStringProperty();
+		note.addListener((obs, oldValue, newValue) -> setEditDateNow());
 		
 		parents = FXCollections.observableArrayList();
+		parents.addListener((ListChangeListener.Change<? extends String> event) -> setEditDateNow());
+		
 		children = FXCollections.observableArrayList();
+		children.addListener((ListChangeListener.Change<? extends String> event) -> setEditDateNow());
+		
 		isProject = new SimpleBooleanProperty();
+		isProject.addListener((obs, oldValue, newValue) -> setEditDateNow());
 		
 		dueDate = new SimpleObjectProperty<DueDate>();
+		dueDate.addListener((obs, oldValue, newValue) -> setEditDateNow());
 		
 		creationDate = new SimpleObjectProperty<DateTime>(new DateTime());
+		creationDate.addListener((obs, oldValue, newValue) -> setEditDateNow());
+		
 		completionDate = new SimpleObjectProperty<DateTime>();
+		completionDate.addListener((obs, oldValue, newValue) -> setEditDateNow());
+		
 		editDate = new SimpleObjectProperty<DateTime>(new DateTime());
 
 		contexts = FXCollections.observableArrayList();
+		contexts.addListener((ListChangeListener.Change<? extends String> event) -> setEditDateNow());
 		
 		loadJSON(json);
 	}
@@ -259,8 +276,8 @@ public class Task {
 		return editDate.getValue();
 	}
 
-	public void setEditDate(DateTime editDate) {
-		this.editDate.setValue(editDate);
+	private void setEditDateNow() {
+		this.editDate.setValue(new DateTime());
 	}
 
 	public void addContext(String uuid) {

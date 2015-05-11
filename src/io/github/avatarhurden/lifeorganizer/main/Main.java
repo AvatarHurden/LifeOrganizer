@@ -50,9 +50,7 @@ public class Main extends Application {
 	public void start(Stage primaryStage) throws Exception {
 		Main.primaryStage = primaryStage;
 		
-//		TaskManager.get().loadAndWatch();
-		
-		
+		TaskManager.get().loadAndWatch();
 		
 //		if (Config.get().getProperty("default_folder") == null)
 //			defineDataFolder();
@@ -74,17 +72,17 @@ public class Main extends Application {
 //		} else
 //			setTaskView();
 //		
-//		setPosition(primaryStage);
+		setPosition(primaryStage);
 //		
-//		primaryStage.setOnCloseRequest(event -> {
-//			try {
-//				savePosition(primaryStage);
+		primaryStage.setOnCloseRequest(event -> {
+			try {
+				savePosition(primaryStage);
 //				controller.saveState();
-//				manager.close();
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//		});
+				TaskManager.get().close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
 	}
 	
 	private void setTaskView() {

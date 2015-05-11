@@ -27,6 +27,8 @@ public class DirectoryWatcher {
 	private boolean watch = true;
 	private Path directory;
 	
+	WatchService watcher;
+	
 	public DirectoryWatcher(Path directory) {
 		this.directory = directory;
 		
@@ -64,7 +66,7 @@ public class DirectoryWatcher {
 	public void startWatching() throws IOException {
 		watch = true;
 
-		WatchService watcher = FileSystems.getDefault().newWatchService();
+		watcher = FileSystems.getDefault().newWatchService();
 		directory.register(watcher, 
 				StandardWatchEventKinds.ENTRY_CREATE, 
 				StandardWatchEventKinds.ENTRY_DELETE, 
@@ -75,6 +77,11 @@ public class DirectoryWatcher {
 	}
 	
 	public void stopWatching() {
+		try {
+			watcher.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		watch = false;
 	}
 	

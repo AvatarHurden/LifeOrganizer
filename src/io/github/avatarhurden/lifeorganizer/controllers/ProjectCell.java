@@ -24,7 +24,8 @@ public class ProjectCell extends TreeCell<String> {
 			loader.load();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
+		}	
+		
 	}
 	
 	@FXML
@@ -40,6 +41,9 @@ public class ProjectCell extends TreeCell<String> {
 	@Override
 	public void updateItem(String task, boolean empty) {
 		super.updateItem(task, empty);
+		
+		if (getTreeItem() != null)
+			System.out.println(getTreeItem().getValue() + " " + getTreeItem().isExpanded());
 		
 		if (!empty) {
 			setAlignment(Pos.CENTER);

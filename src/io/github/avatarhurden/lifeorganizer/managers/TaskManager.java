@@ -38,14 +38,14 @@ public class TaskManager {
 		return instance;
 	}
 	
-	private  ObservableMap<String, Task> tasks;
-	private  ObservableMap<String, Context> contexts;
+	private ObservableMap<String, Task> tasks;
+	private ObservableMap<String, Context> contexts;
 	
 	private static final String activeFile = "active.txt";
-	private static final String doneFile = "done.txt";
+	private static final String completedFile = "completed.txt";
 	private static final String canceledFile = "canceled.txt";
 	
-	private Path folder, activePath, donePath, canceledPath;
+	private Path folder, activePath, completedPath, canceledPath;
 	
 	private ObservableList<String> savingTasks;
 	private ObservableList<String> active, done, canceled;
@@ -64,14 +64,14 @@ public class TaskManager {
 			folder.toFile().mkdirs();
 		
 		activePath = folder.resolve(activeFile);
-		donePath = folder.resolve(doneFile);
+		completedPath = folder.resolve(completedFile);
 		canceledPath = folder.resolve(canceledFile);
 		
 		try {
 			if (!activePath.toFile().exists())
 				JSONFile.saveJSONArray(new JSONArray(), activePath.toFile(), 4);
-			if (!donePath.toFile().exists())
-				JSONFile.saveJSONArray(new JSONArray(), donePath.toFile(), 4);
+			if (!completedPath.toFile().exists())
+				JSONFile.saveJSONArray(new JSONArray(), completedPath.toFile(), 4);
 			if (!canceledPath.toFile().exists())
 				JSONFile.saveJSONArray(new JSONArray(), canceledPath.toFile(), 4);
 		} catch (IOException e) {
@@ -95,7 +95,11 @@ public class TaskManager {
 				e.printStackTrace();
 			}
 		
-		printHierarchy();
+//		printHierarchy();
+	}
+	
+	public ObservableList<String> getActiveTasks() {
+		return active;
 	}
 
 	public Task getTask(String uuid) {
@@ -147,7 +151,7 @@ public class TaskManager {
 	private void readDone() {
 		JSONArray j = null;
 		try {
-			j = JSONFile.loadJSONArray(donePath.toFile());
+			j = JSONFile.loadJSONArray(completedPath.toFile());
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -157,7 +161,7 @@ public class TaskManager {
 		
 		done.addListener((ListChangeListener.Change<? extends String> event) -> {
 			try {
-				JSONFile.saveJSONArray(new JSONArray(done), donePath.toFile(), 4);
+				JSONFile.saveJSONArray(new JSONArray((String[]) done.toArray(new String[done.size()])), completedPath.toFile(), 4);
 			} catch (IOException e) {}
 		});
 	}
@@ -175,7 +179,7 @@ public class TaskManager {
 		
 		canceled.addListener((ListChangeListener.Change<? extends String> event) -> {
 			try {
-				JSONFile.saveJSONArray(new JSONArray(canceled), canceledPath.toFile(), 4);
+				JSONFile.saveJSONArray(new JSONArray((String[]) canceled.toArray(new String[canceled.size()])), canceledPath.toFile(), 4);
 			} catch (IOException e) {}
 		});
 	}
@@ -206,6 +210,7 @@ public class TaskManager {
 	public Task createNewTask() {
 		Task t = Task.createNew();
 		
+		saveTask(t.getUUID());
 		tasks.put(t.getUUID(), t);
 		active.add(t.getUUID());
 		addTaskListeners(t.getUUID());
@@ -308,7 +313,6 @@ public class TaskManager {
 	
 	public void close() {
 		watcher.stopWatching();
-		watcher = null;
 	}
 	
 	public Path getFolder() {
