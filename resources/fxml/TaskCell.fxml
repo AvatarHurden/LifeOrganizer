@@ -7,8 +7,8 @@
 
 <AnchorPane fx:id="root" prefHeight="80.0" prefWidth="478.0" stylesheets="@../style/TaskCell.css" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1">
    <children>
-      <TextField fx:id="nameField" layoutX="59.0" layoutY="10.0" prefHeight="25.0" prefWidth="335.0" styleClass="textfield" />
+      <TextField fx:id="nameField" layoutX="53.0" layoutY="5.0" prefHeight="0.0" prefWidth="335.0" styleClass="textfield" />
       <TextField fx:id="noteField" layoutX="129.0" layoutY="40.0" prefHeight="26.0" prefWidth="221.0" styleClass="textfield" />
-      <AnchorPane fx:id="statusPane" layoutX="25.0" layoutY="10.0" prefHeight="25.0" prefWidth="27.0" />
+      <AnchorPane fx:id="statusPane" layoutX="6.0" layoutY="2.0" prefHeight="31.0" prefWidth="39.0" />
    </children>
 </AnchorPane>

@@ -50,11 +50,9 @@ public class ViewSelector {
 		TreeItem<Task> root = new TreeItem<Task>();
 		
 		TaskManager manager = TaskManager.get();
-		for (String uuid : manager.getActiveTasks()) {
-			System.out.println(uuid + "task");
+		for (String uuid : manager.getActiveTasks())
 			if (!manager.getTask(uuid).hasParents())
 				root.getChildren().add(getChildren(manager.getTask(uuid)));
-		}
 		
 		return root;
 		

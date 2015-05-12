@@ -35,6 +35,10 @@ public class TaskCell extends TreeCell<Task> {
 	
 	@FXML
 	private void initialize() {
+		getStylesheets().add("/style/TaskCell.css");
+		getStyleClass().setAll("cell");
+		root.getStyleClass().setAll("cell");
+		
 		status = new StatusSelector(false);
 		statusPane.getChildren().add(status);
 	}
@@ -50,9 +54,6 @@ public class TaskCell extends TreeCell<Task> {
 	@Override
 	public void updateItem(Task task, boolean empty) {
 		super.updateItem(task, empty);
-		
-		if (getTreeItem() != null)
-			System.out.println(getTreeItem().getValue() + " " + getTreeItem().isExpanded());
 		
 		if (!empty) {
 			setAlignment(Pos.CENTER);

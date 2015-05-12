@@ -42,9 +42,6 @@ public class ProjectCell extends TreeCell<String> {
 	public void updateItem(String task, boolean empty) {
 		super.updateItem(task, empty);
 		
-		if (getTreeItem() != null)
-			System.out.println(getTreeItem().getValue() + " " + getTreeItem().isExpanded());
-		
 		if (!empty) {
 			setAlignment(Pos.CENTER);
 //			setDisclosureNode(null);

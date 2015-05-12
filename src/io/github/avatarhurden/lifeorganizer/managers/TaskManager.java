@@ -125,7 +125,6 @@ public class TaskManager {
 		for (int i = 0; i < indent; i++)
 			s += "\t";
 		s += "- " + getTask(uuid).getName() + " " + getTask(uuid).getStatus() + " " + uuid;
-		System.out.println(s);
 		for (String children : getTask(uuid).getChildren())
 			printTask(children, indent+1);
 	}
@@ -193,6 +192,7 @@ public class TaskManager {
 	private void loadTask(String uuid, boolean loadChildren) throws IOException {
 		Path p = getPathForTask(uuid);
 		Task t = getTask(uuid);
+		System.out.println(t);
 		if (t != null)
 			t.loadJSON(JSONFile.loadJSONObject(p.toFile()));
 		else {
@@ -371,7 +371,7 @@ public class TaskManager {
 	}
 	
 	private void listenToFolder() {
-		watcher.addFilter(path -> Pattern.matches("^[0-9abcdefABCDEF]{32}\\.txt", path.getFileName().toString()));
+		watcher.addFilter(path -> Pattern.matches("^[0-9abcdefABCDEF]{32}\\.task", path.getFileName().toString()));
 		
 		watcher.addAction((path, kind) -> readFile(path, kind));
 		watcher.addAction((path, kind) -> printHierarchy());
@@ -392,7 +392,9 @@ public class TaskManager {
 			if (latestKind == StandardWatchEventKinds.ENTRY_CREATE ||
 				latestKind == StandardWatchEventKinds.ENTRY_MODIFY)
 				try {
+					savingTasks.add(id);
 					loadTask(id, false);
+					savingTasks.remove(id);
 				} catch (Exception e) {	
 					e.printStackTrace();
 				}

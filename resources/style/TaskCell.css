@@ -1,10 +1,15 @@
 
-.textfield {
+.cell:selected {
+	-fx-background-color: lightblue;
+}
+
+.cell > .textfield {
 	-fx-background-color: transparent;
 }
 
-.textfield:hover {
-	-fx-border-color: gray;
+.cell:hover > .textfield {
+	-fx-background-color: transparent;
+	-fx-border-color: gainsboro;
 	-fx-border-width: 0 0 1 0;
 }
 

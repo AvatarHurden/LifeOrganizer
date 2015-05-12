@@ -72,8 +72,12 @@ public class DirectoryWatcher {
 				StandardWatchEventKinds.ENTRY_DELETE, 
 				StandardWatchEventKinds.ENTRY_MODIFY);
 		
-		while (watch)
+		while (watch) {
+			System.out.println("waiting");
 			waitForEvent(watcher);
+			System.out.println("ended");
+		}
+		System.out.println("completey stopped");
 	}
 	
 	public void stopWatching() {
@@ -89,7 +93,10 @@ public class DirectoryWatcher {
 		WatchKey key;
 		try {
 			key = watcher.take();
-		} catch (InterruptedException e) { return; }
+		} catch (InterruptedException e) { 
+			e.printStackTrace();
+			return; 
+		}
 	
 		if (!watch) return;
 		
@@ -115,6 +122,7 @@ public class DirectoryWatcher {
 					for (BiConsumer<Path, WatchEvent.Kind<?>> action : actions)
 						action.accept(file, pathsToPerform.get(file));
 					pathsToPerform.remove(file);
+					System.out.println("performed");
 				}).start();
 
 			pathsToPerform.put(file, kind);
