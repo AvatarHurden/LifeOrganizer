@@ -20,7 +20,7 @@ public class DeleteButton extends StackPane {
 	       
 		getChildren().add(region);
 		
-		getStyleClass().addAll("delete");
+		getStyleClass().addAll("remove");
 	    
 	    region.setOnMouseClicked(event -> {
 	    	if (eventHandler.getValue() != null) 

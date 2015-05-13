@@ -3,8 +3,8 @@ package io.github.avatarhurden.lifeorganizer.controllers;
 import io.github.avatarhurden.lifeorganizer.managers.TaskManager;
 import io.github.avatarhurden.lifeorganizer.objects.Status;
 import io.github.avatarhurden.lifeorganizer.objects.Task;
-import javafx.beans.property.Property;
 import javafx.collections.ListChangeListener;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -23,7 +23,8 @@ public class ViewSelector {
 	private Tab inboxTab, soonTab, projectsTab, contextsTab;
 	@FXML
 	private TabPane tabs;
-	Property<Status> stau;
+
+	private ObservableList<Task> tasks;
 	@FXML
 	private void initialize() {
 		inboxTab.setGraphic(inboxTabGraphic());
@@ -34,9 +35,12 @@ public class ViewSelector {
 		tabs.setTabMinHeight(106);
 		tabs.setTabMaxHeight(106);
 		
+		tasks = TaskManager.get().requestList(t -> !t.hasParents() && t.getStatus() == Status.ACTIVE);
+		
 		TreeView<Task> tree = new TreeView<Task>(getAllTasks());
 		
-		TaskManager.get().getActiveTasks().addListener((ListChangeListener.Change<? extends String> event) -> {
+		tasks.addListener((ListChangeListener.Change<? extends Task> event) -> {
+			tree.setRoot(null);
 			tree.setRoot(getAllTasks());
 		});
 		
@@ -48,14 +52,12 @@ public class ViewSelector {
 	
 	private TreeItem<Task> getAllTasks() {
 		TreeItem<Task> root = new TreeItem<Task>();
+		ObservableList<TreeItem<Task>> children = root.getChildren();
 		
-		TaskManager manager = TaskManager.get();
-		for (String uuid : manager.getActiveTasks())
-			if (!manager.getTask(uuid).hasParents())
-				root.getChildren().add(getChildren(manager.getTask(uuid)));
+		for (Task t : tasks)
+			children.add(getChildren(t));
 		
 		return root;
-		
 	}
 	
 	private TreeItem<Task> getChildren(Task task) {

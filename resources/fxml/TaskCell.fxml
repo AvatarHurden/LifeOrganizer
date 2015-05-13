@@ -10,5 +10,7 @@
       <TextField fx:id="nameField" layoutX="53.0" layoutY="5.0" prefHeight="0.0" prefWidth="335.0" styleClass="textfield" />
       <TextField fx:id="noteField" layoutX="129.0" layoutY="40.0" prefHeight="26.0" prefWidth="221.0" styleClass="textfield" />
       <AnchorPane fx:id="statusPane" layoutX="6.0" layoutY="2.0" prefHeight="31.0" prefWidth="39.0" />
+      <AnchorPane fx:id="removePane" layoutX="401.0" layoutY="5.0" prefHeight="25.0" prefWidth="25.0" />
+      <AnchorPane fx:id="deletePane" layoutX="439.0" layoutY="5.0" prefHeight="25.0" prefWidth="25.0" />
    </children>
 </AnchorPane>

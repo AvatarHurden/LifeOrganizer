@@ -14,9 +14,12 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -24,8 +27,10 @@ import java.util.stream.Collectors;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
+import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
+import javafx.util.Pair;
 
 import org.joda.time.DateTime;
 import org.json.JSONArray;
@@ -47,8 +52,12 @@ public class TaskManager {
 	
 	private Path folder, activePath, completedPath, canceledPath;
 	
-	private ObservableList<String> savingTasks;
+	/** Tasks that should have changes ignored when it comes to saving the file **/
+	private ObservableList<String> tasksToIgnore;
+	
 	private ObservableList<String> active, done, canceled;
+	
+	private List<Pair<ObservableList<Task>, Predicate<Task>>> requestedLists;
 	
 	private DirectoryWatcher watcher;
 	
@@ -78,12 +87,15 @@ public class TaskManager {
 			e.printStackTrace();
 		}
 		
+		requestedLists = new ArrayList<Pair<ObservableList<Task>, Predicate<Task>>>();
+		
 		tasks = FXCollections.<String, Task>observableHashMap();
-		savingTasks = FXCollections.observableArrayList();
 		
 		active = FXCollections.observableArrayList();
 		done = FXCollections.observableArrayList();
 		canceled = FXCollections.observableArrayList();
+
+		tasksToIgnore = FXCollections.observableArrayList();
 		
 		readActive();
 		readDone();
@@ -96,6 +108,18 @@ public class TaskManager {
 			}
 		
 //		printHierarchy();
+	}
+	
+	public ObservableList<Task> requestList(Predicate<Task> predicate) {
+		ObservableList<Task> list = FXCollections.<Task>observableArrayList();
+		
+		for (Task t : tasks.values())
+			if (predicate.test(t))
+				list.add(t);
+		
+		requestedLists.add(new Pair<ObservableList<Task>, Predicate<Task>>(list, predicate));
+		
+		return list;
 	}
 	
 	public ObservableList<String> getActiveTasks() {
@@ -112,21 +136,6 @@ public class TaskManager {
 	
 	public Path getPathForTask(String uuid) {
 		return folder.resolve(uuid+".task");
-	}
-	
-	public void printHierarchy() {
-		for (String id : active) 
-			if (!getTask(id).hasParents())
-				printTask(id, 0);
-	}
-	
-	private void printTask(String uuid, int indent) {
-		String s = "";
-		for (int i = 0; i < indent; i++)
-			s += "\t";
-		s += "- " + getTask(uuid).getName() + " " + getTask(uuid).getStatus() + " " + uuid;
-		for (String children : getTask(uuid).getChildren())
-			printTask(children, indent+1);
 	}
 	
 	private void readActive() {
@@ -215,6 +224,10 @@ public class TaskManager {
 		active.add(t.getUUID());
 		addTaskListeners(t.getUUID());
 		
+		for (Pair<ObservableList<Task>, Predicate<Task>> pair : requestedLists)
+			if (pair.getValue().test(t))
+				pair.getKey().add(t);
+		
 		return t;
 	}
 	
@@ -228,7 +241,9 @@ public class TaskManager {
 		for (String context : t.getContexts())
 			getContext(context).removeTask(uuid);
 		
-		tasks.remove(uuid); // Removes from the list
+
+		for (Pair<ObservableList<Task>, Predicate<Task>> pair : requestedLists)
+			pair.getKey().remove(t);
 		
 		if (t.getStatus() == Status.ACTIVE)
 			active.remove(uuid);
@@ -237,7 +252,11 @@ public class TaskManager {
 		else if (t.getStatus() == Status.COMPLETED)
 			done.remove(uuid);
 		
+		tasksToIgnore.add(uuid);
 		getPathForTask(uuid).toFile().delete(); // Deletes the file
+		tasksToIgnore.remove(uuid);
+
+		tasks.remove(uuid); // Removes from the list
 	}
 	
 	public void addRelationship(String parent, String child) {
@@ -264,8 +283,17 @@ public class TaskManager {
 		Task t = getTask(uuid);
 		
 		// Listener to save the task
-		t.editDateProperty().addListener((obs, oldValue, newValue) -> saveTask(uuid));
-	
+		t.editDateProperty().addListener((obs, oldValue, newValue) -> {
+			System.out.println(t.getName());
+			saveTask(uuid);
+			for (Pair<ObservableList<Task>, Predicate<Task>> pair : requestedLists) {
+				if (!pair.getKey().contains(t) && pair.getValue().test(t))
+					pair.getKey().add(t);
+				else if (pair.getKey().contains(t) && !pair.getValue().test(t))
+					pair.getKey().remove(t);
+			}
+		});
+		
 		// Listener to put the task in the correct category
 		t.statusProperty().addListener((obs, oldValue, newValue) -> {
 			if (newValue == Status.ACTIVE)
@@ -285,9 +313,9 @@ public class TaskManager {
 	}
 	
 	public void saveTask(String uuid) {
-		if (savingTasks.contains(uuid)) return;
+		if (tasksToIgnore.contains(uuid)) return;
 		
-		savingTasks.add(uuid);
+		tasksToIgnore.add(uuid);
 		new Thread(() -> {
 			
 			try {
@@ -298,7 +326,7 @@ public class TaskManager {
 				JSONFile.saveJSONObject(getTask(uuid).toJSON(), p.toFile(), 4);
 
 				Thread.sleep(100);
-				savingTasks.remove(uuid);
+				tasksToIgnore.remove(uuid);
 				watcher.watchPath(p);
 			} catch (InterruptedException e) {
 			}  catch (IOException exc) {
@@ -374,7 +402,6 @@ public class TaskManager {
 		watcher.addFilter(path -> Pattern.matches("^[0-9abcdefABCDEF]{32}\\.task", path.getFileName().toString()));
 		
 		watcher.addAction((path, kind) -> readFile(path, kind));
-		watcher.addAction((path, kind) -> printHierarchy());
 		
 		new Thread(() -> {
 			try {
@@ -392,9 +419,9 @@ public class TaskManager {
 			if (latestKind == StandardWatchEventKinds.ENTRY_CREATE ||
 				latestKind == StandardWatchEventKinds.ENTRY_MODIFY)
 				try {
-					savingTasks.add(id);
+					tasksToIgnore.add(id);
 					loadTask(id, false);
-					savingTasks.remove(id);
+					tasksToIgnore.remove(id);
 				} catch (Exception e) {	
 					e.printStackTrace();
 				}

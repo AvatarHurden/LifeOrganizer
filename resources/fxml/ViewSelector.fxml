@@ -6,8 +6,12 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="624.0" prefWidth="882.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.avatarhurden.lifeorganizer.controllers.ViewSelector">
+<AnchorPane prefHeight="624.0" prefWidth="882.0" stylesheets="@../style/viewSelector.css" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.avatarhurden.lifeorganizer.controllers.ViewSelector">
    <children>
+      <AnchorPane prefHeight="60.0" prefWidth="882.0" styleClass="menuBar" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <Button layoutX="14.0" layoutY="30.0" mnemonicParsing="false" onAction="#createNewTask" text="Create new Task" />
+         </children></AnchorPane>
       <TabPane fx:id="tabs" layoutY="62.0" prefHeight="537.0" prefWidth="882.0" side="LEFT" stylesheets="@../style/viewSelector.css" tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="27.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="60.0">
         <tabs>
           <Tab fx:id="inboxTab">
@@ -32,7 +36,7 @@
             </Tab>
         </tabs>
       </TabPane>
-      <MenuBar prefHeight="60.0" prefWidth="882.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <MenuBar prefHeight="25.0" prefWidth="882.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <menus>
           <Menu mnemonicParsing="false" text="File">
             <items>
@@ -51,6 +55,5 @@
           </Menu>
         </menus>
       </MenuBar>
-      <Button layoutX="40.0" layoutY="598.0" mnemonicParsing="false" onAction="#createNewTask" text="Create new Task" />
    </children>
 </AnchorPane>
