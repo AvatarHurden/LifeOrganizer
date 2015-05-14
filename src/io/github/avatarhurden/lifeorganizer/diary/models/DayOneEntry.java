@@ -5,10 +5,13 @@ import io.github.avatarhurden.lifeorganizer.diary.managers.EntryManager;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Date;
-import java.util.TimeZone;
 import java.util.UUID;
 
+import javafx.beans.property.Property;
+import javafx.beans.property.adapter.JavaBeanObjectPropertyBuilder;
 import javafx.scene.image.Image;
 
 import com.dd.plist.NSDictionary;
@@ -31,12 +34,16 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 		NSDictionary creatorDict = new NSDictionary();
 	    creatorDict.put("Device Agent","PC");
 	    creatorDict.put("Generation Date", new Date());
-	    creatorDict.put("Host Name", "PC");
-	    creatorDict.put("OS Agent", "PC");
+	    try {
+			creatorDict.put("Host Name", InetAddress.getLocalHost().getHostName());
+		} catch (UnknownHostException e) {
+			creatorDict.put("Host Name", "PC");
+		}
+	    creatorDict.put("OS Agent", System.getProperty("os.name"));
 	    creatorDict.put("Software Agent", "LifeOrganizer");
 	    dict.put("Creator", creatorDict);
 	    
-	    dict.put("Time Zone", TimeZone.getDefault().getDisplayName());
+	    dict.put("Time Zone", System.getProperty("user.timezone"));
 	    
 	    File file = new File(manager.getEntryFolder(), dict.get("UUID").toString() + ".doentry");
 	    
@@ -48,6 +55,8 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	private EntryManager manager;
 	private File file, imageFile;
 	private Image image;
+	
+	private boolean isSaving = false;
 	
 	private DayOneEntry(EntryManager manager, NSDictionary dictionary, File file) {
 		this.manager = manager;
@@ -71,11 +80,20 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	}
 	
 	public void save() {
-		manager.ignoreForAction(getUUID(), () -> {
-			try {
-				PropertyListParser.saveAsXML(dictionary, file);
-			} catch (Exception e) { }
-		});
+		if (isSaving) return;
+		
+		new Thread(() ->
+			manager.ignoreForAction(getUUID(), () -> {
+					try {
+						Thread.sleep(3000);
+						PropertyListParser.saveAsXML(dictionary, file);
+					} catch (Exception e) { 
+					} finally {
+						isSaving = false;
+					}
+		})).start();
+	
+		isSaving = true;
 	}
 	
 	public NSDictionary getDictionary() {
@@ -92,6 +110,11 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 				image = new Image(new FileInputStream(imageFile));
 			} catch (FileNotFoundException e) { }
 		return image;
+	}
+	
+	public void setEntryText(String text) {
+		dictionary.put("Entry Text", text);
+		save();
 	}
 	
 	public String getEntryText() {
@@ -113,6 +136,21 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	@Override
 	public int compareTo(DayOneEntry o) {
 		return getCreationDate().compareTo(o.getCreationDate());
+	}
+	
+	// Properties
+	
+	Property<String> entryTextProperty;
+	
+	@SuppressWarnings("unchecked")
+	public Property<String> entryTextProperty() {
+		if (entryTextProperty == null)
+			try {
+				entryTextProperty = JavaBeanObjectPropertyBuilder.create().bean(this).name("entryText").build();
+			} catch (NoSuchMethodException e) {
+				e.printStackTrace();
+			}
+		return entryTextProperty;
 	}
 	
 }

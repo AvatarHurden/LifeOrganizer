@@ -2,19 +2,16 @@ package io.github.avatarhurden.lifeorganizer.diary.managers;
 
 import io.github.avatarhurden.lifeorganizer.diary.models.DayOneEntry;
 import io.github.avatarhurden.lifeorganizer.tools.Config;
+import io.github.avatarhurden.lifeorganizer.tools.DirectoryWatcher;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.DirectoryStream;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -29,15 +26,11 @@ public class EntryManager {
 	
 	private Path entryFolder, imageFolder;
 	
-	private static final long READ_DELAY = 300;
-	
-	private Thread fileWatcher;
-	private HashMap<String, WatchEvent.Kind<?>> filesToRead;
-	
 	private ObservableMap<String, DayOneEntry> entryMap;
 	private ObservableList<DayOneEntry> entryList;
 	
 	private Set<String> ignoredEntries;
+	private DirectoryWatcher watcher;
 	
 	public static boolean isInitiliazed() {
 		return Config.get().getProperty("diary_folder") != null;
@@ -75,13 +68,11 @@ public class EntryManager {
 			e.printStackTrace();
 		}
 		
-		filesToRead = new HashMap<String, WatchEvent.Kind<?>>();
 		listenToFolder();
 	}
 	
 	public void close() {
-		fileWatcher.interrupt();
-		fileWatcher = null;
+		watcher.stopWatching();
 	}
 	
 	public File getEntryFolder() {
@@ -145,78 +136,36 @@ public class EntryManager {
 	}
 	
 	private void listenToFolder() {
-		fileWatcher = new Thread(() -> {
-			
-			WatchService watcher = null;
-			try {
-				watcher = FileSystems.getDefault().newWatchService();
-				entryFolder.register(watcher, 
-						StandardWatchEventKinds.ENTRY_CREATE, 
-						StandardWatchEventKinds.ENTRY_DELETE, 
-						StandardWatchEventKinds.ENTRY_MODIFY);
-			} catch (Exception e1) {
-				e1.printStackTrace();
-			}
-			
-			if (watcher == null)
-				return;
-			
-			while (true) {
-				WatchKey key;
-				try {
-					key = watcher.take();
-				} catch (InterruptedException e) { return; }
-			
-				for (WatchEvent<?> event : key.pollEvents()) {
-					WatchEvent.Kind<?> kind = event.kind();
-		        
-					if (kind == StandardWatchEventKinds.OVERFLOW) continue;
-		        
-					Path file = entryFolder.resolve((Path) event.context());
-		        
-					// Only registers for matching filenames
-					if (!Pattern.matches("^[0-9abcdefABCDEF]{32}\\.doentry", file.getFileName().toString())) 
-						continue;
-					
-					String id = file.getFileName().toString().replace(".doentry", "");
-					if (ignoredEntries.contains(id))
-						continue;
-					
-					if (!filesToRead.containsKey(id))
-						new Thread(() -> {
-							try {
-								Thread.sleep(READ_DELAY);
-							} catch (Exception e1) {}
-							readFile(id, file);
-							filesToRead.remove(id);
-						}).start();
-
-					filesToRead.put(id, kind);
-				}
-			
-				key.reset();
-			}
-		});
+		watcher = new DirectoryWatcher(entryFolder);
+		watcher.addFilter(path -> Pattern.matches("^[0-9abcdefABCDEF]{32}\\.doentry", path.getFileName().toString()));
 		
-		fileWatcher.start();
+		watcher.addAction((path, kind) -> readFile(path, kind));
+		
+		new Thread(() -> {
+			try {
+				watcher.startWatching();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}	
+		}).start();
 	}
 	
-	private void readFile(String id, Path file) {
-		WatchEvent.Kind<?> latestKind = filesToRead.get(id);
+	private void readFile(Path path, WatchEvent.Kind<?> kind) {
+		String id = path.getFileName().toString().replace(".doentry", "");
 		
 		Platform.runLater(() -> {
-			if (latestKind == StandardWatchEventKinds.ENTRY_CREATE)
+			if (kind == StandardWatchEventKinds.ENTRY_CREATE)
 				try {
-					entryMap.put(id, DayOneEntry.loadFromFile(this, file.toFile()));
+					entryMap.put(id, DayOneEntry.loadFromFile(this, path.toFile()));
 				} catch (Exception e) {	
 					e.printStackTrace();
 				}
-			else if (latestKind == StandardWatchEventKinds.ENTRY_DELETE)
+			else if (kind == StandardWatchEventKinds.ENTRY_DELETE)
 				entryMap.remove(id);
-			else if (latestKind == StandardWatchEventKinds.ENTRY_MODIFY)
+			else if (kind == StandardWatchEventKinds.ENTRY_MODIFY)
 				try { // It can happen that a file is created and modified before being read, so test if it is in the map
 					if (!entryMap.containsKey(id))
-						entryMap.put(id, DayOneEntry.loadFromFile(this, file.toFile()));
+						entryMap.put(id, DayOneEntry.loadFromFile(this, path.toFile()));
 					else
 						entryMap.get(id).readFile();
 				} catch (Exception e) {

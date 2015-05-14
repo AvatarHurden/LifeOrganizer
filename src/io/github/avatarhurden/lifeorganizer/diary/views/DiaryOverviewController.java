@@ -2,6 +2,9 @@ package io.github.avatarhurden.lifeorganizer.diary.views;
 
 import io.github.avatarhurden.lifeorganizer.diary.managers.EntryManager;
 import io.github.avatarhurden.lifeorganizer.diary.models.DayOneEntry;
+
+import java.util.Properties;
+
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -32,11 +35,16 @@ public class DiaryOverviewController {
     		if (newValue == null)
     			return;
     		uuidLabel.setText(newValue.getUUID());
+    		if (oldValue != null)
+        	editor.textProperty().unbindBidirectional(oldValue.entryTextProperty());
+			editor.textProperty().bindBidirectional(newValue.entryTextProperty());
     		editor.setText(newValue.getEntryText());
     		imageView.setImage(newValue.getImage());
     	});
     	
     	editor = new MarkdownEditor();
+
+    	System.out.println(System.getProperty("user.timezone"));
     	
     	AnchorPane.setTopAnchor(editor, 100d);
 		AnchorPane.setBottomAnchor(editor, 0d);

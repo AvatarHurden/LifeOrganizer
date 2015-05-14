@@ -39,7 +39,7 @@ public class Main extends Application {
 	private static final double version = 0.1;
 	private static final String changelogURL = "https://raw.githubusercontent.com/AvatarHurden/LifeOrganizer/master/changelog";
 
-	private TaskManager manager;
+//	private TaskManager manager;
 	private EntryManager entryManager;
 	private static Stage primaryStage;
 	
@@ -54,7 +54,7 @@ public class Main extends Application {
 		if (Config.get().getProperty("default_folder") == null)
 			defineDataFolder();
 		
-		manager = new TaskManager();
+//		manager = new TaskManager();
 		entryManager = new EntryManager();
 		entryManager.loadAndWatch();
 		
@@ -74,16 +74,17 @@ public class Main extends Application {
 //		
 //		setPosition(primaryStage);
 //		
-//		primaryStage.setOnCloseRequest(event -> {
-//			try {
-//				savePosition(primaryStage);
+		primaryStage.setOnCloseRequest(event -> {
+			try {
+				savePosition(primaryStage);
+				entryManager.close();
 //				controller.saveState();
-//				Config.save();
+				Config.save();
 //				manager.save();
-//			} catch (Exception e) {
-//				e.printStackTrace();
-//			}
-//		});
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
 		
 	}
 	
@@ -158,7 +159,7 @@ public class Main extends Application {
 		
 		ConfigViewController controller = loader.<ConfigViewController>getController();
 		
-		controller.addActionOnExit(() -> manager.reload());
+//		controller.addActionOnExit(() -> manager.reload());
 		
 		return stage;
 	}
