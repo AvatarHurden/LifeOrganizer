@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+
+
+<HBox fx:id="root" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.avatarhurden.lifeorganizer.diary.views.EntryCellController">
+   <children>
+      <VBox alignment="CENTER" minWidth="70.0" prefHeight="51.0" prefWidth="70.0">
+         <children>
+            <Label fx:id="dayLabel" text="Label" textAlignment="CENTER">
+               <font>
+                  <Font size="22.0" />
+               </font>
+            </Label>
+            <Label fx:id="monthYearLabel" text="Label" />
+         </children>
+      </VBox>
+      <VBox>
+         <children>
+            <Label fx:id="textLabel" prefHeight="34.0" text="Label" />
+            <Label fx:id="tagLabel" prefHeight="17.0" text="Label" />
+         </children>
+      </VBox>
+      <ImageView fx:id="imageView" fitHeight="44.0" fitWidth="54.0" pickOnBounds="true" preserveRatio="true">
+         <viewport>
+            <Rectangle2D />
+         </viewport>
+      </ImageView>
+   </children>
+</HBox>

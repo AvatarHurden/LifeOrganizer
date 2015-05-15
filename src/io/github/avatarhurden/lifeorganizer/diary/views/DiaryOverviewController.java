@@ -2,16 +2,21 @@ package io.github.avatarhurden.lifeorganizer.diary.views;
 
 import io.github.avatarhurden.lifeorganizer.diary.managers.EntryManager;
 import io.github.avatarhurden.lifeorganizer.diary.models.DayOneEntry;
+import io.github.avatarhurden.lifeorganizer.diary.views.EntryCellController;
 
-import java.util.Properties;
+import java.io.IOException;
 
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+
+import org.controlsfx.control.textfield.TextFields;
 
 public class DiaryOverviewController {
 
@@ -24,7 +29,9 @@ public class DiaryOverviewController {
     private Label uuidLabel;
     @FXML
     private ImageView imageView;
-
+    @FXML
+    private TextField searchField;
+    
     private MarkdownEditor editor;
     
     private EntryManager manager;
@@ -40,7 +47,9 @@ public class DiaryOverviewController {
 			editor.textProperty().bindBidirectional(newValue.entryTextProperty());
     		editor.setText(newValue.getEntryText());
     		imageView.setImage(newValue.getImage());
+    		System.out.println(newValue.getTags());
     	});
+    	
     	
     	editor = new MarkdownEditor();
 
@@ -60,7 +69,8 @@ public class DiaryOverviewController {
 		// Compares opposite so that later entries are on top
 		sorted.setComparator((entry1, entry2) -> entry2.compareTo(entry1));
 		entryList.setItems(sorted);
-	
+
+    	TextFields.bindAutoCompletion(searchField, manager.getTags());
 		entryList.setCellFactory(table -> new EntryCell());
 	}
 	
@@ -78,8 +88,16 @@ public class DiaryOverviewController {
 	            setText(null);
 	            setGraphic(null);
 	        } else {
-	            setText(item == null ? "null" : item.getUUID());
-	            setGraphic(null);
+	            //setText(item == null ? "null" : item.getEntryText().substring(0, 10));
+	            FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/github/avatarhurden/lifeorganizer/diary/views/EntryCell.fxml"));
+	            try {
+					setGraphic(loader.load());
+					loader.<EntryCellController>getController().setContent(item);
+					loader.<EntryCellController>getController().setWidth(entryList.getPrefWidth() - 20);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 	        }
 	    }
 		

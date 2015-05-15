@@ -18,9 +18,10 @@ import java.util.regex.Pattern;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.collections.MapChangeListener;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
+import javafx.collections.ObservableSet;
 
 public class EntryManager {
 	
@@ -28,6 +29,7 @@ public class EntryManager {
 	
 	private ObservableMap<String, DayOneEntry> entryMap;
 	private ObservableList<DayOneEntry> entryList;
+	private ObservableSet<String> tagsList;
 	
 	private Set<String> ignoredEntries;
 	private DirectoryWatcher watcher;
@@ -46,18 +48,26 @@ public class EntryManager {
 		if (!imageFolder.toFile().exists())
 			imageFolder.toFile().mkdirs();
 			
-		entryMap = FXCollections.<String, DayOneEntry>observableHashMap();
 		entryList = FXCollections.observableArrayList();
-		ignoredEntries = new HashSet<String>();
+		entryList.addListener((ListChangeListener.Change<? extends DayOneEntry> event) -> {
+			while (event.next()) {
+				if (event.wasRemoved())
+					for (DayOneEntry entry : event.getRemoved())
+						entryMap.remove(entry.getUUID());
+				if (event.wasAdded())
+					for (DayOneEntry entry : event.getAddedSubList())
+						entryMap.put(entry.getUUID(), entry);
+			}
+		});
 		
-		entryMap.addListener((MapChangeListener.Change<? extends String, ? extends DayOneEntry> change) -> 
-			Platform.runLater(() -> {
-				if (change.wasAdded())
-					entryList.add(change.getValueAdded());
-				if (change.wasRemoved())
-					entryList.remove(change.getValueRemoved());
-			})
-		);
+		entryMap = FXCollections.observableHashMap();
+		
+		tagsList = FXCollections.observableSet();
+		ignoredEntries = new HashSet<String>();
+	}
+	
+	public DayOneEntry getEntry(String id) {
+		return entryMap.get(id);
 	}
 	
 	public void loadAndWatch() {
@@ -80,16 +90,18 @@ public class EntryManager {
 	}
 	
 	public void loadImages() throws IOException {
-		DirectoryStream<Path> stream = Files.newDirectoryStream(imageFolder, 
-				path -> Pattern.matches("^[0-9abcdefABCDEF]{32}\\.jpg", path.getFileName().toString()));
-		for (Path file: stream) {
-		  	String id = file.getFileName().toString().replace(".jpg", "");
-		  	entryMap.get(id).setImageFile(file.toFile());
+		for (DayOneEntry entry : entryList) {
+		  	String id = entry.getUUID() + ".jpg";
+		  	entry.setImageFile(new File(imageFolder.toFile(), id));
 		}
 	}
 	
 	public ObservableList<DayOneEntry> getEntries() {
 		return entryList;
+	}
+	
+	public ObservableSet<String> getTags() {
+		return tagsList;
 	}
 	
 	public void ignoreForAction(String uuid, Runnable action) {
@@ -117,12 +129,12 @@ public class EntryManager {
 
 	public DayOneEntry addEntry() {
 		DayOneEntry t = DayOneEntry.createNewEntry(this);
-		entryMap.put(t.getUUID(), t);
+		entryList.add(t);
 		return t;
 	}
 	
 	public void deleteEntry(DayOneEntry entry) {
-		entryMap.remove(entry.getUUID());
+		entryList.remove(entry);
 		entry.delete();
 	}
 	
@@ -130,8 +142,10 @@ public class EntryManager {
 		DirectoryStream<Path> stream = Files.newDirectoryStream(entryFolder, 
 				path -> Pattern.matches("^[0-9abcdefABCDEF]{32}\\.doentry", path.getFileName().toString()));
 		for (Path file: stream) {
-		  	String id = file.getFileName().toString().replace(".doentry", "");
-		   	entryMap.put(id, DayOneEntry.loadFromFile(this, file.toFile()));
+			DayOneEntry entry = DayOneEntry.loadFromFile(this, file.toFile());
+		   	entryList.add(entry);
+		   	for (String tag : entry.getTags())
+		   		tagsList.add(tag);
 		}
 	}
 	
@@ -152,22 +166,23 @@ public class EntryManager {
 	
 	private void readFile(Path path, WatchEvent.Kind<?> kind) {
 		String id = path.getFileName().toString().replace(".doentry", "");
+		DayOneEntry entry = getEntry(id);
 		
 		Platform.runLater(() -> {
 			if (kind == StandardWatchEventKinds.ENTRY_CREATE)
 				try {
-					entryMap.put(id, DayOneEntry.loadFromFile(this, path.toFile()));
+					entryList.add(DayOneEntry.loadFromFile(this, path.toFile()));
 				} catch (Exception e) {	
 					e.printStackTrace();
 				}
 			else if (kind == StandardWatchEventKinds.ENTRY_DELETE)
-				entryMap.remove(id);
+				entryList.remove(entry);
 			else if (kind == StandardWatchEventKinds.ENTRY_MODIFY)
 				try { // It can happen that a file is created and modified before being read, so test if it is in the map
-					if (!entryMap.containsKey(id))
-						entryMap.put(id, DayOneEntry.loadFromFile(this, path.toFile()));
+					if (entry == null)
+						entryList.add(DayOneEntry.loadFromFile(this, path.toFile()));
 					else
-						entryMap.get(id).readFile();
+						entry.readFile();
 				} catch (Exception e) {
 					e.printStackTrace();
 				}

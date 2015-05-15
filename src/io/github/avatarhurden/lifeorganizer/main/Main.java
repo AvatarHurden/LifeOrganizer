@@ -1,8 +1,8 @@
 package io.github.avatarhurden.lifeorganizer.main;
 
+import io.github.avatarhurden.lifeorganizer.diary.models.*;
 import io.github.avatarhurden.lifeorganizer.diary.managers.EntryManager;
 import io.github.avatarhurden.lifeorganizer.diary.views.DiaryOverviewController;
-import io.github.avatarhurden.lifeorganizer.managers.TaskManager;
 import io.github.avatarhurden.lifeorganizer.tools.Config;
 import io.github.avatarhurden.lifeorganizer.views.ConfigView.ConfigViewController;
 
@@ -57,7 +57,7 @@ public class Main extends Application {
 //		manager = new TaskManager();
 		entryManager = new EntryManager();
 		entryManager.loadAndWatch();
-		
+
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/github/avatarhurden/lifeorganizer/diary/views/DiaryOverview.fxml"));
 
 		NotificationPane pane = new NotificationPane(loader.load());

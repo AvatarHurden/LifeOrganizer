@@ -7,13 +7,18 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.adapter.JavaBeanObjectPropertyBuilder;
 import javafx.scene.image.Image;
 
+import org.joda.time.DateTime;
+
+import com.dd.plist.NSArray;
 import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListParser;
@@ -100,10 +105,6 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 		return dictionary;
 	}
 	
-	public String getUUID() {
-		return dictionary.get("UUID").toString();
-	}
-	
 	public Image getImage() {
 		if (image == null && imageFile != null)
 			try {
@@ -111,18 +112,47 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 			} catch (FileNotFoundException e) { }
 		return image;
 	}
+
+	public String getUUID() {
+		return dictionary.get("UUID").toString();
+	}
 	
-	public void setEntryText(String text) {
-		dictionary.put("Entry Text", text);
-		save();
+	public List<String> getTags() {
+		List<String> list = new ArrayList<String>();
+		for (Object s : (Object[]) dictionary.getOrDefault("Tags", new NSArray(0)).toJavaObject())
+			list.add(s.toString());
+		return list;
+	}
+	
+	public void setTags(List<String> tags) {
+		dictionary.put("Tags", tags);
+	}
+	
+	public boolean addTag(String tag) {
+		List<String> tags = getTags();
+		tags.add(tag);
+		setTags(tags);
+		return true;
+	}
+	
+	public boolean removeTag(String tag) {
+		List<String> tags = getTags();
+		boolean ret = tags.remove(tag);
+		setTags(tags);
+		return ret;
 	}
 	
 	public String getEntryText() {
 		return dictionary.getOrDefault("Entry Text", NSObject.wrap("")).toString();
 	}
+
+	public void setEntryText(String text) {
+		dictionary.put("Entry Text", text);
+		save();
+	}
 	
-	public Date getCreationDate() {
-		return (Date) dictionary.get("Creation Date").toJavaObject();
+	public DateTime getCreationDate() {
+		return new DateTime((Date) dictionary.get("Creation Date").toJavaObject());
 	}
 
 	/**

@@ -1,8 +1,5 @@
 package io.github.avatarhurden.lifeorganizer.diary.views;
 
-import java.io.StringReader;
-import java.io.StringWriter;
-
 import javafx.beans.property.Property;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -21,8 +18,8 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.web.WebView;
 import netscape.javascript.JSObject;
 
-import org.tautua.markdownpapers.Markdown;
-import org.tautua.markdownpapers.parser.ParseException;
+import org.pegdown.Extensions;
+import org.pegdown.PegDownProcessor;
 
 public class MarkdownEditor extends AnchorPane {
 
@@ -149,15 +146,10 @@ public class MarkdownEditor extends AnchorPane {
 	}
 	
 	private void updateViewer() {
-        try {
-            StringWriter writer = new StringWriter();
-			new Markdown().transform(new StringReader(text.getText()), writer);
-	        webView.getEngine().loadContent(writer.toString());
-	        webView.setBlendMode(BlendMode.DARKEN);
-	        
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
+		PegDownProcessor processor = new PegDownProcessor(Extensions.ALL);
+		String html = processor.markdownToHtml(text.getText());
+        webView.getEngine().loadContent(html);	     
+        webView.setBlendMode(BlendMode.DARKEN);
 	}
 	
 	@FXML
