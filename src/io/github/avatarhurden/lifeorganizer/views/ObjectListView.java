@@ -1,8 +1,9 @@
 package io.github.avatarhurden.lifeorganizer.views;
 
+import java.util.function.Consumer;
+
 import javafx.animation.FadeTransition;
 import javafx.beans.property.Property;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -13,22 +14,25 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.util.Callback;
 import javafx.util.Duration;
 
+import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
 
 public class ObjectListView<T> extends HBox {
 
-	private Constructor<T> instantiator;
+	private Callback<String, T> creationPolicy;
+	private Consumer<T> deletionPolicy;
 	private StringPropertyGetter<T> property;
-	private Property<ObservableList<T>> objects;
+	
+	private AutoCompletionBinding<T> autoCompletion;
 	
 	private TextField textField;
 	
-	public ObjectListView(Constructor<T> instantiator, StringPropertyGetter<T> property) {
-		this.instantiator = instantiator;
+	public ObjectListView(StringPropertyGetter<T> property) {
 		this.property = property;
-		getStylesheets().add("/io/github/avatarhurden/lifeorganizer/views/style.css");
+		getStylesheets().add("/style/objectListView.css");
 	
 		initialize();
 	}
@@ -37,20 +41,41 @@ public class ObjectListView<T> extends HBox {
 		textField.setPromptText(text);
 	}
 	
-	public void setList(Property<ObservableList<T>> objects, ObservableList<T> suggestions) {
+	public void setList(ObservableList<T> objects) {
 		// Clears the list of labels
 		if (getChildren().size() > 1)
 			getChildren().remove(0, getChildren().size() - 1);
 		
-		this.objects = objects;
-		
 		// Adds listener so that the property fires a changeEvent when the list fires an event
-		ObservableList<T> list = objects.getValue();
-		list.addListener((ListChangeListener.Change<? extends T> listener) -> this.objects.setValue(list));
-		
-		for (T object : objects.getValue())
+		for (T object : objects)
 			addLabel(object);
-		TextFields.bindAutoCompletion(textField, suggestions);
+	}
+
+	public void setSuggestions(ObservableList<T> suggestions) {
+		if (autoCompletion != null)
+			autoCompletion.dispose();
+		autoCompletion = TextFields.bindAutoCompletion(textField,
+				request -> suggestions.filtered(t -> request.getUserText().length() > 0 && t.toString().contains(request.getUserText())));
+	}
+	
+	/**
+	 * Set the action to perform when trying to create a new object. This method should
+	 * verify if the value is valid and, if it is invalid and should not be accepted, 
+	 * the policy should return null.
+	 * 
+	 * @param policy
+	 */
+	public void setCreationPolicy(Callback<String, T> policy) {
+		creationPolicy = policy;
+	}
+
+	/**
+	 * Set the action to perform when deleting an object.
+	 * 
+	 * @param policy
+	 */
+	public void setDeletionPolicy(Consumer<T> policy) {
+		deletionPolicy = policy;
 	}
 	
 	private void initialize() {
@@ -60,9 +85,8 @@ public class ObjectListView<T> extends HBox {
 		setAlignment(Pos.CENTER_LEFT);
 		
 		textField.setOnAction((event) -> {
-				T object = instantiator.newInstance(textField.getText());
-				if (object != null && !objects.getValue().contains(object)) {
-					objects.getValue().add(object);
+				T object = creationPolicy.call(textField.getText());
+				if (object != null) {
 					addLabel(object);
 					textField.clear();
 				}
@@ -72,6 +96,7 @@ public class ObjectListView<T> extends HBox {
 	
 	private void addLabel(T object) {
 		HBox itemBox = new HBox(0);
+		itemBox.setPadding(new Insets(0));
 		itemBox.getStyleClass().add("object-box");
 		
 		itemBox.setFocusTraversable(true);
@@ -79,7 +104,6 @@ public class ObjectListView<T> extends HBox {
 			event.consume();
 			itemBox.requestFocus();
 		});
-		
 		
 		Label label = new Label();
 		label.textProperty().bindBidirectional(property.getProperty(object));
@@ -100,14 +124,14 @@ public class ObjectListView<T> extends HBox {
         
 		Runnable delete = () -> {
 			fadeObject(itemBox, false).setOnFinished(finished -> getChildren().remove(itemBox));
-			objects.getValue().remove(object);
 			textField.requestFocus();
+			deletionPolicy.accept(object);
 		};
 		
 		itemBox.setOnKeyPressed(event -> { if (event.getCode().equals(KeyCode.DELETE)) delete.run(); });
 		clearButtonPane.setOnMouseReleased(event -> delete.run());
 		
-		getChildren().add(objects.getValue().indexOf(object), itemBox);
+		getChildren().add(getChildren().size() - 1, itemBox);
     	fadeObject(itemBox, true);
 		HBox.setMargin(itemBox, new Insets(0, 5, 0, 5));
 	}
@@ -120,10 +144,6 @@ public class ObjectListView<T> extends HBox {
 		return fader;
 	}
 	
-	public interface Constructor<T> {
-		public T newInstance(String s);
-	}
-	
 	public interface StringPropertyGetter<T> {
 		public Property<String> getProperty(T object);
 	}
@@ -131,5 +151,4 @@ public class ObjectListView<T> extends HBox {
 	public void clearTextField() {
 		textField.clear();
 	}
-	
 }

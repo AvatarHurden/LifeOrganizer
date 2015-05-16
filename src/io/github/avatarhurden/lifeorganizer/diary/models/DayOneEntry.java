@@ -126,11 +126,13 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	
 	public void setTags(List<String> tags) {
 		dictionary.put("Tags", tags);
+		save();
 	}
 	
 	public boolean addTag(String tag) {
 		List<String> tags = getTags();
 		tags.add(tag);
+		manager.addTag(tag, this);
 		setTags(tags);
 		return true;
 	}
@@ -138,6 +140,7 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	public boolean removeTag(String tag) {
 		List<String> tags = getTags();
 		boolean ret = tags.remove(tag);
+		manager.removeTag(tag, this);
 		setTags(tags);
 		return ret;
 	}
@@ -148,6 +151,15 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 
 	public void setEntryText(String text) {
 		dictionary.put("Entry Text", text);
+		save();
+	}
+	
+	public boolean isStarred() {
+		return (Boolean) dictionary.get("Starred").toJavaObject();
+	}
+	
+	public void setStarred(boolean starred) {
+		dictionary.put("Starred", starred);
 		save();
 	}
 	
@@ -171,6 +183,7 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	// Properties
 	
 	Property<String> entryTextProperty;
+	Property<Boolean> starredProperty;
 	
 	@SuppressWarnings("unchecked")
 	public Property<String> entryTextProperty() {
@@ -181,6 +194,17 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 				e.printStackTrace();
 			}
 		return entryTextProperty;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Property<Boolean> starredProperty() {
+		if (starredProperty == null)
+			try {
+				starredProperty = JavaBeanObjectPropertyBuilder.create().bean(this).name("starred").build();
+			} catch (NoSuchMethodException e) {
+				e.printStackTrace();
+			}
+		return starredProperty;
 	}
 	
 }

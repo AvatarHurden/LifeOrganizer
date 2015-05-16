@@ -47,6 +47,7 @@ public class MarkdownEditor extends AnchorPane {
 		AnchorPane.setBottomAnchor(viewer, 0d);
 		AnchorPane.setLeftAnchor(viewer, 0d);
 		AnchorPane.setRightAnchor(viewer, 0d);
+
 	}
 	
 	public Property<String> textProperty() {
@@ -149,7 +150,7 @@ public class MarkdownEditor extends AnchorPane {
 		PegDownProcessor processor = new PegDownProcessor(Extensions.ALL);
 		String html = processor.markdownToHtml(text.getText());
         webView.getEngine().loadContent(html);	     
-        webView.setBlendMode(BlendMode.DARKEN);
+//        webView.setBlendMode(BlendMode.DARKEN);
 	}
 	
 	@FXML

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.paint.*?>
+<?import javafx.scene.shape.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.avatarhurden.lifeorganizer.diary.views.EntryViewController">
+   <children>
+      <HBox alignment="CENTER_LEFT" prefHeight="52.0" prefWidth="600.0" spacing="10.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+         <children>
+            <BorderPane prefHeight="48.0" prefWidth="93.0">
+               <left>
+                  <Label fx:id="dayOfWeekLabel" rotate="-90.0" text="Qui" BorderPane.alignment="CENTER">
+                     <font>
+                        <Font name="System Bold" size="12.0" />
+                     </font>
+                  </Label>
+               </left>
+               <center>
+                  <Label fx:id="dayOfMonthLabel" alignment="CENTER" prefHeight="39.0" prefWidth="44.0" text="88" BorderPane.alignment="CENTER">
+                     <font>
+                        <Font name="System Bold" size="27.0" />
+                     </font>
+                  </Label>
+               </center>
+               <right>
+                  <Label fx:id="monthYearLabel" alignment="CENTER_RIGHT" prefWidth="34.0" text="mai&#10;2015&#10;" BorderPane.alignment="CENTER">
+                     <font>
+                        <Font name="System Bold" size="12.0" />
+                     </font>
+                  </Label>
+               </right>
+            </BorderPane>
+            <Label fx:id="timeLabel" text="Label" />
+            <SVGPath fx:id="favoriteIcon" content="M 240.000 250.000L 251.756 256.180L 249.511 243.090L 259.021 233.820L 245.878 231.910L 240.000 220.000L 234.122 231.910L 220.979 233.820L 230.489 243.090L 228.244 256.180L 240.000 250.000" fill="TRANSPARENT" stroke="BLACK" strokeLineJoin="BEVEL" />
+         </children>
+      </HBox>
+      <StackPane fx:id="editorPane" layoutY="47.0" prefHeight="353.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="47.0" />
+   </children>
+</AnchorPane>

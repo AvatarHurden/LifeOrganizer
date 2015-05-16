@@ -1,6 +1,7 @@
 package io.github.avatarhurden.lifeorganizer.diary.managers;
 
 import io.github.avatarhurden.lifeorganizer.diary.models.DayOneEntry;
+import io.github.avatarhurden.lifeorganizer.diary.models.Tag;
 import io.github.avatarhurden.lifeorganizer.tools.Config;
 import io.github.avatarhurden.lifeorganizer.tools.DirectoryWatcher;
 
@@ -21,7 +22,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
-import javafx.collections.ObservableSet;
 
 public class EntryManager {
 	
@@ -29,7 +29,7 @@ public class EntryManager {
 	
 	private ObservableMap<String, DayOneEntry> entryMap;
 	private ObservableList<DayOneEntry> entryList;
-	private ObservableSet<String> tagsList;
+	private ObservableList<Tag> tagsList;
 	
 	private Set<String> ignoredEntries;
 	private DirectoryWatcher watcher;
@@ -62,7 +62,7 @@ public class EntryManager {
 		
 		entryMap = FXCollections.observableHashMap();
 		
-		tagsList = FXCollections.observableSet();
+		tagsList = FXCollections.observableArrayList();
 		ignoredEntries = new HashSet<String>();
 	}
 	
@@ -100,7 +100,36 @@ public class EntryManager {
 		return entryList;
 	}
 	
-	public ObservableSet<String> getTags() {
+	public void addTag(String tag, DayOneEntry entry) {
+		for (Tag t : tagsList)
+			if (t.getName().equals(tag)) {
+				t.getEntries().add(entry);
+				return;
+			}
+		Tag t = new Tag(tag);
+		t.getEntries().add(entry);
+		tagsList.add(t);
+		System.out.println(tagsList);
+	}
+	
+	public void removeTag(String tag, DayOneEntry entry) {
+		for (Tag t : tagsList)
+			if (t.getName().equals(tag)) {
+				t.getEntries().remove(entry);
+				if (t.getEntries().isEmpty())
+					tagsList.remove(t);
+				return;
+			}
+	}
+	
+	public Tag getTag(String name) {
+		for (Tag t : tagsList)
+			if (t.getName().equals(name)) 
+				return t;
+		return null;
+	}
+	
+	public ObservableList<Tag> getTags() {
 		return tagsList;
 	}
 	
@@ -145,7 +174,7 @@ public class EntryManager {
 			DayOneEntry entry = DayOneEntry.loadFromFile(this, file.toFile());
 		   	entryList.add(entry);
 		   	for (String tag : entry.getTags())
-		   		tagsList.add(tag);
+		   		addTag(tag, entry);
 		}
 	}
 	

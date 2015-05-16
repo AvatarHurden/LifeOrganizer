@@ -8,21 +8,16 @@
 
 <AnchorPane prefHeight="665.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.avatarhurden.lifeorganizer.diary.views.DiaryOverviewController">
    <children>
-      <SplitPane dividerPositions="0.35971943887775554" prefHeight="160.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <SplitPane dividerPositions="0.2935871743486974" prefHeight="160.0" prefWidth="200.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
         <items>
-          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="663.0" prefWidth="442.0">
                <children>
                   <ListView fx:id="entryList" layoutY="32.0" prefHeight="632.0" prefWidth="356.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="30.0" />
                   <TextField fx:id="searchField" layoutX="14.0" layoutY="7.0" prefHeight="25.0" prefWidth="274.0" promptText="Search" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="68.0" AnchorPane.topAnchor="2.0" />
                   <Button fx:id="createEntryButton" layoutX="298.0" layoutY="2.0" mnemonicParsing="false" onAction="#createEntry" prefHeight="25.0" prefWidth="44.0" text="New" AnchorPane.rightAnchor="11.0" AnchorPane.topAnchor="2.0" />
                </children>
             </AnchorPane>
-          <AnchorPane fx:id="contentPane" minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
-               <children>
-                  <Label layoutX="14.0" layoutY="14.0" text="UUID" />
-                  <Label fx:id="uuidLabel" layoutX="58.0" layoutY="14.0" text="Label" />
-                  <ImageView fx:id="imageView" fitHeight="150.0" fitWidth="200.0" layoutX="14.0" layoutY="39.0" pickOnBounds="true" preserveRatio="true" />
-               </children></AnchorPane>
+            <AnchorPane fx:id="contentPane" prefHeight="663.0" prefWidth="772.0" />
         </items>
       </SplitPane>
    </children>
