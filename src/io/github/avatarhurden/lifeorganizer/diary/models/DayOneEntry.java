@@ -49,6 +49,8 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	    dict.put("Creator", creatorDict);
 	    
 	    dict.put("Time Zone", System.getProperty("user.timezone"));
+
+	    dict.put("Starred", false);
 	    
 	    File file = new File(manager.getEntryFolder(), dict.get("UUID").toString() + ".doentry");
 	    
@@ -80,7 +82,8 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 		dictionary = (NSDictionary) PropertyListParser.parse(file);
 	}
 	
-	public void delete() {
+	public void delete() {		
+		manager.deleteEntry(this);
 		manager.ignoreForAction(getUUID(), () -> file.delete());
 	}
 	
@@ -166,6 +169,10 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	public DateTime getCreationDate() {
 		return new DateTime((Date) dictionary.get("Creation Date").toJavaObject());
 	}
+	
+	public void setCreationDate(DateTime date) {
+		dictionary.put("Creation Date", date.toDate());
+	}
 
 	/**
 	 * Compares two DayOneEntries for ordering
@@ -184,6 +191,7 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	
 	Property<String> entryTextProperty;
 	Property<Boolean> starredProperty;
+	Property<DateTime> creationDateProperty;
 	
 	@SuppressWarnings("unchecked")
 	public Property<String> entryTextProperty() {
@@ -205,6 +213,17 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 				e.printStackTrace();
 			}
 		return starredProperty;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Property<DateTime> creationDateProperty() {
+		if (creationDateProperty == null)
+			try {
+				creationDateProperty = JavaBeanObjectPropertyBuilder.create().bean(this).name("creationDate").build();
+			} catch (NoSuchMethodException e) {
+				e.printStackTrace();
+			}
+		return creationDateProperty;
 	}
 	
 }

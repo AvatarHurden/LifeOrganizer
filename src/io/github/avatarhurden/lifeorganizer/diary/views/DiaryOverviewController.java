@@ -7,9 +7,11 @@ import io.github.avatarhurden.lifeorganizer.views.ObjectListView;
 
 import java.io.IOException;
 
+import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
@@ -31,6 +33,7 @@ public class DiaryOverviewController {
     @FXML
     private TextField searchField;
     
+    private AnchorPane entryView;
     private EntryViewController controller;
     
     private ObjectListView<Tag> tagList;
@@ -42,10 +45,12 @@ public class DiaryOverviewController {
     @FXML
     private void initialize() {
     	entryList.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, newValue) -> {
-    		controller.setEntry(newValue);
-//    		if (newValue == null)
-//    			return;
-//    		
+    		if (newValue == null)
+    			contentPane.getChildren().clear();
+    		else {
+    			contentPane.getChildren().setAll(entryView);
+    			controller.setEntry(newValue);
+    		}
 //    		if (oldValue != null)
 //    			editor.textProperty().unbindBidirectional(oldValue.entryTextProperty());
 //			editor.textProperty().bindBidirectional(newValue.entryTextProperty());
@@ -121,12 +126,11 @@ public class DiaryOverviewController {
     	FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/github/avatarhurden/lifeorganizer/diary/views/EntryView.fxml"));
     	
     	try {
-    		AnchorPane node = loader.<AnchorPane>load();
-			contentPane.getChildren().add(node);
-	    	AnchorPane.setTopAnchor(node, 0d);
-	    	AnchorPane.setRightAnchor(node, 0d);
-	    	AnchorPane.setBottomAnchor(node, 0d);
-	    	AnchorPane.setLeftAnchor(node, 0d);
+    		entryView = loader.<AnchorPane>load();
+	    	AnchorPane.setTopAnchor(entryView, 0d);
+	    	AnchorPane.setRightAnchor(entryView, 0d);
+	    	AnchorPane.setBottomAnchor(entryView, 0d);
+	    	AnchorPane.setLeftAnchor(entryView, 0d);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -142,6 +146,13 @@ public class DiaryOverviewController {
 		// Compares opposite so that later entries are on top
 		sorted.setComparator((entry1, entry2) -> entry2.compareTo(entry1));
 		entryList.setItems(sorted);
+		entryList.getItems().addListener((ListChangeListener.Change<? extends DayOneEntry> event) -> {
+			event.next();
+			if (event.wasRemoved()) {
+				entryList.getSelectionModel().clearSelection();
+				System.out.println(event);
+			}
+		});
 //    	tagList.setSuggestions(manager.getTags());
 
     	TextFields.bindAutoCompletion(searchField, manager.getTags());
@@ -166,6 +177,7 @@ public class DiaryOverviewController {
 	            FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/github/avatarhurden/lifeorganizer/diary/views/EntryCell.fxml"));
 	            try {
 					setGraphic(loader.load());
+					setPadding(Insets.EMPTY);
 					loader.<EntryCellController>getController().setContent(item);
 					loader.<EntryCellController>getController().setWidth(entryList.getPrefWidth() - 20);
 				} catch (IOException e) {

@@ -18,10 +18,12 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import javafx.application.Platform;
+import javafx.beans.Observable;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
+import javafx.util.Callback;
 
 public class EntryManager {
 	
@@ -48,7 +50,12 @@ public class EntryManager {
 		if (!imageFolder.toFile().exists())
 			imageFolder.toFile().mkdirs();
 			
-		entryList = FXCollections.observableArrayList();
+		// List updates whenever the creation date of a entry is modified
+		Callback<DayOneEntry,Observable[]> callback = entry -> new Observable[]{
+		        entry.creationDateProperty()
+		};
+		
+		entryList = FXCollections.observableArrayList(callback);
 		entryList.addListener((ListChangeListener.Change<? extends DayOneEntry> event) -> {
 			while (event.next()) {
 				if (event.wasRemoved())
@@ -164,7 +171,6 @@ public class EntryManager {
 	
 	public void deleteEntry(DayOneEntry entry) {
 		entryList.remove(entry);
-		entry.delete();
 	}
 	
 	private void readFolder() throws Exception {
