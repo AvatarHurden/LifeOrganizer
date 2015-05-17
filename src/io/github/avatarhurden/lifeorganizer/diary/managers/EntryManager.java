@@ -13,8 +13,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import javafx.application.Platform;
@@ -31,9 +29,9 @@ public class EntryManager {
 	
 	private ObservableMap<String, DayOneEntry> entryMap;
 	private ObservableList<DayOneEntry> entryList;
+	
 	private ObservableList<Tag> tagsList;
 	
-	private Set<String> ignoredEntries;
 	private DirectoryWatcher watcher;
 	
 	public static boolean isInitiliazed() {
@@ -70,7 +68,6 @@ public class EntryManager {
 		entryMap = FXCollections.observableHashMap();
 		
 		tagsList = FXCollections.observableArrayList();
-		ignoredEntries = new HashSet<String>();
 	}
 	
 	public DayOneEntry getEntry(String id) {
@@ -156,11 +153,11 @@ public class EntryManager {
 	}
 	
 	public void ignoreEntry(String uuid) {
-		ignoredEntries.add(uuid);
+		watcher.ignorePath(getEntry(uuid).getFile().toPath());
 	}
 	
 	public void removeIgnore(String uuid) {
-		ignoredEntries.remove(uuid);
+		watcher.watchPath(getEntry(uuid).getFile().toPath());
 	}
 
 	public DayOneEntry addEntry() {

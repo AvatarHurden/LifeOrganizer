@@ -1,9 +1,11 @@
 package io.github.avatarhurden.lifeorganizer.views;
 
+import java.util.HashMap;
 import java.util.function.Consumer;
 
 import javafx.animation.FadeTransition;
 import javafx.beans.property.Property;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -12,29 +14,53 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.util.Callback;
 import javafx.util.Duration;
 
 import org.controlsfx.control.textfield.AutoCompletionBinding;
 import org.controlsfx.control.textfield.TextFields;
 
-public class ObjectListView<T> extends HBox {
+public class ObjectListView<T> extends StackPane {
 
+	public enum ObjectLayout {
+		HORIZONTAL, VERTICAL;
+	}
+	
+	private boolean editable;
+	
+	private Pane box;
+	
 	private Callback<String, T> creationPolicy;
 	private Consumer<T> deletionPolicy;
 	private StringPropertyGetter<T> property;
 	
-	private AutoCompletionBinding<T> autoCompletion;
+	private AutoCompletionBinding<?> autoCompletion;
+	
+	private ObservableList<T> objectList;
+	private HashMap<T, Node> objectNodes;
 	
 	private TextField textField;
 	
-	public ObjectListView(StringPropertyGetter<T> property) {
+	public ObjectListView(StringPropertyGetter<T> property, boolean editable, ObjectLayout layout) {
+		this.editable = editable;
 		this.property = property;
 		getStylesheets().add("/style/objectListView.css");
-	
-		initialize();
+		
+		if (layout == ObjectLayout.VERTICAL)
+			box = new VBox();
+		else 
+			box = new HBox();
+		
+		objectNodes = new HashMap<T, Node>();
+		
+		getChildren().setAll(box);
+		
+		if (editable)
+			addTextField();
 	}
 	
 	public void setPromptText(String text) {
@@ -42,13 +68,32 @@ public class ObjectListView<T> extends HBox {
 	}
 	
 	public void setList(ObservableList<T> objects) {
-		// Clears the list of labels
-		if (getChildren().size() > 1)
-			getChildren().remove(0, getChildren().size() - 1);
+		// Clears the list of labels. If editable, maintains the textField. If not, remove everything
+		ObservableList<Node> children = box.getChildren();
+		if (children.size() > (editable ? 1 : 0))
+			children.remove(0, editable ? children.size() - 1 : children.size());
 		
-		// Adds listener so that the property fires a changeEvent when the list fires an event
+		ListChangeListener<T> listener = (ListChangeListener.Change<? extends T> event) -> {
+			while (event.next()) {
+				if (event.wasRemoved())
+					for (T removed : event.getRemoved()) {
+						children.remove(objectNodes.get(removed));
+						objectNodes.remove(removed);
+					}
+				if (event.wasAdded())
+					for (T added : event.getAddedSubList())
+						addLabel(added);
+			}
+		};
+		
+		if (objectList != null)
+			objectList.removeListener(listener);
+		objects.addListener(listener);
+		
 		for (T object : objects)
 			addLabel(object);
+		
+		this.objectList = objects;
 	}
 
 	public void setSuggestions(ObservableList<T> suggestions) {
@@ -57,6 +102,14 @@ public class ObjectListView<T> extends HBox {
 		autoCompletion = TextFields.bindAutoCompletion(textField,
 				request -> suggestions.filtered(t -> request.getUserText().length() > 0 && t.toString().contains(request.getUserText())));
 	}
+	
+	public <S> void setSuggestions(ObservableList<S> suggestions, Callback<S, T> converter) {
+		if (autoCompletion != null)
+			autoCompletion.dispose();
+		autoCompletion = TextFields.bindAutoCompletion(textField,
+				request -> suggestions.filtered(t -> request.getUserText().length() > 0 && converter.call(t).toString().contains(request.getUserText())));
+	}
+	
 	
 	/**
 	 * Set the action to perform when trying to create a new object. This method should
@@ -78,7 +131,7 @@ public class ObjectListView<T> extends HBox {
 		deletionPolicy = policy;
 	}
 	
-	private void initialize() {
+	private void addTextField() {
 		textField = TextFields.createClearableTextField();
 	
 		HBox.setMargin(textField, new Insets(0, 5, 0, 5));
@@ -91,10 +144,14 @@ public class ObjectListView<T> extends HBox {
 					textField.clear();
 				}
 		});
-		getChildren().add(textField);
+		box.getChildren().add(textField);
 	}
 	
 	private void addLabel(T object) {
+		// Do not created duplicate nodes
+		if (objectNodes.containsKey(object))
+			return;
+		
 		HBox itemBox = new HBox(0);
 		itemBox.setPadding(new Insets(0));
 		itemBox.getStyleClass().add("object-box");
@@ -107,31 +164,36 @@ public class ObjectListView<T> extends HBox {
 		
 		Label label = new Label();
 		label.textProperty().bindBidirectional(property.getProperty(object));
-		label.setPrefHeight(25);
+//		label.setPrefHeight(25);
 		
-		HBox.setMargin(label, new Insets(0, 5, 0, 0));
         itemBox.getChildren().add(label);
 		
-		Region clearButton = new Region();
-        clearButton.getStyleClass().addAll("graphic");
-        
-        StackPane clearButtonPane = new StackPane(clearButton);
-        clearButtonPane.getStyleClass().addAll("clear-button");
-        clearButtonPane.visibleProperty().bind(itemBox.hoverProperty());
-
-        itemBox.getChildren().add(clearButtonPane);
-		itemBox.hoverProperty().addListener((obs, oldValue, newValue) -> fadeObject(clearButtonPane, newValue));
-        
-		Runnable delete = () -> {
-			fadeObject(itemBox, false).setOnFinished(finished -> getChildren().remove(itemBox));
-			textField.requestFocus();
-			deletionPolicy.accept(object);
-		};
+        if (editable) {
+    		HBox.setMargin(label, new Insets(0, 5, 0, 0));
+    		
+			Region clearButton = new Region();
+	        clearButton.getStyleClass().addAll("graphic");
+	        
+	        StackPane clearButtonPane = new StackPane(clearButton);
+	        clearButtonPane.getStyleClass().addAll("clear-button");
+	        clearButtonPane.visibleProperty().bind(itemBox.hoverProperty());
+	
+	        itemBox.getChildren().add(clearButtonPane);
+			itemBox.hoverProperty().addListener((obs, oldValue, newValue) -> fadeObject(clearButtonPane, newValue));
+	        
+			Runnable delete = () -> {
+				fadeObject(itemBox, false).setOnFinished(finished -> getChildren().remove(itemBox));
+				textField.requestFocus();
+				deletionPolicy.accept(object);
+			};
 		
-		itemBox.setOnKeyPressed(event -> { if (event.getCode().equals(KeyCode.DELETE)) delete.run(); });
-		clearButtonPane.setOnMouseReleased(event -> delete.run());
+			itemBox.setOnKeyPressed(event -> { if (event.getCode().equals(KeyCode.DELETE)) delete.run(); });
+			clearButtonPane.setOnMouseReleased(event -> delete.run());
+        }
+        
+        objectNodes.put(object, itemBox);
 		
-		getChildren().add(getChildren().size() - 1, itemBox);
+		box.getChildren().add(editable ? box.getChildren().size() - 1 : box.getChildren().size(), itemBox);
     	fadeObject(itemBox, true);
 		HBox.setMargin(itemBox, new Insets(0, 5, 0, 5));
 	}

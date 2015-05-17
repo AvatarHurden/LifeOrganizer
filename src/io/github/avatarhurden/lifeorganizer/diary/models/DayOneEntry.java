@@ -14,6 +14,8 @@ import java.util.UUID;
 
 import javafx.beans.property.Property;
 import javafx.beans.property.adapter.JavaBeanObjectPropertyBuilder;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.scene.image.Image;
 
 import org.joda.time.DateTime;
@@ -63,12 +65,15 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	private File file, imageFile;
 	private Image image;
 	
-	private boolean isSaving = false;
+	/** If true, changes will not result in an attempt to save the file **/
+	private boolean ignoreChanges = false;
 	
 	private DayOneEntry(EntryManager manager, NSDictionary dictionary, File file) {
 		this.manager = manager;
 		this.dictionary = dictionary;
 		this.file = file;
+		
+		observableTags = FXCollections.observableArrayList(getTags());
 	}
 	
 	public void setImageFile(File imageFile) {
@@ -80,15 +85,22 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 			return;
 		
 		dictionary = (NSDictionary) PropertyListParser.parse(file);
+		
+		// To fire changes on the properties
+		ignoreChanges = true;
+		entryTextProperty.setValue(getEntryText());
+		creationDateProperty.setValue(getCreationDate());
+		observableTags.setAll(getTags());
+		ignoreChanges = false;
 	}
 	
 	public void delete() {		
-		manager.deleteEntry(this);
 		manager.ignoreForAction(getUUID(), () -> file.delete());
+		manager.deleteEntry(this);
 	}
 	
 	public void save() {
-		if (isSaving) return;
+		if (ignoreChanges) return;
 		
 		new Thread(() ->
 			manager.ignoreForAction(getUUID(), () -> {
@@ -97,11 +109,19 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 						PropertyListParser.saveAsXML(dictionary, file);
 					} catch (Exception e) { 
 					} finally {
-						isSaving = false;
+						ignoreChanges = false;
 					}
 		})).start();
 	
-		isSaving = true;
+		ignoreChanges = true;
+	}
+	
+	public File getFile() {
+		return file;
+	}
+	
+	public EntryManager getManager() {
+		return manager;
 	}
 	
 	public NSDictionary getDictionary() {
@@ -129,12 +149,17 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	
 	public void setTags(List<String> tags) {
 		dictionary.put("Tags", tags);
+		observableTags.setAll(tags);
 		save();
 	}
 	
 	public boolean addTag(String tag) {
 		List<String> tags = getTags();
+		if (tags.contains(tag))
+			return false;
+		
 		tags.add(tag);
+		observableTags.add(tag);
 		manager.addTag(tag, this);
 		setTags(tags);
 		return true;
@@ -143,6 +168,7 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	public boolean removeTag(String tag) {
 		List<String> tags = getTags();
 		boolean ret = tags.remove(tag);
+		observableTags.remove(tag);
 		manager.removeTag(tag, this);
 		setTags(tags);
 		return ret;
@@ -193,6 +219,8 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	Property<Boolean> starredProperty;
 	Property<DateTime> creationDateProperty;
 	
+	ObservableList<String> observableTags;
+	
 	@SuppressWarnings("unchecked")
 	public Property<String> entryTextProperty() {
 		if (entryTextProperty == null)
@@ -224,6 +252,10 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 				e.printStackTrace();
 			}
 		return creationDateProperty;
+	}
+	
+	public ObservableList<String> getObservableTags() {
+		return observableTags;
 	}
 	
 }

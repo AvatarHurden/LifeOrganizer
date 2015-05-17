@@ -23,7 +23,12 @@
       <VBox>
          <children>
             <Label fx:id="textLabel" prefHeight="34.0" text="Texto longo para testar tamanho &#10;das coisas&#10;" />
-            <Label fx:id="tagLabel" prefHeight="17.0" text="livro, review, longo" />
+            <StackPane prefHeight="18.0" prefWidth="200.0">
+               <children>
+                  <AnchorPane fx:id="tagPane" prefHeight="19.0" prefWidth="200.0" />
+                  <AnchorPane prefHeight="200.0" prefWidth="200.0" />
+               </children>
+            </StackPane>
          </children>
       </VBox>
       <ImageView fx:id="imageView" fitHeight="44.0" fitWidth="54.0" pickOnBounds="true" preserveRatio="true">

@@ -1,11 +1,11 @@
 package io.github.avatarhurden.lifeorganizer.diary.views;
 
 import io.github.avatarhurden.lifeorganizer.diary.models.DayOneEntry;
-
+import io.github.avatarhurden.lifeorganizer.views.ObjectListView;
+import io.github.avatarhurden.lifeorganizer.views.ObjectListView.ObjectLayout;
 
 import java.util.Calendar;
 import java.util.Locale;
-
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -21,7 +21,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.SVGPath;
 import javafx.util.StringConverter;
 import jfxtras.scene.control.CalendarPicker;
-
 
 import org.controlsfx.control.PopOver;
 import org.controlsfx.control.PopOver.ArrowLocation;
@@ -39,6 +38,8 @@ public class EntryViewController {
 	private MarkdownEditor editor;
 	@FXML
 	private SVGPath favoriteIcon, tagIcon, deleteLidIcon, deleteBodyIcon;
+	@FXML
+	private StackPane tagPane;
 	@FXML
 	private VBox deleteIcon;
 	
@@ -92,6 +93,23 @@ public class EntryViewController {
 			newEntry.starredProperty().setValue(!newEntry.starredProperty().getValue());
 		});
 		
+		tagPane.setOnMouseClicked(event -> {
+			PopOver over = new PopOver();
+			over.setDetachable(false);
+			over.setAutoHide(true);
+			over.setArrowLocation(ArrowLocation.TOP_CENTER);
+			
+			ObjectListView<String> tagView = new ObjectListView<String>(s -> new SimpleStringProperty(s), true, ObjectLayout.VERTICAL);
+			tagView.setList(newEntry.getObservableTags());
+			tagView.setCreationPolicy(s -> newEntry.addTag(s) ? s : null);
+			tagView.setDeletionPolicy(s -> newEntry.removeTag(s));
+			
+			tagView.setSuggestions(newEntry.getManager().getTags(), t -> t.getName());
+			
+			over.setContentNode(tagView);
+			over.show(tagPane);
+		});
+		
 		datePane.setOnMouseClicked(event -> {
 			PopOver over = new PopOver();
 			over.setDetachable(false);
@@ -121,7 +139,9 @@ public class EntryViewController {
 				}
 			});
 			
-			over.setContentNode(picker);
+			StackPane pane = new StackPane(picker);
+			pane.setPadding(new Insets(5));
+			over.setContentNode(pane);
 			over.show(datePane);
 		});
 		

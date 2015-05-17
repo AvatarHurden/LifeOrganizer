@@ -23,7 +23,7 @@
                   </Label>
                </left>
                <center>
-                  <Label fx:id="dayOfMonthLabel" alignment="CENTER" prefHeight="39.0" prefWidth="44.0" text="88" BorderPane.alignment="CENTER">
+                  <Label fx:id="dayOfMonthLabel" alignment="CENTER" prefHeight="39.0" prefWidth="44.0" text="28" BorderPane.alignment="CENTER">
                      <font>
                         <Font name="System Bold" size="30.0" />
                      </font>
@@ -51,19 +51,18 @@
                   <Insets left="10.0" right="10.0" />
                </HBox.margin>
             </BorderPane>
-            <StackPane prefHeight="52.0" prefWidth="34.0">
+            <StackPane fx:id="tagPane" prefHeight="52.0" prefWidth="34.0">
                <children>
-                  <SVGPath fx:id="tagIcon" content="M 0 0 L 0 30 L 10 37 L 20 30 L 20 0 L 0 0 M7,27a3,3 0 1,0 6,0a3,3 0 1,0 -6,0" fill="#f7252500" fillRule="EVEN_ODD" rotate="135.0" stroke="BLACK">
-                     <cursor>
-                        <Cursor fx:constant="HAND" />
-                     </cursor>
-                  </SVGPath>
+                  <SVGPath fx:id="tagIcon" content="M 0 0 L 0 30 L 10 37 L 20 30 L 20 0 L 0 0 M7,27a3,3 0 1,0 6,0a3,3 0 1,0 -6,0" fill="#f7252500" fillRule="EVEN_ODD" rotate="135.0" stroke="BLACK" />
                   <Label fx:id="tagsLabel" text="1">
                      <StackPane.margin>
                         <Insets left="4.0" top="2.0" />
                      </StackPane.margin>
                   </Label>
                </children>
+               <cursor>
+                  <Cursor fx:constant="HAND" />
+               </cursor>
             </StackPane>
             <SVGPath fx:id="favoriteIcon" content="M 240.000 250.000L 251.756 256.180L 249.511 243.090L 259.021 233.820L 245.878 231.910L 240.000 220.000L 234.122 231.910L 220.979 233.820L 230.489 243.090L 228.244 256.180L 240.000 250.000" fill="TRANSPARENT" stroke="BLACK" strokeLineJoin="BEVEL">
                <cursor>
