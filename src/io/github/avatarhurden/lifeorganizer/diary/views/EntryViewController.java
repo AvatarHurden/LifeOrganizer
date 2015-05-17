@@ -30,11 +30,10 @@ import org.joda.time.DateTime;
 public class EntryViewController {
 
 	@FXML
-	private Label dayOfWeekLabel, dayOfMonthLabel, monthYearLabel, timeLabel;
+	private Label dayOfWeekLabel, dayOfMonthLabel, monthYearLabel, timeLabel, tagsLabel;
 	
 	@FXML
 	private BorderPane datePane;
-	
 	@FXML
 	private StackPane editorPane;
 	private MarkdownEditor editor;
@@ -52,8 +51,7 @@ public class EntryViewController {
 		editor.prefHeightProperty().bind(editorPane.prefHeightProperty());
 		editor.prefWidthProperty().bind(editorPane.prefWidthProperty());
 		
-		tagIcon.fillProperty().bind(Bindings.when(BooleanBinding.booleanExpression(tagIcon.hoverProperty())).then(Color.ALICEBLUE.saturate()).otherwise(Color.TRANSPARENT));
-
+		
 		deleteLidIcon.fillProperty().bind(Bindings.when(deleteIcon.hoverProperty()).then(Color.RED).otherwise(Color.BLACK));
 		deleteLidIcon.rotateProperty().bind(Bindings.when(deleteIcon.hoverProperty()).then(40.6).otherwise(0));
 		deleteBodyIcon.fillProperty().bind(Bindings.when(deleteIcon.hoverProperty()).then(Color.RED).otherwise(Color.BLACK));
@@ -79,6 +77,14 @@ public class EntryViewController {
 		editor.textProperty().bindBidirectional(newEntry.entryTextProperty());
 		editor.setText(newEntry.getEntryText());
 		
+		if (newEntry.getTags().size() > 0)
+			tagsLabel.setText(newEntry.getTags().size()+"");
+		else
+			tagsLabel.setText("");
+		
+		tagIcon.fillProperty().bind(Bindings.when(tagsLabel.textProperty().isNotEmpty()).then(Color.LIGHTCYAN).otherwise(
+				Bindings.when(BooleanBinding.booleanExpression(tagIcon.hoverProperty())).then(Color.ALICEBLUE.saturate()).otherwise(Color.TRANSPARENT)));
+
 		favoriteIcon.fillProperty().bind(Bindings.when(
 				BooleanBinding.booleanExpression(newEntry.starredProperty())).then(Color.GOLD).otherwise(
 						Bindings.when(BooleanBinding.booleanExpression(favoriteIcon.hoverProperty())).then(Color.GOLD.deriveColor(0, 1, 1, 0.3)).otherwise(Color.TRANSPARENT)));
