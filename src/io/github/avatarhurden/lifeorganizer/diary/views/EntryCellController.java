@@ -31,6 +31,7 @@ public class EntryCellController {
 		imageView.managedProperty().bind(imageView.visibleProperty());
 		
 		tagView = new ObjectListView<String>(s -> new SimpleStringProperty(s), false, ObjectLayout.HORIZONTAL);
+		tagView.setItemHeight(0);
 		tagPane.getChildren().add(tagView);
 	}
 	
@@ -54,7 +55,7 @@ public class EntryCellController {
 		monthYearLabel.textProperty().bind(Bindings.createStringBinding(() ->
 			entry.getCreationDate().toString("MMM YYYY"), entry.creationDateProperty()));
 		
-		imageView.imageProperty().bind(entry.imageProperty());
+		imageView.imageProperty().bind(Bindings.createObjectBinding(() -> entry.getImage(), entry.imageProperty()));
 //		imageView.setImage(entry.getImage());
 	}
 

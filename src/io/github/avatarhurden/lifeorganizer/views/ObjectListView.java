@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 
 import javafx.animation.FadeTransition;
 import javafx.beans.property.Property;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -30,8 +31,6 @@ public class ObjectListView<T> extends StackPane {
 		HORIZONTAL, VERTICAL;
 	}
 	
-	private boolean editable;
-	
 	private Pane box;
 	
 	private Callback<String, T> creationPolicy;
@@ -44,16 +43,27 @@ public class ObjectListView<T> extends StackPane {
 	private HashMap<T, Node> objectNodes;
 	
 	private TextField textField;
+
+	private boolean editable;
+	private ObjectLayout layout;
+	
+	private Property<Number> itemHeight;
 	
 	public ObjectListView(StringPropertyGetter<T> property, boolean editable, ObjectLayout layout) {
 		this.editable = editable;
 		this.property = property;
-		getStylesheets().add("/style/objectListView.css");
+		this.layout = layout;
+		itemHeight = new SimpleIntegerProperty(25);
 		
-		if (layout == ObjectLayout.VERTICAL)
+		getStylesheets().add("/style/objectListView.css");
+	
+		if (layout == ObjectLayout.VERTICAL) {
 			box = new VBox();
-		else 
+			((VBox) box).setFillWidth(false);
+		} else {
 			box = new HBox();
+			((HBox) box).setFillHeight(false);
+		}
 		
 		objectNodes = new HashMap<T, Node>();
 		
@@ -61,6 +71,14 @@ public class ObjectListView<T> extends StackPane {
 		
 		if (editable)
 			addTextField();
+	}
+	
+	public Integer getItemHeight() {
+		return itemHeight.getValue().intValue();
+	}
+	
+	public void setItemHeight(int itemHeight) {
+		this.itemHeight.setValue(itemHeight);
 	}
 	
 	public void setPromptText(String text) {
@@ -134,7 +152,11 @@ public class ObjectListView<T> extends StackPane {
 	private void addTextField() {
 		textField = TextFields.createClearableTextField();
 	
-		HBox.setMargin(textField, new Insets(0, 5, 0, 5));
+		if (layout == ObjectLayout.VERTICAL)
+			VBox.setMargin(textField, new Insets(5, 0, 5, 0));
+		else
+			HBox.setMargin(textField, new Insets(0, 5, 0, 5));
+			
 		setAlignment(Pos.CENTER_LEFT);
 		
 		textField.setOnAction((event) -> {
@@ -164,12 +186,15 @@ public class ObjectListView<T> extends StackPane {
 		
 		Label label = new Label();
 		label.textProperty().bindBidirectional(property.getProperty(object));
-//		label.setPrefHeight(25);
+		label.prefHeightProperty().bind(itemHeight);
 		
         itemBox.getChildren().add(label);
 		
         if (editable) {
-    		HBox.setMargin(label, new Insets(0, 5, 0, 0));
+        	if (layout == ObjectLayout.VERTICAL)
+    			VBox.setMargin(label, new Insets(0, 0, 5, 0));
+    		else
+    			HBox.setMargin(label, new Insets(0, 5, 0, 0));
     		
 			Region clearButton = new Region();
 	        clearButton.getStyleClass().addAll("graphic");
@@ -195,7 +220,11 @@ public class ObjectListView<T> extends StackPane {
 		
 		box.getChildren().add(editable ? box.getChildren().size() - 1 : box.getChildren().size(), itemBox);
     	fadeObject(itemBox, true);
-		HBox.setMargin(itemBox, new Insets(0, 5, 0, 5));
+
+    	if (layout == ObjectLayout.VERTICAL)
+			VBox.setMargin(itemBox, new Insets(5, 0, 5, 0));
+		else
+			HBox.setMargin(itemBox, new Insets(0, 5, 0, 5));
 	}
 	
 	private FadeTransition fadeObject(Node object, boolean toVisible) {

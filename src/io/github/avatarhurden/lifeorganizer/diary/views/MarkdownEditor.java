@@ -1,6 +1,7 @@
 package io.github.avatarhurden.lifeorganizer.diary.views;
 
 import javafx.beans.property.Property;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
@@ -29,15 +30,24 @@ public class MarkdownEditor extends AnchorPane {
 	private WebView webView;
 	
 	private VBox viewer, editor;
+	
+	private Property<Boolean> hasButtons;
 
 	public MarkdownEditor() {
-
+		hasButtons = new SimpleBooleanProperty(true);
+		hasButtons.addListener((obs, oldValue, newValue) -> {
+			if (!newValue)
+				editor.getChildren().remove(buttons);
+			else
+				editor.getChildren().add(1, buttons);
+		});
+		
 		setEditPane();
 		setViewerPane();
 		
 //		text.setText("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce sit amet nunc vel dui accumsan tincidunt. Cras non nisi nibh. Integer erat erat, fringilla at fringilla ac, suscipit eu lorem. Aenean a scelerisque velit. Nam a sapien eget metus bibendum mattis. Duis sodales dignissim feugiat. Pellentesque aliquam tellus a pharetra cursus. Sed accumsan elementum nisi et rhoncus. Praesent id ornare elit.\n\nAliquam purus metus, fermentum at tellus ac, gravida accumsan enim. Vestibulum nec justo et tortor rhoncus rutrum consectetur non ipsum. Etiam eu aliquet nisl. Sed sit amet luctus leo. Proin eget justo luctus, commodo neque sed, efficitur libero. Vestibulum feugiat gravida accumsan. Proin id auctor urna. Curabitur imperdiet malesuada lectus, vitae venenatis libero consectetur non. Pellentesque vestibulum aliquam odio, nec suscipit elit accumsan vel. Mauris rutrum odio felis, sed semper odio sagittis et. In tempor rutrum tempus. Curabitur magna lacus, rutrum ac eros eu, tempor aliquam augue.\n\nCum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Sed aliquet dapibus nulla, placerat posuere dolor. Maecenas id eleifend metus. Duis tincidunt dictum est in vehicula. Mauris nec rutrum risus. Cras luctus vestibulum dolor. Vivamus ut consequat ligula. Donec sed aliquet magna, non vestibulum sapien. Nam at fermentum arcu. Vivamus eu tortor sed odio aliquam placerat. Cras mattis eget felis ac laoreet.\n\nMorbi a ultrices diam. In sodales maximus pharetra. Fusce molestie euismod orci, eget viverra eros iaculis non. Praesent in consequat lectus, vitae maximus mauris. Integer nisi ipsum, scelerisque id magna id, tincidunt consequat nibh. Sed vehicula vitae nibh ac condimentum. Morbi placerat dui tellus, vitae pharetra dui scelerisque ac. Aliquam eget semper ligula. Suspendisse semper tellus eget nisl sollicitudin mollis. Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n\nDuis mauris risus, ullamcorper et porttitor sit amet, consectetur a libero. Quisque justo nulla, facilisis non rhoncus et, ultrices at risus. Nam interdum elit non augue auctor varius. Integer a neque consectetur, cursus elit eget, faucibus orci. Integer aliquet nisi et nisi mattis tristique. Nunc in libero vitae mi hendrerit varius ac sit amet nisi. Integer non felis id nulla tempus varius at aliquet justo. Sed non vulputate dui. Donec interdum faucibus ipsum, non pharetra risus iaculis in. Curabitur in est scelerisque, eleifend tortor vel, lacinia risus. Nulla et pellentesque odio, eget ornare felis.");
 
-		getChildren().setAll(viewer);
+		viewViewer();
 		
 		AnchorPane.setTopAnchor(editor, 0d);
 		AnchorPane.setBottomAnchor(editor, 0d);
@@ -47,7 +57,14 @@ public class MarkdownEditor extends AnchorPane {
 		AnchorPane.setBottomAnchor(viewer, 0d);
 		AnchorPane.setLeftAnchor(viewer, 0d);
 		AnchorPane.setRightAnchor(viewer, 0d);
-
+	}
+	
+	public void setHasButtons(boolean hasButtons) {
+		this.hasButtons.setValue(hasButtons);
+	}
+	
+	public boolean hasButtons() {
+		return hasButtons.getValue();
 	}
 	
 	public Property<String> textProperty() {
@@ -63,6 +80,9 @@ public class MarkdownEditor extends AnchorPane {
 		return text.getText();
 	}
 	
+	private FlowPane buttons;
+	private ButtonBar bar;
+	
 	private void setEditPane() {
 		editor = new VBox();
 		
@@ -70,14 +90,14 @@ public class MarkdownEditor extends AnchorPane {
 		text.setOnKeyPressed(event -> {
 			if (event.getCode() == KeyCode.ENTER && event.isControlDown()) {
 				updateViewer();
-				getChildren().setAll(viewer);
+				viewViewer();
 			}
 		});
 		text.setWrapText(true);
 		
-		FlowPane buttons = getEditButtons();
+		buttons = getEditButtons();
 		
-		ButtonBar bar = new ButtonBar();
+		bar = new ButtonBar();
 		
 		Button done = new Button("Done");
 		done.setOnAction(event -> {
@@ -87,10 +107,11 @@ public class MarkdownEditor extends AnchorPane {
 		bar.getButtons().add(done);
 		
 		text.prefHeightProperty().bind(editor.heightProperty().subtract(buttons.heightProperty()).subtract(bar.heightProperty()));
-		
+		text.setStyle("-fx-background-color: transparent");
+
+		editor.getChildren().add(bar);
 		editor.getChildren().add(buttons);
 		editor.getChildren().add(text);
-		editor.getChildren().add(bar);
 	}
 
 	private FlowPane getEditButtons() {
@@ -127,21 +148,26 @@ public class MarkdownEditor extends AnchorPane {
 		return flowPane;
 	}
 	
+	public void viewEditor() {
+		getChildren().setAll(editor);
+	}
+	
+	public void viewViewer() {
+		getChildren().setAll(viewer);	
+	}
+	
 	private void setViewerPane() {
 		webView = new WebView();
 		webView.setOnMouseClicked(event -> {
 			if (event.getClickCount() == 2)
-				getChildren().setAll(editor);
+				viewEditor();
 		});
 		
 		ButtonBar buttonBar = new ButtonBar();
 		
 		Button edit = new Button("Edit");
-		edit.setOnAction(event -> {
-			getChildren().setAll(editor);
-		});
+		edit.setOnAction(event -> viewEditor());
 		buttonBar.getButtons().add(edit);
-
 		
 		viewer = new VBox(webView, buttonBar);
 	}
@@ -150,7 +176,7 @@ public class MarkdownEditor extends AnchorPane {
 		PegDownProcessor processor = new PegDownProcessor(Extensions.ALL);
 		String html = processor.markdownToHtml(text.getText());
         webView.getEngine().loadContent(html);	     
-//        webView.setBlendMode(BlendMode.DARKEN);
+        webView.setBlendMode(BlendMode.DARKEN);
 	}
 	
 	@FXML

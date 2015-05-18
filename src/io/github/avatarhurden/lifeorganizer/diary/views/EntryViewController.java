@@ -4,6 +4,7 @@ import io.github.avatarhurden.lifeorganizer.diary.models.DayOneEntry;
 import io.github.avatarhurden.lifeorganizer.views.ObjectListView;
 import io.github.avatarhurden.lifeorganizer.views.ObjectListView.ObjectLayout;
 
+import java.io.File;
 import java.util.Calendar;
 import java.util.Locale;
 
@@ -12,13 +13,18 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.SVGPath;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.util.StringConverter;
 import jfxtras.scene.control.CalendarPicker;
 
@@ -37,9 +43,12 @@ public class EntryViewController {
 	private StackPane editorPane;
 	private MarkdownEditor editor;
 	@FXML
-	private SVGPath favoriteIcon, tagIcon, deleteLidIcon, deleteBodyIcon;
+	private SVGPath favoriteIcon, tagIcon, deleteLidIcon, deleteBodyIcon, photoIcon;
 	@FXML
-	private StackPane tagPane;
+	private StackPane tagPane, photoPane;
+	
+	@FXML
+	private ImageView imageView;
 	@FXML
 	private VBox deleteIcon;
 	
@@ -48,6 +57,7 @@ public class EntryViewController {
 	@FXML
 	private void initialize() {
 		editor = new MarkdownEditor();
+		editor.setHasButtons(false);
 		editorPane.getChildren().setAll(editor);
 		editor.prefHeightProperty().bind(editorPane.prefHeightProperty());
 		editor.prefWidthProperty().bind(editorPane.prefWidthProperty());
@@ -57,8 +67,10 @@ public class EntryViewController {
 		deleteLidIcon.rotateProperty().bind(Bindings.when(deleteIcon.hoverProperty()).then(40.6).otherwise(0));
 		deleteBodyIcon.fillProperty().bind(Bindings.when(deleteIcon.hoverProperty()).then(Color.RED).otherwise(Color.BLACK));
 		deleteIcon.hoverProperty().addListener((obs, oldValue, newValue) -> {
-			VBox.setMargin((Node) deleteLidIcon, newValue ? new Insets(4, 0, 0, 12) : new Insets(4, 0, 0, 0));
+			VBox.setMargin((Node) deleteLidIcon, newValue ? new Insets(4, 0, 0, 12) : new Insets(4, 12, 0, 0));
 		});
+		
+		photoIcon.fillProperty().bind(Bindings.when(photoPane.hoverProperty()).then(Color.ALICEBLUE.saturate()).otherwise(Color.TRANSPARENT));
 	}
 	
 	public void setEntry(DayOneEntry newEntry) {
@@ -75,6 +87,7 @@ public class EntryViewController {
 		
 		if (entry != null)
 			editor.textProperty().unbindBidirectional(entry.entryTextProperty());
+		editor.viewViewer();
 		editor.textProperty().bindBidirectional(newEntry.entryTextProperty());
 		editor.setText(newEntry.getEntryText());
 		
@@ -106,7 +119,10 @@ public class EntryViewController {
 			
 			tagView.setSuggestions(newEntry.getManager().getTags(), t -> t.getName());
 			
-			over.setContentNode(tagView);
+			StackPane pane = new StackPane(tagView);
+			pane.setPadding(new Insets(5));
+			
+			over.setContentNode(pane);
 			over.show(tagPane);
 		});
 		
@@ -145,7 +161,67 @@ public class EntryViewController {
 			over.show(datePane);
 		});
 		
-		deleteIcon.setOnMouseClicked(event -> newEntry.delete());
+		deleteIcon.setOnMouseClicked(event -> {
+			PopOver over = new PopOver();
+			over.setDetachable(false);
+			over.setAutoHide(true);
+			over.setArrowLocation(ArrowLocation.TOP_CENTER);
+			
+			Button delete = new Button("Delete Entry");
+			delete.setTextFill(Color.RED);
+			delete.setOnAction(event2 -> newEntry.delete());
+			
+			VBox box = new VBox(5);
+			box.setAlignment(Pos.CENTER);
+			box.setPadding(new Insets(5));
+			box.getChildren().addAll(delete);
+			
+			over.setContentNode(box);
+			over.show(deleteIcon);
+		});
+		
+		photoIcon.setOnMouseClicked(event -> {
+			PopOver over = new PopOver();
+			over.setDetachable(false);
+			over.setAutoHide(true);
+			over.setArrowLocation(ArrowLocation.TOP_CENTER);
+			
+			Button select = new Button("Select Image");
+			select.setOnAction(event2 -> {
+				FileChooser chooser = new FileChooser();
+				chooser.setInitialDirectory(new File(System.getProperty("user.home"), "Pictures"));
+				chooser.getExtensionFilters().add(new ExtensionFilter("JPEG Images", "*.jpg"));
+				File selected = chooser.showOpenDialog(null);
+				if (selected != null )
+					newEntry.setNewImage(selected);
+			});
+			
+			Button remove = new Button("Remove Image");
+			remove.setTextFill(Color.RED);
+			remove.disableProperty().bind(Bindings.createBooleanBinding(() -> newEntry.getImage() == null, newEntry.imageProperty()));
+			remove.setOnAction(event2 -> {
+				newEntry.removeImage();
+			});
+
+			VBox box = new VBox(5);
+			box.setAlignment(Pos.CENTER);
+			box.setPadding(new Insets(5));
+			box.getChildren().addAll(select, remove);
+			
+			over.setContentNode(box);
+			over.show(photoIcon);
+		});
+		
+		imageView.imageProperty().bind(newEntry.imageProperty());
+		if (imageView.getImage() == null) {
+			imageView.fitHeightProperty().unbind();
+			imageView.fitWidthProperty().unbind();
+			imageView.setFitHeight(0);
+			imageView.setFitWidth(0);
+		} else {
+			imageView.fitHeightProperty().bind(Bindings.min(400, imageView.getImage().heightProperty()));
+			imageView.fitWidthProperty().bind(Bindings.min(imageView.getScene().getWidth(), imageView.getImage().widthProperty()));
+		}
 		
 		entry = newEntry;
 	}

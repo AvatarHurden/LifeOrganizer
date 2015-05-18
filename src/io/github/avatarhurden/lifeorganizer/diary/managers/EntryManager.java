@@ -95,6 +95,10 @@ public class EntryManager {
 		return entryFolder.toFile();
 	}
 	
+	public File getImageFolder() {
+		return imageFolder.toFile();
+	}
+	
 	public void loadImages() throws IOException {
 		for (DayOneEntry entry : entryList) {
 		  	String id = entry.getUUID() + ".jpg";
@@ -117,7 +121,6 @@ public class EntryManager {
 		Tag t = new Tag(tag);
 		t.getEntries().add(entry);
 		tagsList.add(t);
-		System.out.println(tagsList);
 	}
 	
 	public void removeTag(String tag, DayOneEntry entry) {
@@ -158,10 +161,12 @@ public class EntryManager {
 	
 	public void ignoreEntry(String uuid) {
 		watcher.ignorePath(getEntry(uuid).getFile().toPath());
+		imageWatcher.ignorePath(getEntry(uuid).getImageFile().toPath());
 	}
 	
 	public void removeIgnore(String uuid) {
 		watcher.watchPath(getEntry(uuid).getFile().toPath());
+		imageWatcher.watchPath(getEntry(uuid).getImageFile().toPath());
 	}
 
 	public DayOneEntry addEntry() {
@@ -217,7 +222,6 @@ public class EntryManager {
 		String id = path.getFileName().toString().replace(".jpg", "");
 		DayOneEntry entry = getEntry(id);
 		
-		System.out.println(path);
 		Platform.runLater(() -> entry.setImageFile(path.toFile()));
 	}
 	

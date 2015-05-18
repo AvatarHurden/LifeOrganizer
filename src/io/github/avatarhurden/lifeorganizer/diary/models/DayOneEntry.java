@@ -4,9 +4,11 @@ import io.github.avatarhurden.lifeorganizer.diary.managers.EntryManager;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -79,7 +81,6 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	
 	public void setImageFile(File imageFile) {
 		this.imageFile = imageFile;
-		System.out.println(imageFile);
 		setImage();
 	}
 	
@@ -122,7 +123,11 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	public File getFile() {
 		return file;
 	}
-	
+
+	public File getImageFile() {
+		return imageFile;
+	}
+
 	public EntryManager getManager() {
 		return manager;
 	}
@@ -138,7 +143,6 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 			image.setValue(null);
 		else
 			try {
-				System.out.println(image);
 				FileInputStream input = new FileInputStream(imageFile);
 				image.setValue(new Image(input));
 				input.close();
@@ -146,11 +150,32 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 				e.printStackTrace();
 				image.setValue(null);
 			}
-		System.out.println(image);
+	}
+	
+	public void setNewImage(File imageFile) {
+		if (this.imageFile == null)
+			this.imageFile = new File(manager.getImageFolder(), getUUID() + ".jpg");
+		
+		manager.ignoreForAction(getUUID(), () -> {
+			try {
+				FileOutputStream stream = new FileOutputStream(this.imageFile);
+				Files.copy(imageFile.toPath(), stream);
+				stream.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
+		setImage();
 	}
 	
 	public Image getImage() {
 		return imageProperty().getValue();
+	}
+
+	public void removeImage() {
+		imageProperty().setValue(null);
+		if (imageFile != null)
+			manager.ignoreForAction(getUUID(), () -> imageFile.delete());
 	}
 	
 	public Property<Image> imageProperty() {
@@ -282,5 +307,5 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	public ObservableList<String> getObservableTags() {
 		return observableTags;
 	}
-	
+
 }
