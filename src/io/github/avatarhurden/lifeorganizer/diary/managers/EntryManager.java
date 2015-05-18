@@ -33,6 +33,7 @@ public class EntryManager {
 	private ObservableList<Tag> tagsList;
 	
 	private DirectoryWatcher watcher;
+	private DirectoryWatcher imageWatcher;
 	
 	public static boolean isInitiliazed() {
 		return Config.get().getProperty("diary_folder") != null;
@@ -87,6 +88,7 @@ public class EntryManager {
 	
 	public void close() {
 		watcher.stopWatching();
+		imageWatcher.stopWatching();
 	}
 	
 	public File getEntryFolder() {
@@ -96,7 +98,9 @@ public class EntryManager {
 	public void loadImages() throws IOException {
 		for (DayOneEntry entry : entryList) {
 		  	String id = entry.getUUID() + ".jpg";
-		  	entry.setImageFile(new File(imageFolder.toFile(), id));
+		  	File file = new File(imageFolder.toFile(), id);
+		  	if (file.exists())
+		  		entry.setImageFile(file);
 		}
 	}
 	
@@ -187,6 +191,11 @@ public class EntryManager {
 		
 		watcher.addAction((path, kind) -> readFile(path, kind));
 		
+		imageWatcher = new DirectoryWatcher(imageFolder);
+		imageWatcher.addFilter(path -> Pattern.matches("^[0-9abcdefABCDEF]{32}\\.jpg", path.getFileName().toString()));
+		
+		imageWatcher.addAction((path, kind) -> readImageFile(path, kind));
+		
 		new Thread(() -> {
 			try {
 				watcher.startWatching();
@@ -194,6 +203,22 @@ public class EntryManager {
 				e.printStackTrace();
 			}	
 		}).start();
+		
+		new Thread(() -> {
+			try {
+				imageWatcher.startWatching();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}	
+		}).start();
+	}
+	
+	private void readImageFile(Path path,  WatchEvent.Kind<?> kind) {
+		String id = path.getFileName().toString().replace(".jpg", "");
+		DayOneEntry entry = getEntry(id);
+		
+		System.out.println(path);
+		Platform.runLater(() -> entry.setImageFile(path.toFile()));
 	}
 	
 	private void readFile(Path path, WatchEvent.Kind<?> kind) {

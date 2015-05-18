@@ -54,7 +54,8 @@ public class EntryCellController {
 		monthYearLabel.textProperty().bind(Bindings.createStringBinding(() ->
 			entry.getCreationDate().toString("MMM YYYY"), entry.creationDateProperty()));
 		
-		imageView.setImage(entry.getImage());
+		imageView.imageProperty().bind(entry.imageProperty());
+//		imageView.setImage(entry.getImage());
 	}
 
 	public void setWidth(double width) {

@@ -89,8 +89,7 @@ public class DirectoryWatcher {
 		WatchKey key;
 		try {
 			key = watcher.take();
-		} catch (InterruptedException e) { 
-			e.printStackTrace();
+		} catch (InterruptedException e) {
 			return; 
 		}
 	

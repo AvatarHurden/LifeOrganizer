@@ -12,6 +12,7 @@ import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
+import javafx.scene.Node;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
@@ -51,6 +52,7 @@ public class DiaryOverviewController {
     			contentPane.getChildren().setAll(entryView);
     			controller.setEntry(newValue);
     		}
+    		
 //    		if (oldValue != null)
 //    			editor.textProperty().unbindBidirectional(oldValue.entryTextProperty());
 //			editor.textProperty().bindBidirectional(newValue.entryTextProperty());
@@ -169,6 +171,8 @@ public class DiaryOverviewController {
 		@Override public void updateItem(DayOneEntry item, boolean empty) {
 	        super.updateItem(item, empty);
 	 
+	       
+	        
 	        if (empty) {
 	            setText(null);
 	            setGraphic(null);
@@ -176,10 +180,22 @@ public class DiaryOverviewController {
 	            //setText(item == null ? "null" : item.getEntryText().substring(0, 10));
 	            FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/github/avatarhurden/lifeorganizer/diary/views/EntryCell.fxml"));
 	            try {
-					setGraphic(loader.load());
+					Node n = loader.load();
+					setGraphic(n);
 					setPadding(Insets.EMPTY);
 					loader.<EntryCellController>getController().setContent(item);
 					loader.<EntryCellController>getController().setWidth(entryList.getPrefWidth() - 20);
+					
+//					selectedProperty().addListener((obs, oldValue, newValue) -> {
+//						try {
+//							if (newValue)
+//								controller.setEntry(item);
+//							setGraphic(newValue ? entryView : n);
+//						} catch (Exception e) {
+//							// TODO Auto-generated catch block
+//							e.printStackTrace();
+//						} 
+//					});
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

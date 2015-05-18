@@ -4,7 +4,7 @@ import io.github.avatarhurden.lifeorganizer.diary.managers.EntryManager;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 import javafx.beans.property.Property;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.adapter.JavaBeanObjectPropertyBuilder;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -63,7 +64,7 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	
 	private EntryManager manager;
 	private File file, imageFile;
-	private Image image;
+	private Property<Image> image;
 	
 	/** If true, changes will not result in an attempt to save the file **/
 	private boolean ignoreChanges = false;
@@ -78,6 +79,8 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	
 	public void setImageFile(File imageFile) {
 		this.imageFile = imageFile;
+		System.out.println(imageFile);
+		setImage();
 	}
 	
 	public void readFile() throws Exception {
@@ -128,11 +131,33 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 		return dictionary;
 	}
 	
-	public Image getImage() {
-		if (image == null && imageFile != null)
+	private void setImage() {
+		if (image == null)
+			return;
+		if (imageFile == null)
+			image.setValue(null);
+		else
 			try {
-				image = new Image(new FileInputStream(imageFile));
-			} catch (FileNotFoundException e) { }
+				System.out.println(image);
+				FileInputStream input = new FileInputStream(imageFile);
+				image.setValue(new Image(input));
+				input.close();
+			} catch (NullPointerException | IOException e) { 
+				e.printStackTrace();
+				image.setValue(null);
+			}
+		System.out.println(image);
+	}
+	
+	public Image getImage() {
+		return imageProperty().getValue();
+	}
+	
+	public Property<Image> imageProperty() {
+		if (image == null) {
+			image = new SimpleObjectProperty<Image>();
+			setImage();
+		}
 		return image;
 	}
 
