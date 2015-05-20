@@ -160,13 +160,17 @@ public class EntryManager {
 	}
 	
 	public void ignoreEntry(String uuid) {
-		watcher.ignorePath(getEntry(uuid).getFile().toPath());
-		imageWatcher.ignorePath(getEntry(uuid).getImageFile().toPath());
+		DayOneEntry entry = getEntry(uuid);
+		watcher.ignorePath(entry.getFile().toPath());
+		if (entry.getImageFile() != null)
+			imageWatcher.ignorePath(entry.getImageFile().toPath());
 	}
 	
 	public void removeIgnore(String uuid) {
-		watcher.watchPath(getEntry(uuid).getFile().toPath());
-		imageWatcher.watchPath(getEntry(uuid).getImageFile().toPath());
+		DayOneEntry entry = getEntry(uuid);
+		watcher.watchPath(entry.getFile().toPath());
+		if (entry.getImageFile() != null)
+			imageWatcher.watchPath(entry.getImageFile().toPath());
 	}
 
 	public DayOneEntry addEntry() {

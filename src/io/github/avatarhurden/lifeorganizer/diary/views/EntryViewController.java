@@ -17,12 +17,16 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.effect.BlendMode;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.SVGPath;
+import javafx.scene.web.WebView;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.util.StringConverter;
@@ -31,6 +35,9 @@ import jfxtras.scene.control.CalendarPicker;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.control.PopOver.ArrowLocation;
 import org.joda.time.DateTime;
+import org.pegdown.Extensions;
+import org.pegdown.PegDownProcessor;
+
 
 public class EntryViewController {
 
@@ -39,9 +46,6 @@ public class EntryViewController {
 	
 	@FXML
 	private BorderPane datePane;
-	@FXML
-	private StackPane editorPane;
-	private MarkdownEditor editor;
 	@FXML
 	private SVGPath favoriteIcon, tagIcon, deleteLidIcon, deleteBodyIcon, photoIcon;
 	@FXML
@@ -52,17 +56,53 @@ public class EntryViewController {
 	@FXML
 	private VBox deleteIcon;
 	
+	@FXML
+	private VBox contentPane;
+	@FXML
+	private TextArea textArea;
+	@FXML
+	private WebView webView;
+	@FXML
+	private Button editButton, saveButton;
+
 	private DayOneEntry entry;
 	
 	@FXML
 	private void initialize() {
-		editor = new MarkdownEditor();
-		editor.setHasButtons(false);
-		editorPane.getChildren().setAll(editor);
-		editor.prefHeightProperty().bind(editorPane.prefHeightProperty());
-		editor.prefWidthProperty().bind(editorPane.prefWidthProperty());
+		editButton.setOnAction(event -> editButton.setVisible(false));
+		saveButton.setOnAction(event -> editButton.setVisible(true));
 		
+		textArea.visibleProperty().bindBidirectional(saveButton.visibleProperty());
+		saveButton.visibleProperty().bind(editButton.visibleProperty().not());
+		webView.visibleProperty().bindBidirectional(editButton.visibleProperty());
 		
+		textArea.prefHeightProperty().bind(contentPane.heightProperty());
+		webView.prefHeightProperty().bind(contentPane.heightProperty());
+		
+		textArea.autosize();
+		textArea.setWrapText(true);
+		PegDownProcessor processor = new PegDownProcessor(Extensions.ALL);
+		textArea.textProperty().addListener((obs, oldValue, newValue) -> {
+			String html = processor.markdownToHtml(newValue);
+	        webView.getEngine().loadContent(html);
+		});
+        webView.setBlendMode(BlendMode.DARKEN);
+		
+        textArea.setOnKeyPressed(event -> {
+        	if (event.isControlDown() && event.getCode() == KeyCode.ENTER)
+        		editButton.setVisible(true);
+        });
+        
+        webView.setOnMouseClicked(event -> {
+        	if (event.getClickCount() == 2)
+        		editButton.setVisible(false);
+        });
+        
+		saveButton.managedProperty().bind(saveButton.visibleProperty());
+		editButton.managedProperty().bind(editButton.visibleProperty());
+		textArea.managedProperty().bind(textArea.visibleProperty());
+		webView.managedProperty().bind(webView.visibleProperty());
+
 		deleteLidIcon.fillProperty().bind(Bindings.when(deleteIcon.hoverProperty()).then(Color.RED).otherwise(Color.BLACK));
 		deleteLidIcon.rotateProperty().bind(Bindings.when(deleteIcon.hoverProperty()).then(40.6).otherwise(0));
 		deleteBodyIcon.fillProperty().bind(Bindings.when(deleteIcon.hoverProperty()).then(Color.RED).otherwise(Color.BLACK));
@@ -86,10 +126,11 @@ public class EntryViewController {
 			newEntry.getCreationDate().toString("HH:mm"), newEntry.creationDateProperty()));
 		
 		if (entry != null)
-			editor.textProperty().unbindBidirectional(entry.entryTextProperty());
-		editor.viewViewer();
-		editor.textProperty().bindBidirectional(newEntry.entryTextProperty());
-		editor.setText(newEntry.getEntryText());
+			textArea.textProperty().unbindBidirectional(entry.entryTextProperty());
+//		editor.viewViewer();
+		textArea.textProperty().bindBidirectional(newEntry.entryTextProperty());
+		editButton.setVisible(true);
+//		editor.setText(newEntry.getEntryText());
 		
 		if (newEntry.getTags().size() > 0)
 			tagsLabel.setText(newEntry.getTags().size()+"");
