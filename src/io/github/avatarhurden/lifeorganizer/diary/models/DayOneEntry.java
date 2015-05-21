@@ -92,8 +92,8 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 		
 		// To fire changes on the properties
 		ignoreChanges = true;
-		entryTextProperty.setValue(getEntryText());
-		creationDateProperty.setValue(getCreationDate());
+		entryTextProperty().setValue(getEntryText());
+		creationDateProperty().setValue(getCreationDate());
 		observableTags.setAll(getTags());
 		ignoreChanges = false;
 	}

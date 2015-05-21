@@ -191,10 +191,7 @@ public class ObjectListView<T> extends StackPane {
         itemBox.getChildren().add(label);
 		
         if (editable) {
-        	if (layout == ObjectLayout.VERTICAL)
-    			VBox.setMargin(label, new Insets(0, 0, 5, 0));
-    		else
-    			HBox.setMargin(label, new Insets(0, 5, 0, 0));
+    		HBox.setMargin(label, new Insets(0, 5, 0, 0));
     		
 			Region clearButton = new Region();
 	        clearButton.getStyleClass().addAll("graphic");
@@ -219,7 +216,6 @@ public class ObjectListView<T> extends StackPane {
         objectNodes.put(object, itemBox);
 		
 		box.getChildren().add(editable ? box.getChildren().size() - 1 : box.getChildren().size(), itemBox);
-    	fadeObject(itemBox, true);
 
     	if (layout == ObjectLayout.VERTICAL)
 			VBox.setMargin(itemBox, new Insets(5, 0, 5, 0));
