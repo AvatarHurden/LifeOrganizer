@@ -8,7 +8,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<HBox fx:id="root" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.avatarhurden.lifeorganizer.diary.views.EntryCellController">
+<HBox fx:id="root" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.avatarhurden.lifeorganizer.diary.controllers.EntryCellController">
    <children>
       <VBox alignment="CENTER" minWidth="62.0" prefHeight="53.0" prefWidth="62.0">
          <children>

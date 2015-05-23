@@ -1,4 +1,4 @@
-package io.github.avatarhurden.lifeorganizer.diary.views;
+package io.github.avatarhurden.lifeorganizer.diary.controllers;
 
 import io.github.avatarhurden.lifeorganizer.diary.models.DayOneEntry;
 import io.github.avatarhurden.lifeorganizer.views.ObjectListView;

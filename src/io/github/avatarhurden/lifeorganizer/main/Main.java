@@ -1,5 +1,6 @@
 package io.github.avatarhurden.lifeorganizer.main;
 
+import io.github.avatarhurden.lifeorganizer.diary.controllers.MainWindowController;
 import io.github.avatarhurden.lifeorganizer.diary.models.*;
 import io.github.avatarhurden.lifeorganizer.diary.managers.EntryManager;
 import io.github.avatarhurden.lifeorganizer.diary.views.DiaryOverviewController;
@@ -58,14 +59,14 @@ public class Main extends Application {
 		entryManager = new EntryManager();
 		entryManager.loadAndWatch();
 
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("/io/github/avatarhurden/lifeorganizer/diary/views/DiaryOverview.fxml"));
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/MainWindow.fxml"));
 
 		NotificationPane pane = new NotificationPane(loader.load());
 		Scene scene = new Scene(pane);
 		
 //		startUpdater(pane);
 //		
-		DiaryOverviewController controller = loader.<DiaryOverviewController>getController();
+		MainWindowController controller = loader.<MainWindowController>getController();
 		controller.setDiaryManager(entryManager);
 //		
 		primaryStage.setTitle("LifeOrganizer");

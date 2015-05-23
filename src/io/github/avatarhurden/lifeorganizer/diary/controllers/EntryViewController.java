@@ -1,4 +1,4 @@
-package io.github.avatarhurden.lifeorganizer.diary.views;
+package io.github.avatarhurden.lifeorganizer.diary.controllers;
 
 import io.github.avatarhurden.lifeorganizer.diary.models.DayOneEntry;
 import io.github.avatarhurden.lifeorganizer.views.ObjectListView;
@@ -116,6 +116,10 @@ public class EntryViewController {
 		});
 		
 		photoIcon.fillProperty().bind(Bindings.when(photoPane.hoverProperty()).then(Color.ALICEBLUE.saturate()).otherwise(Color.TRANSPARENT));
+	}
+	
+	public DayOneEntry getEntry() {
+		return entry;
 	}
 	
 	public void setEntry(DayOneEntry newEntry) {

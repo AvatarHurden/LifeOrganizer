@@ -70,6 +70,8 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	
 	/** If true, changes will not result in an attempt to save the file **/
 	private boolean ignoreChanges = false;
+	/** Is true only when created. After any changes to any field (i.e. after a save), is set to false **/
+	private boolean isEmpty = true;
 	
 	private DayOneEntry(EntryManager manager, NSDictionary dictionary, File file) {
 		this.manager = manager;
@@ -87,7 +89,7 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	public void readFile() throws Exception {
 		if (!file.canRead())
 			return;
-		
+	
 		dictionary = (NSDictionary) PropertyListParser.parse(file);
 		
 		// To fire changes on the properties
@@ -118,6 +120,7 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 		})).start();
 	
 		ignoreChanges = true;
+		isEmpty = false;
 	}
 	
 	public File getFile() {
@@ -134,6 +137,10 @@ public class DayOneEntry implements Comparable<DayOneEntry> {
 	
 	public NSDictionary getDictionary() {
 		return dictionary;
+	}
+	
+	public boolean isEmpty() {
+		return isEmpty;
 	}
 	
 	private void setImage() {
