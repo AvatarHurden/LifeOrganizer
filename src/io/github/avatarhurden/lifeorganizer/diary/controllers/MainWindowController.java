@@ -5,14 +5,9 @@ import io.github.avatarhurden.lifeorganizer.diary.models.DayOneEntry;
 
 import java.io.IOException;
 
-import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Insets;
-import javafx.scene.Node;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
@@ -30,7 +25,7 @@ public class MainWindowController {
 	private EntryViewController entryViewController;
 	
 	// List View
-	private ListView<DayOneEntry> listView;
+//	private ListView<DayOneEntry> listView;
 	private BorderPane entryListView;
 	private ListEntryViewController entryListViewController;
 	
@@ -42,13 +37,10 @@ public class MainWindowController {
 		
 		SortedList<DayOneEntry> sorted = new SortedList<DayOneEntry>(manager.getEntries());
 		// Compares opposite so that later entries are on top
-		sorted.setComparator((entry1, entry2) -> entry2.compareTo(entry1));
-		listView.setItems(sorted);
-		listView.getItems().addListener((ListChangeListener.Change<? extends DayOneEntry> event) -> {
-			event.next();
-			if (event.wasRemoved()) 
-				listView.getSelectionModel().clearSelection();
-		});
+		sorted.setComparator((entry1, entry2) -> entry1.compareTo(entry2));
+		entryListViewController.setItems(sorted);
+
+    	showNewEntry();
 	}
 	
 	@FXML
@@ -62,12 +54,17 @@ public class MainWindowController {
 				group.selectToggle(oldValue);
 		});
 		
-		listView = new ListView<DayOneEntry>();
-		listView.setCellFactory(table -> new EntryCell());
-		AnchorPane.setTopAnchor(listView, 0d);
-    	AnchorPane.setRightAnchor(listView, 0d);
-    	AnchorPane.setBottomAnchor(listView, 0d);
-    	AnchorPane.setLeftAnchor(listView, 0d);
+//		listView = new ListView<DayOneEntry>();
+//		
+//		listView.getSelectionModel().selectedItemProperty().addListener((obs, oldValue, newValue) -> {
+//			entryListViewController.setCurrentEntry(newValue);
+//		});
+//		
+//		listView.setCellFactory(table -> new EntryCell());
+//		AnchorPane.setTopAnchor(listView, 0d);
+//    	AnchorPane.setRightAnchor(listView, 0d);
+//    	AnchorPane.setBottomAnchor(listView, 0d);
+//    	AnchorPane.setLeftAnchor(listView, 0d);
     	
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/EntryView.fxml"));
     	try {
@@ -85,7 +82,7 @@ public class MainWindowController {
     	loader = new FXMLLoader(getClass().getResource("/fxml/ListEntryView.fxml"));
     	try {
     		entryListView = loader.<BorderPane>load();
-	    	AnchorPane.setTopAnchor(entryListView, 0d);
+	    	AnchorPane.setTopAnchor(entryListView, 0d);	
 	    	AnchorPane.setRightAnchor(entryListView, 0d);
 	    	AnchorPane.setBottomAnchor(entryListView, 0d);
 	    	AnchorPane.setLeftAnchor(entryListView, 0d);
@@ -94,7 +91,6 @@ public class MainWindowController {
 		}
     	
     	entryListViewController = loader.<ListEntryViewController>getController();
-    	entryListViewController.setOnHomeClicked(() -> contentPane.getChildren().setAll(listView));
 	}
 	
 	@FXML
@@ -107,38 +103,9 @@ public class MainWindowController {
 	
 	@FXML
 	private void showEntryList() {
-		contentPane.getChildren().setAll(listView);
-	}
-	
-	private class EntryCell extends ListCell<DayOneEntry> {
-		
-		@Override public void updateItem(DayOneEntry item, boolean empty) {
-	        super.updateItem(item, empty);
-	 
-	        setOnMouseClicked(event -> {
-	        	if (event.getClickCount() == 2) {
-	        		entryListViewController.setCurrentEntry(item);
-	        		contentPane.getChildren().setAll(entryListView);
-	        	}
-	        });
-	        
-	        if (empty) {
-	            setText(null);
-	            setGraphic(null);
-	        } else {
-	            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/EntryCell.fxml"));
-	            try {
-					Node n = loader.load();
-					setGraphic(n);
-					setPadding(Insets.EMPTY);
-					loader.<EntryCellController>getController().setContent(item);
-					loader.<EntryCellController>getController().setWidth(listView.getPrefWidth() - 20);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-	        }
-	    }
-		
+		if (entryViewController.getEntry() != null && entryViewController.getEntry().isEmpty())
+			manager.deleteEntry(entryViewController.getEntry());
+		contentPane.getChildren().setAll(entryListView);
+		entryListViewController.showList();
 	}
 }
