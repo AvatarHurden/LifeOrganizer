@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.*?>
+<?import javafx.scene.shape.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+
+
+<BorderPane prefHeight="200.0" prefWidth="200.0" xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="io.github.avatarhurden.lifeorganizer.diary.controllers.ListEntryViewController">
+   <bottom>
+      <HBox alignment="CENTER" prefHeight="65.0" prefWidth="232.0" spacing="20.0" BorderPane.alignment="CENTER">
+         <children>
+            <SVGPath fx:id="previousButton" content="m 374.21785,139.65444 32.15665,21.43777 0,-11.5496 22.72404,0 0,-19.77634 -22.72404,0 0,-11.5496 -32.15665,21.43777 z">
+               <cursor>
+                  <Cursor fx:constant="HAND" />
+               </cursor>
+            </SVGPath>
+            <SVGPath fx:id="homeButton" content="m 97.179128,104.91959 c -0.773692,0.77369 -11.371509,10.82583 -17.547498,16.68037 l 0,20.60834 13.160704,0 0,-16.45087 10.967146,0 0,16.45087 13.1607,0 0,-20.64222 c -6.41979,-6.10427 -17.547495,-16.64649 -17.547495,-16.64649 0,0 -1.096783,-1.09678 -2.193557,0 z m 19.741052,-6.580349 c 0,-1.211279 -0.98212,-2.193395 -2.1934,-2.193395 l -4.38695,0 c -1.21128,0 -2.1934,0.982116 -2.1934,2.193395 l 0,1.902049 c 2.77937,2.6583 5.92198,5.65844 8.77375,8.37877 l 0,-10.280819 z m 8.77391,20.837839 c 0,0 -23.03123,-21.934619 -25.22479,-24.128016 -2.193398,-2.193395 -4.386793,0 -4.386793,0 0,0 -24.128009,23.031226 -25.22479,24.128016 -1.096615,1.09661 0,2.1934 0,2.1934 0,0 1.096781,1.09677 2.193562,2.19339 1.096615,1.09678 2.193395,0 2.193395,0 0,0 20.837833,-19.74106 21.934454,-20.83768 1.096774,-1.09678 2.193557,0 2.193557,0 0,0 20.837675,19.74106 21.934455,20.83768 1.09677,1.09678 2.19338,0 2.19338,0 0,0 0,0 2.19357,-2.19339 1.09662,-1.09679 0,-2.1934 0,-2.1934 z">
+               <cursor>
+                  <Cursor fx:constant="HAND" />
+               </cursor>
+            </SVGPath>
+            <SVGPath fx:id="nextButton" content="m 484.51199,139.62414 -32.15665,21.43777 0,-11.5496 -22.72403,0 0,-19.77634 22.72403,0 0,-11.5496 32.15665,21.43777 z">
+               <cursor>
+                  <Cursor fx:constant="HAND" />
+               </cursor>
+            </SVGPath>
+         </children>
+      </HBox>
+   </bottom>
+   <center>
+      <AnchorPane fx:id="contentPane" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER" />
+   </center>
+</BorderPane>

@@ -16,6 +16,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.BorderPane;
 
 public class MainWindowController {
 
@@ -29,7 +30,9 @@ public class MainWindowController {
 	private EntryViewController entryViewController;
 	
 	// List View
-	private ListView<DayOneEntry> entryListView;
+	private ListView<DayOneEntry> listView;
+	private BorderPane entryListView;
+	private ListEntryViewController entryListViewController;
 	
 	
 	private EntryManager manager;
@@ -40,11 +43,11 @@ public class MainWindowController {
 		SortedList<DayOneEntry> sorted = new SortedList<DayOneEntry>(manager.getEntries());
 		// Compares opposite so that later entries are on top
 		sorted.setComparator((entry1, entry2) -> entry2.compareTo(entry1));
-		entryListView.setItems(sorted);
-		entryListView.getItems().addListener((ListChangeListener.Change<? extends DayOneEntry> event) -> {
+		listView.setItems(sorted);
+		listView.getItems().addListener((ListChangeListener.Change<? extends DayOneEntry> event) -> {
 			event.next();
 			if (event.wasRemoved()) 
-				entryListView.getSelectionModel().clearSelection();
+				listView.getSelectionModel().clearSelection();
 		});
 	}
 	
@@ -59,12 +62,12 @@ public class MainWindowController {
 				group.selectToggle(oldValue);
 		});
 		
-		entryListView = new ListView<DayOneEntry>();
-		entryListView.setCellFactory(table -> new EntryCell());
-		AnchorPane.setTopAnchor(entryListView, 0d);
-    	AnchorPane.setRightAnchor(entryListView, 0d);
-    	AnchorPane.setBottomAnchor(entryListView, 0d);
-    	AnchorPane.setLeftAnchor(entryListView, 0d);
+		listView = new ListView<DayOneEntry>();
+		listView.setCellFactory(table -> new EntryCell());
+		AnchorPane.setTopAnchor(listView, 0d);
+    	AnchorPane.setRightAnchor(listView, 0d);
+    	AnchorPane.setBottomAnchor(listView, 0d);
+    	AnchorPane.setLeftAnchor(listView, 0d);
     	
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/EntryView.fxml"));
     	try {
@@ -78,6 +81,20 @@ public class MainWindowController {
 		}
     	
     	entryViewController = loader.<EntryViewController>getController();
+    	
+    	loader = new FXMLLoader(getClass().getResource("/fxml/ListEntryView.fxml"));
+    	try {
+    		entryListView = loader.<BorderPane>load();
+	    	AnchorPane.setTopAnchor(entryListView, 0d);
+	    	AnchorPane.setRightAnchor(entryListView, 0d);
+	    	AnchorPane.setBottomAnchor(entryListView, 0d);
+	    	AnchorPane.setLeftAnchor(entryListView, 0d);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    	
+    	entryListViewController = loader.<ListEntryViewController>getController();
+    	entryListViewController.setOnHomeClicked(() -> contentPane.getChildren().setAll(listView));
 	}
 	
 	@FXML
@@ -90,15 +107,20 @@ public class MainWindowController {
 	
 	@FXML
 	private void showEntryList() {
-		contentPane.getChildren().setAll(entryListView);
+		contentPane.getChildren().setAll(listView);
 	}
 	
-
 	private class EntryCell extends ListCell<DayOneEntry> {
 		
 		@Override public void updateItem(DayOneEntry item, boolean empty) {
 	        super.updateItem(item, empty);
 	 
+	        setOnMouseClicked(event -> {
+	        	if (event.getClickCount() == 2) {
+	        		entryListViewController.setCurrentEntry(item);
+	        		contentPane.getChildren().setAll(entryListView);
+	        	}
+	        });
 	        
 	        if (empty) {
 	            setText(null);
@@ -110,7 +132,7 @@ public class MainWindowController {
 					setGraphic(n);
 					setPadding(Insets.EMPTY);
 					loader.<EntryCellController>getController().setContent(item);
-					loader.<EntryCellController>getController().setWidth(entryListView.getPrefWidth() - 20);
+					loader.<EntryCellController>getController().setWidth(listView.getPrefWidth() - 20);
 				} catch (IOException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
