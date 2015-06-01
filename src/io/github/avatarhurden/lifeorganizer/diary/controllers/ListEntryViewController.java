@@ -109,29 +109,40 @@ public class ListEntryViewController {
 	
 	private class EntryCell extends ListCell<DayOneEntry> {
 		
+		private Node n;
+		private EntryCellController controller;
+		{
+			 setOnMouseClicked(event -> {
+		        	if (event.getClickCount() == 2)
+		        		showSingle();
+		        });
+			FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/EntryCell.fxml"));
+			try {
+				n = loader.load();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			controller = loader.<EntryCellController>getController();
+		}
+		
 		@Override public void updateItem(DayOneEntry item, boolean empty) {
 	        super.updateItem(item, empty);
-	 
-	        setOnMouseClicked(event -> {
-	        	if (event.getClickCount() == 2)
-	        		showSingle();
-	        });
 	        
 	        if (empty) {
 	            setText(null);
 	            setGraphic(null);
 	        } else {
-	            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/EntryCell.fxml"));
-	            try {
-					Node n = loader.load();
-					setGraphic(n);
-					setPadding(Insets.EMPTY);
-					loader.<EntryCellController>getController().setContent(item);
-					loader.<EntryCellController>getController().setWidth(listView.getPrefWidth() - 20);
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
+				setGraphic(n);
+				setPadding(Insets.EMPTY);
+
+				controller.setContent(item);
+				
+				DayOneEntry previous = listView.getItems().get(listView.getItems().indexOf(item) - 1);
+				
+				controller.setDateEnabled(previous.getCreationDate().getDayOfYear() != item.getCreationDate().getDayOfYear());
+				
+				controller.widthProperty().bind(listView.widthProperty().subtract(40));
 	        }
 	    }
 		

@@ -28,7 +28,7 @@ import com.dd.plist.NSDictionary;
 import com.dd.plist.NSObject;
 import com.dd.plist.PropertyListParser;
 
-public class DayOneEntry implements Comparable<DayOneEntry> {
+public class DayOneEntry implements Comparable<DayOneEntry>, Entry {
 
 	public static DayOneEntry loadFromFile(EntryManager manager, File file) throws Exception {
 		return new DayOneEntry(manager, (NSDictionary) PropertyListParser.parse(file), file);
